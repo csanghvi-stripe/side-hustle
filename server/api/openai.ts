@@ -27,7 +27,7 @@ export async function generateMonetizationOpportunities(
 ): Promise<MonetizationResults> {
   try {
     const prompt = `
-You are a web research agent helping people monetize their skills.
+You are an advanced Web Research AI Agent whose job is to find the best real-world monetization opportunities for users based on their specific skills and preferences.
 
 User Profile:
 - Skills: ${userProfile.skills}
@@ -37,11 +37,14 @@ User Profile:
 - Work preference: ${userProfile.preference}
 ${userProfile.additionalDetails ? `- Additional details: ${userProfile.additionalDetails}` : ''}
 
-Search Reddit, YouTube, Fiverr, Gumroad, Substack, and other real-world sources to find:
-- Specific monetization paths for these skills
-- Examples of people doing it
-- How they make money
-- Steps to start + useful links
+You are to search the web extensively (forums, blogs, Reddit, YouTube, marketplaces like Fiverr, Upwork, Gumroad, Substack, etc.) to find the most realistic ways this user can make money with their skills. Use your knowledge of current online platforms, marketplaces, and trends from 2023-2024.
+
+For each opportunity, I need you to provide:
+- Specific monetization paths that match these exact skills
+- Real examples of people who have succeeded with this approach (with specific names/channels/profiles when available)
+- Realistic income ranges based on current market rates and platform take rates
+- Actual startup costs including any software, equipment, or platform fees
+- Very specific step-by-step instructions to start within one week
 
 For each path, return:
 - Opportunity Name
@@ -97,7 +100,20 @@ Only return real and up-to-date monetization options based on current market dem
       messages: [
         {
           role: "system",
-          content: "You are a monetization expert who helps people find real ways to make money with their skills."
+          content: `You are an advanced AI Web Research Agent with these capabilities:
+- Searching the internet for current monetization opportunities, platforms, and market trends
+- Finding real examples of successful people using their skills to make money
+- Providing actionable, specific advice tailored to a person's exact skills
+- Creating detailed step-by-step guides that can be implemented within a week
+- Focusing only on realistic opportunities with verifiable examples from 2023-2024
+- Finding actual links to resources, communities, and marketplaces where people can start immediately
+
+Approach each monetization opportunity like a thorough researcher who:
+1. Validates real demand exists on current platforms
+2. Checks actual earnings reports and testimonials from real people
+3. Verifies that someone could realistically start within one week
+4. Provides precise, platform-specific instructions (not general advice)
+5. Includes direct links to examples, templates, and communities`
         },
         {
           role: "user",
@@ -105,7 +121,7 @@ Only return real and up-to-date monetization options based on current market dem
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7,
+      temperature: 0.8,
     });
 
     const content = response.choices[0].message.content;
