@@ -76,6 +76,8 @@ export const monetizationOpportunities = pgTable("monetization_opportunities", {
   opportunityData: jsonb("opportunity_data").notNull(),
   createdAt: text("created_at").notNull(),
   shared: boolean("shared").default(false), // Whether opportunity is shared with community
+  skills: jsonb("skills").default([]), // The user's skills related to this opportunity
+  title: text("title"), // Optional descriptive title for the saved search
 });
 
 export const insertMonetizationOpportunitySchema = createInsertSchema(monetizationOpportunities).pick({
@@ -83,6 +85,8 @@ export const insertMonetizationOpportunitySchema = createInsertSchema(monetizati
   opportunityData: true,
   createdAt: true,
   shared: true,
+  skills: true,
+  title: true,
 });
 
 // Messages table for inbox functionality

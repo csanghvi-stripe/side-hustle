@@ -188,7 +188,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const schema = z.object({
         opportunityData: z.any(),
         shared: z.boolean().default(false),
-        createdAt: z.string().datetime().optional()
+        createdAt: z.string().datetime().optional(),
+        skills: z.array(z.string()).optional().default([]),
+        title: z.string().optional()
       });
       
       const validatedData = schema.parse(req.body);
@@ -197,7 +199,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         opportunityData: validatedData.opportunityData,
         shared: validatedData.shared,
-        createdAt: validatedData.createdAt || new Date().toISOString()
+        createdAt: validatedData.createdAt || new Date().toISOString(),
+        skills: validatedData.skills,
+        title: validatedData.title
       });
       
       return res.status(201).json(opportunity);

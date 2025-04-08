@@ -66,22 +66,38 @@ export default function SavedOpportunitiesPage() {
         })
     : [];
 
-  // Group saved opportunities by date to show most recent first
-  const groupedOpportunities = filteredOpportunities.reduce<{
-    [date: string]: MonetizationOpportunity[];
+  // Group saved opportunities by skill
+  const groupedBySkill = filteredOpportunities.reduce<{
+    [skillKey: string]: MonetizationOpportunity[];
   }>((groups, opportunity) => {
-    const dateStr = new Date(opportunity.createdAt).toLocaleDateString();
-    if (!groups[dateStr]) {
-      groups[dateStr] = [];
+    // Get skills from the opportunity
+    const skills = opportunity.skills as string[] || [];
+    
+    if (skills.length === 0) {
+      // If no skills, put in "Other" category
+      const key = "Other";
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(opportunity);
+    } else {
+      // For each skill, add the opportunity to that skill group
+      skills.forEach(skill => {
+        const key = skill.trim();
+        if (!groups[key]) {
+          groups[key] = [];
+        }
+        if (!groups[key].find(opp => opp.id === opportunity.id)) {
+          groups[key].push(opportunity);
+        }
+      });
     }
-    groups[dateStr].push(opportunity);
+    
     return groups;
   }, {});
 
-  // Sort dates newest first
-  const sortedDates = Object.keys(groupedOpportunities).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime()
-  );
+  // Sort skill groups alphabetically
+  const sortedSkills = Object.keys(groupedBySkill).sort();
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -124,22 +140,29 @@ export default function SavedOpportunitiesPage() {
           </TabsList>
           
           <TabsContent value={activeTab} className="mt-0">
-            {sortedDates.length > 0 ? (
+            {sortedSkills && sortedSkills.length > 0 ? (
               <div className="space-y-10">
-                {sortedDates.map((date) => (
-                  <div key={date}>
+                {sortedSkills.map((skill: string) => (
+                  <div key={skill}>
                     <div className="flex items-center mb-4">
-                      <h2 className="text-lg font-semibold">{date}</h2>
+                      <h2 className="text-lg font-semibold">Skill: {skill}</h2>
                       <Badge variant="secondary" className="ml-3">
-                        {groupedOpportunities[date].length} results
+                        {groupedBySkill[skill].length} opportunities
                       </Badge>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {groupedOpportunities[date].map((opportunity) => {
+                      {groupedBySkill[skill].map((opportunity) => {
                         const opportunityData = opportunity.opportunityData as any;
                         return opportunityData.opportunities?.map((opp: any, index: number) => (
-                          <OpportunityCard key={`${opportunity.id}-${index}`} opportunity={opp} />
+                          <div key={`${opportunity.id}-${index}`} className="relative">
+                            <div className="absolute top-2 right-2 z-10">
+                              <Badge className="text-xs bg-slate-700 hover:bg-slate-800">
+                                {new Date(opportunity.createdAt).toLocaleDateString()}
+                              </Badge>
+                            </div>
+                            <OpportunityCard opportunity={opp} />
+                          </div>
                         ));
                       })}
                     </div>

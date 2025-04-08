@@ -33,8 +33,17 @@ const Home: React.FC = () => {
     mutationFn: async () => {
       if (!results) return;
       
+      // Extract skills from the results to organize saved opportunities
+      const skills = results.userProfile?.skills || [];
+      
+      // Create a descriptive title based on skills
+      const skillsText = skills.join(", ");
+      const title = `Monetization opportunities for ${skillsText}`;
+      
       const res = await apiRequest("POST", "/api/opportunities", {
         opportunityData: results,
+        skills: skills,
+        title: title,
         shared: false // Default to private
       });
       
