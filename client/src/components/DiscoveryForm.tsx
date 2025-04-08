@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import LoadingState from "./LoadingState";
 
 // Form validation schema
@@ -26,6 +27,9 @@ const formSchema = z.object({
     required_error: "Please select your work preference",
   }),
   additionalDetails: z.string().optional(),
+  // Social network settings
+  discoverable: z.boolean().default(true),
+  allowMessages: z.boolean().default(true),
 });
 
 interface DiscoveryFormProps {
@@ -45,6 +49,9 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
       incomeGoals: 0,
       workPreference: "remote",
       additionalDetails: "",
+      // Social network defaults
+      discoverable: true,
+      allowMessages: true,
     },
   });
 
@@ -75,7 +82,11 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
       const step1Valid = form.trigger(["skills", "incomeGoals"]);
       if (!step1Valid) return;
     }
-    setCurrentStep(prev => Math.min(prev + 1, 2));
+    if (currentStep === 2) {
+      const step2Valid = form.trigger(["timeAvailability", "riskAppetite", "workPreference"]);
+      if (!step2Valid) return;
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 3));
   };
 
   const prevStep = () => {
@@ -98,13 +109,18 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
       <div className="px-6 pt-6">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${currentStep === 1 ? 'bg-primary text-white' : 'bg-primary text-white'}`}>1</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${currentStep >= 1 ? 'bg-primary text-white' : 'bg-neutral-100 text-neutral-400'}`}>1</div>
             <div className="ml-2 text-sm font-medium">Skills & Goals</div>
           </div>
           <div className="w-12 h-1 bg-neutral-100"></div>
           <div className="flex items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${currentStep === 2 ? 'bg-primary text-white' : 'bg-neutral-100 text-neutral-400'}`}>2</div>
-            <div className={`ml-2 text-sm font-medium ${currentStep === 2 ? '' : 'text-neutral-400'}`}>Preferences</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${currentStep >= 2 ? 'bg-primary text-white' : 'bg-neutral-100 text-neutral-400'}`}>2</div>
+            <div className={`ml-2 text-sm font-medium ${currentStep >= 2 ? '' : 'text-neutral-400'}`}>Preferences</div>
+          </div>
+          <div className="w-12 h-1 bg-neutral-100"></div>
+          <div className="flex items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${currentStep === 3 ? 'bg-primary text-white' : 'bg-neutral-100 text-neutral-400'}`}>3</div>
+            <div className={`ml-2 text-sm font-medium ${currentStep === 3 ? '' : 'text-neutral-400'}`}>Community</div>
           </div>
         </div>
       </div>
@@ -341,6 +357,108 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
               />
 
               <div className="flex justify-between mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={prevStep}
+                >
+                  <svg
+                    className="mr-1 h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  Back
+                </Button>
+                <Button 
+                  type="button" 
+                  onClick={nextStep}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Next
+                  <svg
+                    className="ml-1 h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Community Settings */}
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <div className="border p-4 rounded-lg bg-primary/5 mb-6">
+                <h3 className="text-base font-medium mb-2">Community Features</h3>
+                <p className="text-sm text-neutral-600 mb-1">
+                  Our community helps you connect with others who have similar skills and interests.
+                  Choose your networking preferences below:
+                </p>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="discoverable"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="font-medium">
+                        Make my profile discoverable
+                      </FormLabel>
+                      <FormDescription>
+                        Allow others to find you in the community based on your skills and interests.
+                        We'll suggest connections with similar monetization paths.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="allowMessages"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="font-medium">
+                        Allow direct messages
+                      </FormLabel>
+                      <FormDescription>
+                        Receive messages from community members who may want to collaborate
+                        or share opportunities with you.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-between mt-8">
                 <Button
                   type="button"
                   variant="outline"

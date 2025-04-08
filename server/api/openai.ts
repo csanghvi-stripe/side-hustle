@@ -4,7 +4,9 @@ import {
   MonetizationOpportunity, 
   OpportunityType, 
   RiskLevel,
-  Resource
+  Resource,
+  UserMatch,
+  UserProfile
 } from "../../client/src/types";
 import { v4 as uuidv4 } from "uuid";
 
@@ -20,6 +22,144 @@ interface UserProfileInput {
   riskTolerance: string;
   preference: string;
   additionalDetails?: string;
+  discoverable: boolean;
+  allowMessages: boolean;
+}
+
+/**
+ * Generate a list of similar users with matching skills
+ * @param userSkills Array of user skills
+ * @param discoverable Whether the user allows discovery by others
+ * @returns Array of UserMatch objects
+ */
+function generateSimilarUsers(userSkills: string[], discoverable: boolean): UserMatch[] {
+  // If user opted out of discovery features, return empty array
+  if (!discoverable) {
+    return [];
+  }
+
+  // The list of fictional users with their skills
+  const potentialMatches: UserProfile[] = [
+    {
+      id: 1,
+      username: "alexcreative",
+      displayName: "Alex Taylor",
+      profilePicture: "/profiles/alex.jpg",
+      bio: "Digital creator specializing in video editing, motion graphics and 3D animation.",
+      skills: ["video editing", "motion graphics", "after effects", "3D animation", "premiere pro"],
+      timeAvailability: "20-30 hours/week",
+      discoverable: true,
+      allowMessages: true
+    },
+    {
+      id: 2,
+      username: "sarahdev",
+      displayName: "Sarah Chen",
+      profilePicture: "/profiles/sarah.jpg",
+      bio: "Full-stack developer with 5 years experience, currently focusing on React projects and AI integration.",
+      skills: ["javascript", "react", "node.js", "typescript", "python", "machine learning"],
+      timeAvailability: "Part-time",
+      discoverable: true,
+      allowMessages: true
+    },
+    {
+      id: 3,
+      username: "michaelwriter",
+      displayName: "Michael Rodriguez",
+      profilePicture: "/profiles/michael.jpg",
+      bio: "SEO content writer and strategist. I help businesses rank higher and convert better.",
+      skills: ["content writing", "SEO", "copywriting", "blog writing", "technical writing"],
+      timeAvailability: "Flexible",
+      discoverable: true,
+      allowMessages: true
+    },
+    {
+      id: 4,
+      username: "emilyphoto",
+      displayName: "Emily Wong",
+      profilePicture: "/profiles/emily.jpg",
+      bio: "Commercial photographer specializing in product photography and lifestyle branding.",
+      skills: ["photography", "photo editing", "lightroom", "photoshop", "product photography"],
+      timeAvailability: "10-15 hours/week",
+      discoverable: true,
+      allowMessages: true
+    },
+    {
+      id: 5,
+      username: "davidmarketer",
+      displayName: "David Miller",
+      profilePicture: "/profiles/david.jpg",
+      bio: "Digital marketer with focus on paid social, analytics, and conversion optimization.",
+      skills: ["digital marketing", "social media marketing", "facebook ads", "analytics", "google ads"],
+      timeAvailability: "Full-time",
+      discoverable: true,
+      allowMessages: true
+    },
+    {
+      id: 6,
+      username: "jasmineteach",
+      displayName: "Jasmine Kumar",
+      profilePicture: "/profiles/jasmine.jpg",
+      bio: "Math teacher and online tutor. Creating educational content for high school and college students.",
+      skills: ["teaching", "mathematics", "tutoring", "curriculum design", "educational content"],
+      timeAvailability: "Evenings & weekends",
+      discoverable: true,
+      allowMessages: true
+    },
+    {
+      id: 7,
+      username: "thomasdesigner",
+      displayName: "Thomas Wilson",
+      profilePicture: "/profiles/thomas.jpg",
+      bio: "UI/UX designer focused on creating intuitive experiences for web and mobile applications.",
+      skills: ["UI/UX design", "figma", "web design", "mobile design", "wireframing", "prototyping"],
+      timeAvailability: "30+ hours/week",
+      discoverable: true,
+      allowMessages: true
+    },
+    {
+      id: 8,
+      username: "rachelvoice",
+      displayName: "Rachel Stevens",
+      profilePicture: "/profiles/rachel.jpg",
+      bio: "Voice actor and audiobook narrator with home studio setup and 3 years of experience.",
+      skills: ["voice acting", "narration", "audio editing", "audiobooks", "commercial voiceover"],
+      timeAvailability: "Project-based",
+      discoverable: true,
+      allowMessages: true
+    }
+  ];
+
+  // Calculate match scores based on skill overlap
+  const matches: UserMatch[] = potentialMatches
+    .map(profile => {
+      // Find overlapping skills
+      const matchedSkills = profile.skills.filter(skill => 
+        userSkills.some(userSkill => 
+          userSkill.toLowerCase().includes(skill.toLowerCase()) || 
+          skill.toLowerCase().includes(userSkill.toLowerCase())
+        )
+      );
+      
+      // Calculate match score (0-100) based on percentage of overlapping skills
+      const matchScore = Math.round(
+        (matchedSkills.length / Math.max(userSkills.length, profile.skills.length)) * 100
+      );
+      
+      return {
+        user: profile,
+        matchScore,
+        matchedSkills
+      };
+    })
+    // Filter out poor matches (less than 20% match)
+    .filter(match => match.matchScore >= 20)
+    // Sort by match score (highest first)
+    .sort((a, b) => b.matchScore - a.matchScore)
+    // Limit to top 3 matches
+    .slice(0, 3);
+  
+  return matches;
 }
 
 export async function generateMonetizationOpportunities(
@@ -158,6 +298,9 @@ Approach each monetization opportunity like a thorough researcher AND storytelle
     if (typeof parsedResponse.userProfile.skills === 'string') {
       parsedResponse.userProfile.skills = parsedResponse.userProfile.skills.split(',').map((s: string) => s.trim());
     }
+
+    // Generate similar users with matching skills
+    parsedResponse.similarUsers = generateSimilarUsers(parsedResponse.userProfile.skills, userProfile.discoverable);
 
     return parsedResponse as MonetizationResults;
   } catch (error) {
