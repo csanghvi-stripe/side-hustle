@@ -19,7 +19,7 @@ import { db } from "./db";
 import { eq, and, or } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import pkg from "pg"; // Import pg as a namespace
+import pkg from "pg";
 const { Pool } = pkg;
 
 export interface IStorage {
@@ -57,7 +57,7 @@ export interface IStorage {
     status: string,
   ): Promise<Connection | undefined>;
 
-  // Session store for authentication
+  // Session management
   sessionStore: session.Store;
 }
 
@@ -67,19 +67,23 @@ export class DatabaseStorage implements IStorage {
   constructor() {
     // Set up Postgres session store using standard pg
     const PostgresSessionStore = connectPg(session);
-    // Then use Pool as before in your constructor
-    const sessionPool = new Pool({
+    
+    // Create a new pool for session storage
+    const poolConfig = {
       connectionString: process.env.DATABASE_URL,
       ssl: {
         rejectUnauthorized: false,
       },
-    });
-
+    };
+    
+    const pgPool = new Pool(poolConfig);
+    
     this.sessionStore = new PostgresSessionStore({
-      pool: sessionPool,
+      pool: pgPool,
       createTableIfMissing: true,
     });
   }
+
 
   // User management
   async getUser(id: number): Promise<User | undefined> {

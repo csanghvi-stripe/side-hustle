@@ -121,12 +121,10 @@ export default function AppHeader() {
     <header className="border-b">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center">
-          <Link href="/">
-            <a className="flex items-center mr-6">
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
-                MonetizeMe
-              </span>
-            </a>
+          <Link href="/" className="flex items-center mr-6">
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
+              MonetizeMe
+            </span>
           </Link>
 
           {/* Desktop Navigation Menu */}

@@ -25,20 +25,20 @@ const LoadingState: React.FC = () => {
 
   const searchSteps = [
     {
-      title: "Searching the web for opportunities...",
-      description: "Analyzing forums, marketplaces, and communities for your skills"
+      title: "Analyzing your skills and preferences...",
+      description: "Claude is assessing your unique skillset and constraints"
     },
     {
-      title: "Finding real examples...",
-      description: "Identifying real people who have monetized similar skills"
+      title: "Evaluating market opportunities...",
+      description: "Identifying monetization options that match your profile"
     },
     {
-      title: "Validating market demand...",
-      description: "Checking current rates and platform requirements"
+      title: "Creating personalized recommendations...",
+      description: "Generating custom opportunities with detailed information"
     },
     {
-      title: "Creating step-by-step instructions...",
-      description: "Building actionable guides you can start this week"
+      title: "Building actionable guides...",
+      description: "Preparing step-by-step instructions for immediate implementation"
     }
   ];
 
@@ -54,8 +54,8 @@ const LoadingState: React.FC = () => {
             </svg>
           </div>
         </div>
-        <h3 className="mt-4 text-xl font-semibold text-neutral-800">Web Research in Progress</h3>
-        <p className="text-neutral-500 mt-1">Our AI agent is searching multiple sources for your opportunities</p>
+        <h3 className="mt-4 text-xl font-semibold text-neutral-800">AI Research in Progress</h3>
+        <p className="text-neutral-500 mt-1">Claude is analyzing your skills and finding opportunity matches</p>
       </div>
 
       <div className="mt-8 space-y-6">

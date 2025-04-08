@@ -1,10 +1,20 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { generateMonetizationOpportunities } from "./api/openai";
+import { generateMonetizationOpportunities } from "./api/anthropic";
 import { setupAuth } from "./auth";
 import { insertUserProfileSchema } from "@shared/schema";
 import { z } from "zod";
+import pkg from "pg";
+const { Pool } = pkg;
+
+// Create a Pool for direct DB operations
+const dbPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: any) => {
@@ -17,6 +27,31 @@ const isAuthenticated = (req: Request, res: Response, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+  
+  // Development endpoint to clear all sessions (only enable in development mode)
+  app.post("/api/dev/clear-sessions", async (req, res) => {
+    try {
+      // Check if we're in development mode
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({
+          message: "This endpoint is only available in development mode",
+        });
+      }
+      
+      // Direct query to truncate session table
+      await dbPool.query('TRUNCATE TABLE "session" CASCADE');
+      
+      return res.status(200).json({
+        message: "All sessions have been cleared successfully",
+      });
+    } catch (error) {
+      console.error("Error clearing sessions:", error);
+      return res.status(500).json({
+        message: "Failed to clear sessions",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
 
   // Discover monetization opportunities
   app.post("/api/opportunities/discover", async (req, res) => {
@@ -31,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Generate monetization opportunities using OpenAI
+      // Generate monetization opportunities using Anthropic
       const opportunities = await generateMonetizationOpportunities({
         skills,
         timePerWeek: timeAvailability,
