@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -6,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { user, login, isLoading } = useAuth();
+  const { loginMutation, user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -17,12 +18,17 @@ export default function AuthPage() {
 
     const handleAuth = async () => {
       try {
-        await login();
-        toast({
-          title: "Welcome back!",
-          description: "Successfully logged in.",
+        const result = await loginMutation.mutateAsync({
+          username: "",
+          password: ""
         });
-        setLocation("/");
+        if (result) {
+          toast({
+            title: "Welcome back!",
+            description: "Successfully logged in.",
+          });
+          setLocation("/");
+        }
       } catch (error) {
         toast({
           variant: "destructive",
@@ -33,7 +39,7 @@ export default function AuthPage() {
     };
 
     handleAuth();
-  }, [user, login, setLocation, toast]);
+  }, [user, loginMutation, setLocation, toast]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-neutral-50">
