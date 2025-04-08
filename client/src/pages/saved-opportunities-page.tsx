@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import AppHeader from "@/components/AppHeader";
 import { MonetizationOpportunity } from "@shared/schema";
 import OpportunityCard from "@/components/OpportunityCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +25,6 @@ export default function SavedOpportunitiesPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-neutral-50">
-        <AppHeader />
         <div className="max-w-6xl mx-auto px-4 py-12 flex justify-center items-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <span className="ml-2">Loading your saved opportunities...</span>
@@ -101,8 +99,6 @@ export default function SavedOpportunitiesPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      <AppHeader />
-      
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>

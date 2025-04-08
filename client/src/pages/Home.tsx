@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import AppHeader from "@/components/AppHeader";
 import DiscoveryForm from "@/components/DiscoveryForm";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import { MonetizationResults } from "@/types";
@@ -80,9 +79,7 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <AppHeader />
-      
+    <div className="min-h-screen bg-neutral-50">      
       <main className="max-w-6xl mx-auto px-4 py-8">
         {!results ? (
           <DiscoveryForm onResultsReceived={handleResultsReceived} />
