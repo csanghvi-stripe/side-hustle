@@ -7,7 +7,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import connectPg from "connect-pg-simple";
-import { Pool } from "@neondatabase/serverless";
+import postgres from "postgres"; // Changed to postgres-js
 
 declare global {
   namespace Express {
@@ -33,8 +33,11 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   // Create PostgreSQL session store
   const PostgresSessionStore = connectPg(session);
-  const sessionPool = new Pool({
-    connectionString: process.env.DATABASE_URL
+
+  // Use postgres-js instead of @neondatabase/serverless
+  const sessionClient = postgres(process.env.DATABASE_URL!, {
+    ssl: true,
+    max: 1 // Use a single connection in the pool
   });
 
   const sessionSettings: session.SessionOptions = {
@@ -42,7 +45,8 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: new PostgresSessionStore({ 
-      pool: sessionPool, 
+      // Use postgres-js client for session store
+      pool: sessionClient, 
       createTableIfMissing: true
     }),
     cookie: {
@@ -84,7 +88,7 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     try {
       const { username, password, email } = req.body;
-      
+
       // Validate input
       if (!username || !password || !email) {
         return res.status(400).json({ message: "Missing required fields" });

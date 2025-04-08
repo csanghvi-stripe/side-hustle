@@ -1,12 +1,26 @@
-
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { Pool } from "pg"; // Add this import
 import * as schema from "../shared/schema";
 
-// Use WebSocket protocol for serverless connections
-const poolUrl = process.env.DATABASE_URL!.replace('postgres://', 'postgresql://').replace('.us-east-2', '-pooler.us-east-2');
-const sql = neon(poolUrl, { 
-  webSocketConstructor: WebSocket,
-  useSecureWebSocket: true 
+// Create postgres-js client for Drizzle
+const connectionString = process.env.DATABASE_URL!;
+const client = postgres(connectionString, {
+  ssl: true,
+  max: 10,
 });
-export const db = drizzle(sql, { schema });
+
+// Create a standard node-postgres pool for session store
+// This is more compatible with connect-pg-simple
+const pgPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // May need this for Neon
+  },
+});
+
+// Export drizzle instance
+export const db = drizzle(client, { schema });
+
+// Export pg Pool for session store
+export const sessionPool = pgPool;
