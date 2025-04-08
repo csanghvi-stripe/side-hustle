@@ -19,6 +19,7 @@ interface UserProfileInput {
   incomeGoal: string;
   riskTolerance: string;
   preference: string;
+  additionalDetails?: string;
 }
 
 export async function generateMonetizationOpportunities(
@@ -32,8 +33,9 @@ User Profile:
 - Skills: ${userProfile.skills}
 - Time per week: ${userProfile.timePerWeek}
 - Income goal: ${userProfile.incomeGoal}
-- Risk: ${userProfile.riskTolerance}
-- Preference: ${userProfile.preference}
+- Risk tolerance: ${userProfile.riskTolerance}
+- Work preference: ${userProfile.preference}
+${userProfile.additionalDetails ? `- Additional details: ${userProfile.additionalDetails}` : ''}
 
 Search Reddit, YouTube, Fiverr, Gumroad, Substack, and other real-world sources to find:
 - Specific monetization paths for these skills
