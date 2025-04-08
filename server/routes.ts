@@ -170,6 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const message = await storage.sendMessage({
         senderId: req.user!.id,
+        senderName: req.user!.username,
         recipientId,
         subject,
         content

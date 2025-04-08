@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,29 +8,31 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { loginMutation, user } = useAuth();
+  const { loginMutation, user, isLoading } = useAuth();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (user) {
+    // Only redirect if we have a user AND we're not in a loading state
+    if (user && !isLoading) {
       setLocation("/");
     }
-  }, [user, setLocation]);
+  }, [user, isLoading, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await loginMutation.mutateAsync({
         username,
-        password
+        password,
       });
+      // Successful login will update the user in useAuth
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Invalid username or password"
+        description: "Invalid username or password",
       });
     }
   };
@@ -50,6 +51,7 @@ export default function AuthPage() {
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -58,10 +60,11 @@ export default function AuthPage() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full"
               disabled={loginMutation.isPending}
             >

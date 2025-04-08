@@ -38,12 +38,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
+  displayName: text("display_name"),
+  bio: text("bio"),
   skills: jsonb("skills").default([]),
   timeAvailability: text("time_availability"),
   incomeGoals: integer("income_goals"),
   riskTolerance: text("risk_tolerance"),
   workPreference: text("work_preference"),
   additionalDetails: text("additional_details"),
+  discoverable: boolean("discoverable").default(true),
+  allowMessages: boolean("allow_messages").default(true),
   lastUpdated: timestamp("last_updated").defaultNow(),
 }, (table) => {
   return {
@@ -53,12 +57,16 @@ export const userProfiles = pgTable("user_profiles", {
 
 export const insertUserProfileSchema = createInsertSchema(userProfiles).pick({
   userId: true,
+  displayName: true,
+  bio: true,
   skills: true,
   timeAvailability: true,
   incomeGoals: true,
   riskTolerance: true,
   workPreference: true,
   additionalDetails: true,
+  discoverable: true,
+  allowMessages: true,
 });
 
 // Monetization opportunity table
@@ -82,6 +90,7 @@ export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   senderId: integer("sender_id").references(() => users.id).notNull(),
   recipientId: integer("recipient_id").references(() => users.id).notNull(),
+  senderName: text("sender_name").notNull(),
   subject: text("subject"),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
@@ -92,6 +101,7 @@ export const messages = pgTable("messages", {
 export const insertMessageSchema = createInsertSchema(messages).pick({
   senderId: true,
   recipientId: true,
+  senderName: true,
   subject: true,
   content: true,
 });
