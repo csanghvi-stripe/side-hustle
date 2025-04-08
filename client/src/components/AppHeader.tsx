@@ -123,7 +123,7 @@ export default function AppHeader() {
         <div className="flex items-center">
           <Link href="/" className="flex items-center mr-6">
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
-              MonetizeMe
+              SideHustle
             </span>
           </Link>
 

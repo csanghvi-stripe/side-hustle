@@ -1,10 +1,10 @@
-# Monetization Discovery Agent
+# SideHustle
 
-A web application that provides personalized monetization opportunities based on users' skills and preferences using AI-powered research.
+A web application that provides personalized side hustle opportunities based on users' skills and preferences using AI-powered research.
 
 ## What Does This Application Do?
 
-The Monetization Discovery Agent is an intelligent tool designed to help users discover personalized ways to monetize their skillsets. Unlike traditional static lists of ideas, this application:
+SideHustle is an intelligent tool designed to help users discover personalized ways to monetize their skillsets. Unlike traditional static lists of ideas, this application:
 
 - **Provides personalized recommendations** based on your specific skills, time availability, risk tolerance, and income goals
 - **Delivers actionable opportunities** that can be started within a week
@@ -22,7 +22,7 @@ The application uses a modern full-stack JavaScript architecture:
 - **Backend**: Express.js server with RESTful API
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Passport.js with secure session management
-- **AI Integration**: OpenAI API for generating personalized monetization opportunities
+- **AI Integration**: Anthropic Claude API for generating personalized monetization opportunities
 
 ### Key Components
 
@@ -50,7 +50,7 @@ The application uses a modern full-stack JavaScript architecture:
 1. Users register/login through the authentication system
 2. Users fill out the multi-step discovery form with their skills and preferences
 3. The form data is sent to the backend API
-4. The backend processes the request and uses OpenAI to generate personalized recommendations
+4. The backend processes the request and uses Anthropic Claude to generate personalized recommendations
 5. Results are returned to the frontend and displayed in an organized, actionable format
 6. Optional: Users can engage with the community features to connect with others
 
@@ -60,14 +60,14 @@ The application uses a modern full-stack JavaScript architecture:
 
 - Node.js (v18+)
 - PostgreSQL database
-- OpenAI API key
+- Anthropic API key
 
 ### Environment Variables
 
 The application requires the following environment variables:
 
 - `DATABASE_URL`: PostgreSQL connection string
-- `OPENAI_API_KEY`: Your OpenAI API key for generating recommendations
+- `ANTHROPIC_API_KEY`: Your Anthropic API key for generating recommendations
 - `SESSION_SECRET`: A secret string for session encryption
 
 ### Installation
@@ -75,7 +75,7 @@ The application requires the following environment variables:
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd monetization-discovery-agent
+   cd sidehustle
    ```
 
 2. Install dependencies:
