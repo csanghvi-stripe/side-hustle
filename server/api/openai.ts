@@ -27,7 +27,7 @@ export async function generateMonetizationOpportunities(
 ): Promise<MonetizationResults> {
   try {
     const prompt = `
-You are an advanced Web Research AI Agent whose job is to find the best real-world monetization opportunities for users based on their specific skills and preferences.
+You are an advanced Web Research AI Agent whose job is to find the best real-world monetization opportunities for users based on their specific skills and preferences. Your goal is to not only provide practical options but also INSPIRE action through real success stories.
 
 User Profile:
 - Skills: ${userProfile.skills}
@@ -37,14 +37,17 @@ User Profile:
 - Work preference: ${userProfile.preference}
 ${userProfile.additionalDetails ? `- Additional details: ${userProfile.additionalDetails}` : ''}
 
-You are to search the web extensively (forums, blogs, Reddit, YouTube, marketplaces like Fiverr, Upwork, Gumroad, Substack, etc.) to find the most realistic ways this user can make money with their skills. Use your knowledge of current online platforms, marketplaces, and trends from 2023-2024.
+Search the web extensively including LinkedIn, Reddit, Discord public forums, Medium, Substack, Twitter, YouTube, marketplaces like Fiverr, Upwork, Gumroad, etc. to find the most realistic ways this user can make money with their skills. Use your knowledge of current online platforms, marketplaces, and trends from 2023-2024.
 
 For each opportunity, I need you to provide:
-- Specific monetization paths that match these exact skills
-- Real examples of people who have succeeded with this approach (with specific names/channels/profiles when available)
-- Realistic income ranges based on current market rates and platform take rates
-- Actual startup costs including any software, equipment, or platform fees
-- Very specific step-by-step instructions to start within one week
+1. Specific monetization paths that match these exact skills
+2. MULTIPLE real success stories of people who started small and succeeded with this approach (with specific names, channels, profiles when available)
+3. Detailed revenue journey information - how they started, how long it took to reach income milestones
+4. Realistic income ranges based on current market rates and platform take rates
+5. Actual startup costs including any software, equipment, or platform fees
+6. Very specific step-by-step instructions to start within one week
+
+CRUCIAL: For each opportunity, find and include 2-3 INSPIRATIONAL SUCCESS STORIES of real people who started from scratch in this field. Include their journey details, challenges they overcame, how long it took them to reach income goals, and direct links to their profiles/content.
 
 For each path, return:
 - Opportunity Name
@@ -80,6 +83,15 @@ Respond with JSON that follows this exact structure:
           "url": "https://example.com",
           "source": "Reddit/YouTube/etc"
         }
+      ],
+      "successStories": [
+        {
+          "name": "Real Person's Name",
+          "background": "Brief description of their background/starting point",
+          "journey": "Their path from beginner to success, including challenges and turning points",
+          "outcome": "Current status and accomplishments",
+          "profileUrl": "URL to their profile/portfolio/content"
+        }
       ]
     }
   ],
@@ -107,13 +119,16 @@ Only return real and up-to-date monetization options based on current market dem
 - Creating detailed step-by-step guides that can be implemented within a week
 - Focusing only on realistic opportunities with verifiable examples from 2023-2024
 - Finding actual links to resources, communities, and marketplaces where people can start immediately
+- Discovering INSPIRATIONAL SUCCESS STORIES from LinkedIn, Medium, Substack, Twitter, Reddit, YouTube etc.
 
-Approach each monetization opportunity like a thorough researcher who:
+Approach each monetization opportunity like a thorough researcher AND storyteller who:
 1. Validates real demand exists on current platforms
-2. Checks actual earnings reports and testimonials from real people
-3. Verifies that someone could realistically start within one week
-4. Provides precise, platform-specific instructions (not general advice)
-5. Includes direct links to examples, templates, and communities`
+2. Identifies specific individuals who started from zero and succeeded
+3. Discovers the journey stories of real people (their struggles, breakthroughs, milestones)
+4. Verifies that someone could realistically start within one week
+5. Provides precise, platform-specific instructions (not general advice)
+6. Includes direct links to success stories, examples, templates, and communities
+7. Highlights "from zero to hero" narratives that INSPIRE action`
         },
         {
           role: "user",
