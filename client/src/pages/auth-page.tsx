@@ -1,52 +1,68 @@
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { loginMutation, user } = useAuth();
-  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    if (user) {
-      setLocation("/");
-      return;
+  if (user) {
+    setLocation("/");
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await loginMutation.mutateAsync({
+        username,
+        password
+      });
+    } catch (error) {
+      console.error("Login failed:", error);
     }
-
-    const handleAuth = async () => {
-      try {
-        const result = await loginMutation.mutateAsync({
-          username: "",
-          password: ""
-        });
-        if (result) {
-          toast({
-            title: "Welcome back!",
-            description: "Successfully logged in.",
-          });
-          setLocation("/");
-        }
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to authenticate. Please try again.",
-        });
-      }
-    };
-
-    handleAuth();
-  }, [user, loginMutation, setLocation, toast]);
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-neutral-50">
-      <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-        <h1 className="mt-4 text-xl font-semibold">Authenticating...</h1>
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-neutral-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Logging in..." : "Login"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
