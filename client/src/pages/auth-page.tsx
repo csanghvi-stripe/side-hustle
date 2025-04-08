@@ -5,10 +5,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { loginMutation, user } = useAuth();
+  const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -25,7 +27,11 @@ export default function AuthPage() {
         password
       });
     } catch (error) {
-      console.error("Login failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "Invalid username or password"
+      });
     }
   };
 
