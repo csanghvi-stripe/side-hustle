@@ -1,22 +1,23 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { Pool } from "pg"; // Add this import
+import pkg from "pg"; // Import pg as a namespace
 import * as schema from "../shared/schema";
+
+const { Pool } = pkg; // Extract Pool from the imported namespace
 
 // Create postgres-js client for Drizzle
 const connectionString = process.env.DATABASE_URL!;
-const client = postgres(connectionString, {
+const client = postgres(connectionString, { 
   ssl: true,
-  max: 10,
+  max: 10
 });
 
 // Create a standard node-postgres pool for session store
-// This is more compatible with connect-pg-simple
 const pgPool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false, // May need this for Neon
-  },
+    rejectUnauthorized: false
+  }
 });
 
 // Export drizzle instance
