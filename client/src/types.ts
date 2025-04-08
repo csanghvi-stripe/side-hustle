@@ -4,6 +4,7 @@ export interface UserInputForm {
   riskAppetite: "low" | "medium" | "high";
   incomeGoals: number;
   workPreference: "remote" | "local" | "both";
+  additionalDetails?: string;
 }
 
 export enum OpportunityType {

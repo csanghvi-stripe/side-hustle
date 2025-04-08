@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import LoadingState from "./LoadingState";
 
 // Form validation schema
@@ -18,12 +19,13 @@ const formSchema = z.object({
   skills: z.string().min(3, "Please enter at least one skill"),
   timeAvailability: z.string().min(1, "Please select your time availability"),
   riskAppetite: z.enum(["low", "medium", "high"], {
-    required_error: "Please select your risk appetite",
+    required_error: "Please select your risk tolerance",
   }),
   incomeGoals: z.coerce.number().min(1, "Please enter your income goal"),
   workPreference: z.enum(["remote", "local", "both"], {
     required_error: "Please select your work preference",
   }),
+  additionalDetails: z.string().optional(),
 });
 
 interface DiscoveryFormProps {
@@ -42,6 +44,7 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
       riskAppetite: "medium",
       incomeGoals: 0,
       workPreference: "remote",
+      additionalDetails: "",
     },
   });
 
@@ -87,8 +90,8 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
     <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8 border border-neutral-100">
       {/* Form Header */}
       <div className="bg-primary text-white px-6 py-4">
-        <h2 className="text-xl font-medium">Discover Monetization Opportunities</h2>
-        <p className="text-primary-50">Find personalized ways to generate income based on skills and preferences</p>
+        <h2 className="text-xl font-medium">Your Monetization Profile</h2>
+        <p className="text-primary-50">Tell us about your skills and preferences to discover personalized opportunities</p>
       </div>
       
       {/* Form Progress */}
@@ -120,13 +123,14 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                       What skills or expertise do you have? <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g. graphic design, writing, programming, marketing"
+                      <Textarea 
+                        placeholder="Tell us about your skills, experience, and expertise (e.g., graphic design, writing, programming, marketing, teaching, etc.)"
+                        className="min-h-[120px] resize-y"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Separate multiple skills with commas
+                      Be specific about your skills to get more targeted opportunities
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -139,7 +143,7 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-medium">
-                      What's your monthly income goal? <span className="text-red-500">*</span>
+                      Monthly income goal <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
@@ -148,7 +152,7 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                         </div>
                         <Input
                           type="number"
-                          placeholder="e.g. 500"
+                          placeholder="500"
                           className="pl-7 pr-12"
                           {...field}
                         />
@@ -157,13 +161,39 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                         </div>
                       </div>
                     </FormControl>
+                    <FormDescription>
+                      How much extra income would you like to make per month?
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="additionalDetails"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-medium">
+                      Additional details (optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Any other information that might help us find better opportunities for you (e.g., your interests, background, current job, etc.)"
+                        className="min-h-[80px] resize-y"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      This helps us tailor recommendations to your specific situation
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
               <div className="flex justify-end mt-6">
-                <Button type="button" onClick={nextStep}>
+                <Button type="button" onClick={nextStep} className="bg-primary hover:bg-primary/90">
                   Next
                   <svg
                     className="ml-1 h-4 w-4"
@@ -191,12 +221,12 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-medium">
-                      How much time can you dedicate per week? <span className="text-red-500">*</span>
+                      Available time per week <span className="text-red-500">*</span>
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select time availability" />
+                          <SelectValue placeholder="Select your available time" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -206,6 +236,9 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                         <SelectItem value="20+">20+ hours/week</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      How much time can you dedicate to new income opportunities?
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -217,7 +250,7 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                 render={({ field }) => (
                   <FormItem className="space-y-3">
                     <FormLabel className="font-medium">
-                      What's your risk appetite? <span className="text-red-500">*</span>
+                      Risk tolerance <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <RadioGroup
@@ -251,6 +284,9 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
+                    <FormDescription>
+                      This helps us match opportunities to your comfort level with uncertainty
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -296,6 +332,9 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
+                    <FormDescription>
+                      Do you prefer remote work or are you open to local opportunities?
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -321,8 +360,12 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                   </svg>
                   Back
                 </Button>
-                <Button type="submit" disabled={generateOpportunities.isPending}>
-                  Find Opportunities
+                <Button 
+                  type="submit" 
+                  disabled={generateOpportunities.isPending}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Find Monetization Opportunities
                   <svg
                     className="ml-1 h-4 w-4"
                     xmlns="http://www.w3.org/2000/svg"

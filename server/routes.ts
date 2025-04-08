@@ -7,7 +7,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discover monetization opportunities
   app.post("/api/opportunities/discover", async (req, res) => {
     try {
-      const { skills, timeAvailability, riskAppetite, incomeGoals, workPreference } = req.body;
+      const { skills, timeAvailability, riskAppetite, incomeGoals, workPreference, additionalDetails } = req.body;
 
       // Validate required fields
       if (!skills || !timeAvailability || !riskAppetite || !incomeGoals) {
@@ -21,6 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         incomeGoal: `$${incomeGoals}/month`,
         riskTolerance: riskAppetite,
         preference: workPreference,
+        additionalDetails: additionalDetails || "",
       });
 
       // Return the opportunities
