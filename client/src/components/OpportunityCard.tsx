@@ -185,47 +185,101 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
           </div>
           
           <div className="mb-4">
-            <h4 className="font-medium text-sm mb-2">How It Works</h4>
+            <h4 className="font-medium text-base mb-2">How It Works</h4>
             <p className="text-sm">{opportunity.description}</p>
           </div>
-          
+
           <div className="mb-4">
-            <h4 className="font-medium text-sm mb-2">Steps to Start</h4>
-            <ol className="text-sm list-decimal list-inside space-y-1">
+            <h4 className="font-medium text-base mb-2">Steps to Start</h4>
+            <ol className="text-sm list-decimal list-outside ml-5 space-y-2">
               {opportunity.stepsToStart.map((step, index) => (
-                <li key={index}>{step}</li>
+                <li key={index} className="pl-1">{step}</li>
               ))}
             </ol>
           </div>
           
-          <div>
-            <h4 className="font-medium text-sm mb-2">Resources</h4>
-            <div className="flex flex-wrap gap-2">
+          <div className="mb-6">
+            <h4 className="font-medium text-base mb-2">Resources & Examples</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {opportunity.resources.map((resource, index) => (
                 <a 
                   key={index}
                   href={resource.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                  className="inline-flex items-center p-3 text-sm font-medium rounded border border-neutral-200 bg-neutral-50 text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition-colors"
                 >
-                  <svg
-                    className="w-3 h-3 mr-1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
-                  {resource.title}
+                  {resource.source === "Reddit" ? (
+                    <svg className="w-4 h-4 mr-2 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                      <circle cx="12" cy="12" r="3" fill="white"/>
+                      <circle cx="17" cy="9" r="1.5" fill="white"/>
+                      <circle cx="7" cy="9" r="1.5" fill="white"/>
+                      <path fill="white" d="M17 14c-1 1.5-2.5 3-5 3s-4-1.5-5-3"/>
+                    </svg>
+                  ) : resource.source === "YouTube" ? (
+                    <svg className="w-4 h-4 mr-2 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  ) : resource.source === "Fiverr" ? (
+                    <svg className="w-4 h-4 mr-2 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23 9V7h-6.5C15.67 7 15 7.67 15 8.5V11h-3V7H9v9h3v-3h3v4.5c0 .83.67 1.5 1.5 1.5H23v-2h-5v-5h5V9Z"/>
+                    </svg>
+                  ) : resource.source === "Gumroad" ? (
+                    <svg className="w-4 h-4 mr-2 text-pink-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8.5 9A5.5 5.5 0 0 1 14 3.5H21v17H3V9h5.5z"/>
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-4 h-4 mr-2 text-blue-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                  )}
+                  <div>
+                    <div className="font-medium line-clamp-1">{resource.title}</div>
+                    <div className="text-xs text-neutral-500">{resource.source}</div>
+                  </div>
                 </a>
               ))}
             </div>
+          </div>
+          
+          <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
+            <h4 className="flex items-center font-medium text-sm text-primary mb-2">
+              <svg
+                className="w-4 h-4 mr-1"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
+                <polyline points="7.5 19.79 7.5 14.6 3 12" />
+                <polyline points="21 12 16.5 14.6 16.5 19.79" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+              Pro Tips
+            </h4>
+            <ul className="text-xs space-y-1 text-neutral-700">
+              <li>• Start with small projects to build a portfolio and reviews quickly</li>
+              <li>• Focus on high-engagement communities where potential clients gather</li>
+              <li>• Set up payment processing before advertising your services</li>
+              <li>• Clearly define your scope of work to avoid scope creep</li>
+            </ul>
           </div>
         </div>
       )}
