@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MonetizationResults, OpportunityType } from "@/types";
 import OpportunityCard from "./OpportunityCard";
+import UserMatchCard from "./UserMatchCard";
 
 interface ResultsDisplayProps {
   results: MonetizationResults;
@@ -128,6 +129,23 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
             Start New Search
           </button>
         </div>
+        
+        {/* Similar Users Section */}
+        {results.similarUsers && results.similarUsers.length > 0 && (
+          <div className="mt-12 border-t pt-8">
+            <h3 className="text-lg font-medium text-neutral-900 mb-4">Connect with Similar Professionals</h3>
+            <p className="text-neutral-600 text-sm mb-6">
+              We found people with similar skills who might be on the same monetization journey as you.
+              Connect with them to share experiences and opportunities!
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {results.similarUsers.map((match, index) => (
+                <UserMatchCard key={index} match={match} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

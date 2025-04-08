@@ -9,6 +9,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { skills, timeAvailability, riskAppetite, incomeGoals, workPreference, additionalDetails } = req.body;
 
+      // Extract the social networking settings
+      const { discoverable = true, allowMessages = true } = req.body;
+
       // Validate required fields
       if (!skills || !timeAvailability || !riskAppetite || !incomeGoals) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -22,6 +25,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         riskTolerance: riskAppetite,
         preference: workPreference,
         additionalDetails: additionalDetails || "",
+        discoverable,
+        allowMessages,
       });
 
       // Return the opportunities

@@ -5,6 +5,9 @@ export interface UserInputForm {
   incomeGoals: number;
   workPreference: "remote" | "local" | "both";
   additionalDetails?: string;
+  // Social networking options
+  discoverable: boolean;
+  allowMessages: boolean;
 }
 
 export enum OpportunityType {
@@ -60,4 +63,46 @@ export interface MonetizationResults {
     riskTolerance: string;
     preference: string;
   };
+  similarUsers?: UserMatch[];
+}
+
+export interface UserProfile {
+  id: number;
+  username: string;
+  displayName?: string;
+  profilePicture?: string;
+  bio?: string;
+  skills: string[];
+  timeAvailability?: string;
+  discoverable: boolean;
+  allowMessages: boolean;
+}
+
+export interface UserMatch {
+  user: UserProfile;
+  matchScore: number; // 0-100 score showing how closely skills match
+  matchedSkills: string[];
+  commonInterests?: string[];
+}
+
+export interface Message {
+  id: number;
+  senderId: number;
+  recipientId: number;
+  senderName: string;
+  subject?: string;
+  content: string;
+  isRead: boolean;
+  sentAt: string;
+  readAt?: string;
+}
+
+export interface Connection {
+  id: number;
+  requesterId: number;
+  recipientId: number;
+  requesterName: string;
+  recipientName: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'blocked';
+  createdAt: string;
 }
