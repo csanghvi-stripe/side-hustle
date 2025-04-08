@@ -28,6 +28,15 @@ export interface Resource {
   source: string;
 }
 
+export interface SuccessStory {
+  name: string;  
+  background: string;
+  journey: string;
+  outcome: string;
+  profileUrl?: string;
+  imageUrl?: string;
+}
+
 export interface MonetizationOpportunity {
   id: string;
   title: string;
@@ -39,6 +48,7 @@ export interface MonetizationOpportunity {
   riskLevel: RiskLevel;
   stepsToStart: string[];
   resources: Resource[];
+  successStories?: SuccessStory[];
 }
 
 export interface MonetizationResults {
