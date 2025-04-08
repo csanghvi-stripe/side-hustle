@@ -47,6 +47,7 @@ export default function AppHeader() {
     { name: "Discover", path: "/" },
     { name: "Community", path: "/community" },
     { name: "Resources", path: "/resources" },
+    { name: "My Opportunities", path: "/saved-opportunities" },
   ];
 
   const renderMobileMenu = () => {
@@ -62,7 +63,7 @@ export default function AppHeader() {
             {menuItems.map((item) => (
               <Button
                 key={item.path}
-                variant={location === item.path ? "default" : "ghost"}
+                variant={(location === item.path || (item.path === "/" && location === "")) ? "default" : "ghost"}
                 className="justify-start"
                 onClick={() => {
                   navigate(item.path);
@@ -132,7 +133,7 @@ export default function AppHeader() {
             {menuItems.map((item) => (
               <Button
                 key={item.path}
-                variant={location === item.path ? "default" : "ghost"}
+                variant={(location === item.path || (item.path === "/" && location === "")) ? "default" : "ghost"}
                 asChild
               >
                 <Link href={item.path}>{item.name}</Link>

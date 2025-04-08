@@ -2,22 +2,60 @@ import React, { useState } from "react";
 import { MonetizationResults, OpportunityType } from "@/types";
 import OpportunityCard from "./OpportunityCard";
 import UserMatchCard from "./UserMatchCard";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { BookmarkPlus, BookmarkCheck, ArrowRight, RefreshCw } from "lucide-react";
+import { Link } from "wouter";
 
 interface ResultsDisplayProps {
   results: MonetizationResults;
   onReset: () => void;
+  saved?: boolean;
+  onSave?: () => void;
 }
 
 type TabKey = "all" | OpportunityType.FREELANCE | OpportunityType.DIGITAL_PRODUCT | OpportunityType.CONTENT | OpportunityType.SERVICE;
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => {
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset, saved = false, onSave }) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>("all");
-
+  const { toast } = useToast();
+  
   const filteredOpportunities = activeTab === "all" 
     ? results.opportunities 
     : results.opportunities.filter(opp => opp.type === activeTab);
 
   const skillsList = results.userProfile.skills.join(", ");
+  
+  // Save results mutation for authenticated users
+  const saveResultsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/opportunities", {
+        opportunityData: results,
+        createdAt: new Date().toISOString(),
+        shared: false // Default to not sharing
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      toast({
+        title: "Saved successfully",
+        description: "You can view your saved opportunities in your profile",
+      });
+      if (onSave) onSave();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to save",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-100">
@@ -108,26 +146,46 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset }) => 
           </div>
         )}
 
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={onReset}
-            className="inline-flex items-center px-4 py-2 border border-neutral-300 text-sm font-medium rounded-md shadow-sm text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-          >
-            <svg
-              className="mr-2 h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+        <div className="flex justify-center gap-4 mt-8">
+          {user && (
+            <Button
+              onClick={() => saveResultsMutation.mutate()}
+              disabled={saveResultsMutation.isPending || saved}
+              variant={saved ? "outline" : "default"}
+              className={saved ? "bg-green-50 border-green-200 text-green-700" : ""}
             >
-              <path d="M2.5 2v6h6M21.5 22v-6h-6" />
-              <path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2" />
-            </svg>
+              {saved ? (
+                <>
+                  <BookmarkCheck className="mr-2 h-4 w-4" />
+                  Saved
+                </>
+              ) : saveResultsMutation.isPending ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <BookmarkPlus className="mr-2 h-4 w-4" />
+                  Save Results
+                </>
+              )}
+            </Button>
+          )}
+          
+          {user && saved && (
+            <Button variant="outline" asChild>
+              <Link href="/saved-opportunities">
+                View Saved
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+          
+          <Button variant="outline" onClick={onReset}>
+            <RefreshCw className="mr-2 h-4 w-4" />
             Start New Search
-          </button>
+          </Button>
         </div>
         
         {/* Similar Users Section */}

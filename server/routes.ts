@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateMonetizationOpportunities } from "./api/anthropic";
 import { setupAuth } from "./auth";
-import { insertUserProfileSchema } from "@shared/schema";
+import { insertUserProfileSchema, insertMonetizationOpportunitySchema } from "@shared/schema";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
@@ -174,6 +174,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching opportunities:", error);
       return res.status(500).json({
         message: "Failed to fetch opportunities",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Save a monetization opportunity
+  app.post("/api/opportunities", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Validate request body
+      const schema = z.object({
+        opportunityData: z.any(),
+        shared: z.boolean().default(false),
+        createdAt: z.string().datetime().optional()
+      });
+      
+      const validatedData = schema.parse(req.body);
+      
+      const opportunity = await storage.saveOpportunity({
+        userId,
+        opportunityData: validatedData.opportunityData,
+        shared: validatedData.shared,
+        createdAt: validatedData.createdAt || new Date().toISOString()
+      });
+      
+      return res.status(201).json(opportunity);
+    } catch (error) {
+      console.error("Error saving opportunity:", error);
+      return res.status(500).json({
+        message: "Failed to save opportunity",
         error: error instanceof Error ? error.message : String(error)
       });
     }

@@ -3,17 +3,71 @@ import AppHeader from "@/components/AppHeader";
 import DiscoveryForm from "@/components/DiscoveryForm";
 import ResultsDisplay from "@/components/ResultsDisplay";
 import { MonetizationResults } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { BookmarkPlus, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 
 const Home: React.FC = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [results, setResults] = useState<MonetizationResults | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const handleResultsReceived = (newResults: MonetizationResults) => {
     setResults(newResults);
+    setSaved(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleReset = () => {
     setResults(null);
+    setSaved(false);
+  };
+  
+  // Save the current search results
+  const saveOpportunityMutation = useMutation({
+    mutationFn: async () => {
+      if (!results) return;
+      
+      const res = await apiRequest("POST", "/api/opportunities", {
+        opportunityData: results,
+        shared: false // Default to private
+      });
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      setSaved(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      toast({
+        title: "Recommendations saved!",
+        description: "You can view your saved opportunities in your profile."
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to save",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Handle the save button click
+  const handleSave = () => {
+    if (results && user) {
+      saveOpportunityMutation.mutate();
+    } else if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to save your search results",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -24,7 +78,12 @@ const Home: React.FC = () => {
         {!results ? (
           <DiscoveryForm onResultsReceived={handleResultsReceived} />
         ) : (
-          <ResultsDisplay results={results} onReset={handleReset} />
+          <ResultsDisplay 
+            results={results} 
+            onReset={handleReset} 
+            saved={saved}
+            onSave={handleSave}
+          />
         )}
       </main>
       
