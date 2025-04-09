@@ -10,6 +10,9 @@ import SettingsPage from "@/pages/settings-page";
 import SavedOpportunitiesPage from "@/pages/saved-opportunities-page";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import CoachPage from "@/pages/coach-page";
+import SubscriptionPage from "@/pages/subscription-page";
+import ResourcesPage from "@/pages/resources-page";
+import CommunityPage from "@/pages/community-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
 import AppHeader from "@/components/AppHeader";
@@ -26,6 +29,9 @@ function Router() {
           <ProtectedRoute path="/saved-opportunities" component={SavedOpportunitiesPage} />
           <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
           <ProtectedRoute path="/coach" component={CoachPage} />
+          <ProtectedRoute path="/subscription" component={SubscriptionPage} />
+          <ProtectedRoute path="/resources" component={ResourcesPage} />
+          <ProtectedRoute path="/community" component={CommunityPage} />
           <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
         </Switch>

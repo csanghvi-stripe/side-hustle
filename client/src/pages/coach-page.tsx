@@ -312,7 +312,10 @@ const SubscriptionRequired = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            <Button className="min-w-[200px]">
+            <Button 
+              className="min-w-[200px]"
+              onClick={() => window.location.href = '/subscription'}
+            >
               Upgrade Now
             </Button>
             <div>
@@ -485,7 +488,12 @@ export default function CoachPage() {
                   </p>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
-                  <Button className="w-full">Upgrade Now</Button>
+                  <Button 
+                    className="w-full"
+                    onClick={() => window.location.href = '/subscription'}
+                  >
+                    Upgrade Now
+                  </Button>
                   <Button 
                     variant="outline" 
                     className="w-full"
