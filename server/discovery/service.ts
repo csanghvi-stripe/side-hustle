@@ -5,7 +5,8 @@
  * and coordination of various opportunity sources.
  */
 
-import { DiscoveryPreferences, DiscoveryResults, OpportunitySource, RawOpportunity, SimilarUser } from './types';
+import { DiscoveryPreferences, DiscoveryResults, OpportunitySource, RawOpportunity, SimilarUser, CacheEntry } from './types';
+import { RiskLevel } from '../../shared/schema';
 import { db } from '../db';
 import { logger } from './utils';
 import { monetizationOpportunities, users } from '@shared/schema';
@@ -235,7 +236,8 @@ class DiscoveryService {
   }
   
   /**
-   * Filter and score opportunities based on user preferences
+   * Filter and score opportunities based on user preferences 
+   * Returns opportunities scored and categorized by relevance
    */
   private filterAndScoreOpportunities(
     opportunities: RawOpportunity[],
@@ -257,11 +259,224 @@ class DiscoveryService {
     // Filter out duplicates
     const uniqueOpportunities = opportunities.filter(opp => !previousIds.has(opp.id));
     
-    // TODO: Add more filtering logic based on preferences
-    // For example, filter by time requirement, risk level, etc.
+    // Enhanced filtering based on preferences
+    const filteredOpportunities = uniqueOpportunities.filter(opp => {
+      // Filter by time requirement if specified
+      if (preferences.timeAvailability !== 'any') {
+        const maxHoursPerWeek = this.parseTimeAvailability(preferences.timeAvailability);
+        if (opp.timeRequired && opp.timeRequired.min > maxHoursPerWeek) {
+          return false;
+        }
+      }
+      
+      // Filter by risk tolerance if specified
+      if (preferences.riskAppetite !== 'any') {
+        const userRiskLevel = this.getRiskLevelValue(preferences.riskAppetite);
+        const opportunityRiskLevel = this.getRiskLevelValue(opp.entryBarrier);
+        
+        // Only show opportunities with risk level at or below user's tolerance
+        if (opportunityRiskLevel > userRiskLevel) {
+          return false;
+        }
+      }
+      
+      // Filter by income goals if specified
+      if (preferences.incomeGoals > 0) {
+        // Check if the opportunity can potentially meet income goals
+        // Convert estimated income to monthly basis for comparison
+        const monthlyIncomeMin = this.convertToMonthlyIncome(
+          opp.estimatedIncome.min, 
+          opp.estimatedIncome.timeframe
+        );
+        
+        // Only keep opportunities that can potentially meet at least 25% of income goals
+        if (monthlyIncomeMin < (preferences.incomeGoals * 0.25)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
     
-    // Sort by relevance (for now, just return the first 10)
-    return uniqueOpportunities.slice(0, 10);
+    // Score the opportunities by relevance to user
+    const scoredOpportunities = filteredOpportunities.map(opp => {
+      // Initial score based on skill match
+      let score = this.calculateSkillMatchScore(opp.requiredSkills, preferences.skills);
+      
+      // Adjust score based on nice-to-have skills
+      if (opp.niceToHaveSkills && opp.niceToHaveSkills.length > 0) {
+        const niceToHaveScore = this.calculateSkillMatchScore(opp.niceToHaveSkills, preferences.skills) * 0.5;
+        score += niceToHaveScore;
+      }
+      
+      // Adjust based on income potential (weight: 20%)
+      const incomeScore = this.calculateIncomeScore(opp.estimatedIncome, preferences.incomeGoals);
+      score += incomeScore * 0.2;
+      
+      // Adjust based on time requirement match (weight: 15%)
+      const timeScore = this.calculateTimeScore(opp.timeRequired, preferences.timeAvailability);
+      score += timeScore * 0.15;
+      
+      // Adjust based on risk level match (weight: 15%)
+      const riskScore = this.calculateRiskScore(opp.entryBarrier, preferences.riskAppetite);
+      score += riskScore * 0.15;
+      
+      // Return opportunity with calculated score
+      return {
+        ...opp,
+        matchScore: Math.min(1, Math.max(0, score)) // Ensure score is between 0-1
+      };
+    });
+    
+    // Sort by score (highest first)
+    const sortedOpportunities = scoredOpportunities.sort((a, b) => 
+      (b.matchScore || 0) - (a.matchScore || 0)
+    );
+    
+    // Return top opportunities (max 15)
+    return sortedOpportunities.slice(0, 15);
+  }
+  
+  /**
+   * Calculate skill match score between required skills and user skills
+   * @returns Score between 0-1
+   */
+  private calculateSkillMatchScore(requiredSkills: string[], userSkills: string[]): number {
+    if (!requiredSkills || requiredSkills.length === 0) return 0.5; // Neutral score for no skills
+    
+    // Normalize skills to lowercase for comparison
+    const normalizedRequiredSkills = requiredSkills.map(s => s.toLowerCase());
+    const normalizedUserSkills = userSkills.map(s => s.toLowerCase());
+    
+    // Calculate match percentage
+    const matchCount = normalizedRequiredSkills.filter(skill => 
+      normalizedUserSkills.includes(skill)
+    ).length;
+    
+    return matchCount / normalizedRequiredSkills.length;
+  }
+  
+  /**
+   * Calculate income potential score
+   * @returns Score between 0-1
+   */
+  private calculateIncomeScore(
+    estimatedIncome: { min: number, max: number, timeframe: string },
+    incomeGoal: number
+  ): number {
+    if (!incomeGoal) return 0.5; // Neutral score if no goal
+    
+    // Convert to monthly income
+    const monthlyIncome = this.convertToMonthlyIncome(
+      (estimatedIncome.min + estimatedIncome.max) / 2, // Use average
+      estimatedIncome.timeframe
+    );
+    
+    // Calculate ratio of income potential to goal
+    const ratio = monthlyIncome / incomeGoal;
+    
+    // Score based on how close to or exceeding the goal
+    if (ratio >= 1.5) return 1.0; // Exceeds goal by 50%
+    if (ratio >= 1.0) return 0.9; // Meets goal
+    if (ratio >= 0.75) return 0.8; // 75% of goal
+    if (ratio >= 0.5) return 0.6; // 50% of goal
+    if (ratio >= 0.25) return 0.4; // 25% of goal
+    return 0.2; // Less than 25% of goal
+  }
+  
+  /**
+   * Calculate time requirement match score
+   * @returns Score between 0-1
+   */
+  private calculateTimeScore(
+    timeRequired: { min: number, max: number },
+    timeAvailability: string
+  ): number {
+    const availableHours = this.parseTimeAvailability(timeAvailability);
+    if (availableHours === 0) return 0.5; // Neutral score if not specified
+    
+    // Use the average of min/max required hours
+    const requiredHours = (timeRequired.min + timeRequired.max) / 2;
+    
+    // Calculate how well the time requirement fits availability
+    const ratio = requiredHours / availableHours;
+    
+    // Score based on how well it fits
+    if (ratio <= 0.5) return 0.9; // Uses half or less of available time
+    if (ratio <= 0.75) return 0.8; // Uses 75% or less of available time
+    if (ratio <= 0.9) return 0.7; // Uses 90% or less of available time
+    if (ratio <= 1.0) return 0.6; // Just fits within available time
+    if (ratio <= 1.25) return 0.4; // Slightly exceeds available time
+    if (ratio <= 1.5) return 0.2; // Moderately exceeds available time
+    return 0.1; // Significantly exceeds available time
+  }
+  
+  /**
+   * Calculate risk match score
+   * @returns Score between 0-1
+   */
+  private calculateRiskScore(entryBarrier: RiskLevel, riskAppetite: string): number {
+    const opportunityRisk = this.getRiskLevelValue(entryBarrier);
+    const userRiskTolerance = this.getRiskLevelValue(riskAppetite);
+    
+    // Calculate how well the risk level matches user tolerance
+    const diff = userRiskTolerance - opportunityRisk;
+    
+    if (diff < -1) return 0.2; // Way too risky
+    if (diff === -1) return 0.4; // Slightly too risky
+    if (diff === 0) return 1.0; // Perfect match
+    if (diff === 1) return 0.8; // Safer than user is willing to take
+    return 0.6; // Much safer than user is willing to take
+  }
+  
+  /**
+   * Convert risk level to numeric value
+   * @returns 1=LOW, 2=MEDIUM, 3=HIGH
+   */
+  private getRiskLevelValue(risk: string): number {
+    if (typeof risk !== 'string') return 2; // Default to medium
+    
+    const riskLower = risk.toLowerCase();
+    if (riskLower === 'low' || riskLower === RiskLevel.LOW.toLowerCase()) return 1;
+    if (riskLower === 'high' || riskLower === RiskLevel.HIGH.toLowerCase()) return 3;
+    return 2; // Default to medium
+  }
+  
+  /**
+   * Parse time availability string to hours per week
+   * @returns Hours per week
+   */
+  private parseTimeAvailability(time: string): number {
+    if (!time || time === 'any') return 0;
+    
+    const timeLower = time.toLowerCase();
+    if (timeLower.includes('full')) return 40;
+    if (timeLower.includes('part')) return 20;
+    if (timeLower.includes('evenings')) return 10;
+    if (timeLower.includes('weekends')) return 16;
+    
+    // Try to extract hours
+    const hours = parseInt(time);
+    if (!isNaN(hours)) return hours;
+    
+    return 0; // Default if unparseable
+  }
+  
+  /**
+   * Convert income to monthly basis for comparison
+   */
+  private convertToMonthlyIncome(amount: number, timeframe: string): number {
+    if (!timeframe) return amount;
+    
+    const timeframeLower = timeframe.toLowerCase();
+    if (timeframeLower === 'hour') return amount * 160; // 40h × 4 weeks
+    if (timeframeLower === 'day') return amount * 20; // 5 days × 4 weeks
+    if (timeframeLower === 'week') return amount * 4;
+    if (timeframeLower === 'month') return amount;
+    if (timeframeLower === 'year') return amount / 12;
+    if (timeframeLower === 'project') return amount / 3; // Assume 3 months per project avg
+    
+    return amount; // Default if timeframe unknown
   }
 }
 

@@ -29,8 +29,8 @@ export function sleep(ms: number): Promise<void> {
 export function safeJsonParse<T>(text: string, defaultValue: T): T {
   try {
     return JSON.parse(text) as T;
-  } catch (e) {
-    logger.error(`Failed to parse JSON: ${e.message}`);
+  } catch (error) {
+    logger.error(`Failed to parse JSON: ${error instanceof Error ? error.message : String(error)}`);
     return defaultValue;
   }
 }
@@ -102,4 +102,48 @@ export function normalizeString(str: string): string {
 // Create a unique ID with prefix
 export function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+}
+
+/**
+ * Calculate readability score of a text (Flesch-Kincaid)
+ * Higher scores (max 100) indicate easier readability
+ */
+export function calculateReadability(text: string): number {
+  try {
+    if (!text || typeof text !== 'string') return 0;
+    
+    // Clean the text
+    const cleanText = text.replace(/[^\w\s.!?]/g, '');
+    
+    // Count words, sentences, syllables
+    const words = cleanText.split(/\s+/).filter(w => w.length > 0);
+    const sentences = cleanText.split(/[.!?]+/).filter(s => s.length > 0);
+    
+    // If we can't count words or sentences, return 0
+    if (words.length === 0 || sentences.length === 0) return 0;
+    
+    // Count syllables (simplified approach)
+    let syllables = 0;
+    for (const word of words) {
+      // Count vowel groups as syllables (simplified)
+      const vowelGroups = word.toLowerCase().match(/[aeiouy]+/g);
+      syllables += vowelGroups ? vowelGroups.length : 1;
+      
+      // Words ending in silent e
+      if (word.length > 2 && word.match(/[^aeiou]e$/i)) {
+        syllables -= 1;
+      }
+    }
+    
+    // Flesch Reading Ease formula
+    const asl = words.length / sentences.length;
+    const asw = syllables / words.length;
+    const score = 206.835 - (1.015 * asl) - (84.6 * asw);
+    
+    // Clamp between 0-100
+    return Math.max(0, Math.min(100, score));
+  } catch (error) {
+    logger.error(`Error calculating readability: ${error instanceof Error ? error.message : String(error)}`);
+    return 0;
+  }
 }

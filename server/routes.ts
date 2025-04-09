@@ -885,6 +885,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get personalized opportunities based on user profile and preferences
+  app.post("/api/discovery/personalized", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Get the discovery preferences from the request body
+      const preferences = req.body;
+      
+      // Validate preferences
+      if (!preferences.skills || !Array.isArray(preferences.skills) || preferences.skills.length === 0) {
+        return res.status(400).json({ 
+          message: "Invalid request: skills must be a non-empty array" 
+        });
+      }
+
+      // Set up user discovery input
+      const userInput = {
+        userId,
+        skills: preferences.skills,
+        timeAvailability: preferences.timeAvailability || "any",
+        riskAppetite: preferences.riskAppetite || "medium",
+        incomeGoals: preferences.incomeGoals || 0,
+        workPreference: preferences.workPreference,
+        additionalDetails: preferences.additionalDetails,
+        discoverable: preferences.discoverable || false,
+        useEnhanced: preferences.useEnhanced || false
+      };
+
+      // Call the discovery service to get personalized opportunities
+      const results = await discoveryService.discoverOpportunities(userId, userInput);
+
+      return res.status(200).json(results);
+    } catch (error) {
+      console.error("Error fetching personalized opportunities:", error);
+      return res.status(500).json({
+        message: "Failed to fetch personalized opportunities",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

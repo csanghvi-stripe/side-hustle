@@ -25,9 +25,13 @@ export interface RawOpportunity {
   };
   entryBarrier: RiskLevel;
   stepsToStart: string[];
-  resources: string[];
+  resourceLinks: string[]; // Links to resources (URLs)
   successStories?: string[];
   matchScore?: number; // Added during matching process
+  location?: string; // Optional location information
+  competition?: string; // Competition level information
+  skillsRequired?: string[]; // Alternative property name for skills
+  sourceName?: string; // Name of the source that provided this opportunity
 }
 
 // User preferences for opportunity discovery
@@ -59,10 +63,62 @@ export interface DiscoveryResults {
   enhanced: boolean;
 }
 
-// Interface for opportunity sources
+// User input for discovery process
+export interface UserDiscoveryInput {
+  userId?: number;
+  skills: string[];
+  timeAvailability: string;
+  riskAppetite: string;
+  riskTolerance?: string; // Alternative name for riskAppetite
+  incomeGoals: number;
+  workPreference?: string;
+  additionalDetails?: string;
+  discoverable?: boolean;
+  useEnhanced?: boolean;
+}
+
+// Added structure for success stories
+export interface SuccessStory {
+  username: string;
+  shortStory: string;
+  income: number;
+  timeframe: string;
+  daysToFirstDollar: number;
+}
+
+// Added structure for learning resources
+export interface Resource {
+  title: string;
+  url: string;
+  type: 'article' | 'video' | 'course' | 'tool' | 'other';
+  isPaid?: boolean;
+  free?: boolean; // Alternative name for isPaid (inverse logic)
+  price?: number;
+  duration?: string;
+  source?: string;
+  description?: string;
+}
+
+// Enhanced opportunity with more details
+export interface EnrichedOpportunity extends Omit<RawOpportunity, 'resourceLinks' | 'successStories'> {
+  successStories: SuccessStory[];
+  resources: Resource[];
+  resourceLinks?: string[]; // Optional backward compatibility
+  skillGaps: string[];
+  learningPaths: string[];
+  completionTimeEstimate: string;
+  timeToFirstDollar: string;
+  category: OpportunityCategory;
+}
+
+// Interface for opportunity sources with extended properties
 export interface OpportunitySource {
   name: string;
   id: string;
+  description?: string;
+  capabilities?: string[];
+  isEnabled?: boolean;
+  active?: boolean;
   getOpportunities(skills: string[], preferences: DiscoveryPreferences): Promise<RawOpportunity[]>;
 }
 
