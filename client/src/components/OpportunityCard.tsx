@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MonetizationOpportunity, OpportunityType, RiskLevel } from "@/types";
+import { MonetizationOpportunity, OpportunityType, RiskLevel, RiskLevelObject } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -178,8 +178,14 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
             <div>
               <p className="text-sm text-neutral-500">Risk Level</p>
               <p className="font-medium flex items-center">
-                <span className={cn("inline-block w-2 h-2 rounded-full mr-1", riskLevelColors[opportunity.riskLevel])}></span>
-                {opportunity.riskLevel}
+                <span className={cn("inline-block w-2 h-2 rounded-full mr-1", 
+                  typeof opportunity.riskLevel === 'string' 
+                    ? riskLevelColors[opportunity.riskLevel as RiskLevel] 
+                    : riskLevelColors[RiskLevel.MEDIUM]
+                )}></span>
+                {typeof opportunity.riskLevel === 'string'
+                  ? opportunity.riskLevel
+                  : (opportunity.riskLevel as RiskLevelObject)?.high ? 'High' : (opportunity.riskLevel as RiskLevelObject)?.medium ? 'Medium' : 'Low'}
               </p>
             </div>
           </div>

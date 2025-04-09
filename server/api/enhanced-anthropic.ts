@@ -251,7 +251,9 @@ Please analyze my profile and the web research data to suggest highly personaliz
       description: opp.description,
       incomePotential: opp.incomePotential,
       startupCost: opp.startupCost,
-      riskLevel: opp.riskLevel as RiskLevel,
+      riskLevel: typeof opp.riskLevel === 'string' 
+        ? opp.riskLevel as RiskLevel 
+        : opp.riskLevel?.high ? RiskLevel.HIGH : opp.riskLevel?.medium ? RiskLevel.MEDIUM : RiskLevel.LOW,
       stepsToStart: Array.isArray(opp.stepsToStart) ? opp.stepsToStart : [],
       resources: Array.isArray(opp.resources) ? opp.resources : [],
       successStories: Array.isArray(opp.successStories) ? opp.successStories : [],

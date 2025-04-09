@@ -27,6 +27,12 @@ export enum RiskLevel {
   HIGH = "High"
 }
 
+export interface RiskLevelObject {
+  low?: boolean;
+  medium?: boolean;
+  high?: boolean;
+}
+
 export interface Resource {
   title: string;
   url: string;
@@ -50,7 +56,7 @@ export interface MonetizationOpportunity {
   description: string;
   incomePotential: string;
   startupCost: string;
-  riskLevel: RiskLevel;
+  riskLevel: RiskLevel | RiskLevelObject;
   stepsToStart: string[];
   resources: Resource[];
   successStories?: SuccessStory[];
