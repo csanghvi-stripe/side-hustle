@@ -4,7 +4,7 @@
 
 import axios from "axios";
 import { BaseOpportunitySource } from "./base-source";
-import { UserDiscoveryInput, RawOpportunity } from "../types";
+import { UserDiscoveryInput, RawOpportunity, DiscoveryPreferences } from "../types";
 import { logger } from "../utils";
 
 /**
@@ -15,14 +15,9 @@ export class GumroadSource extends BaseOpportunitySource {
   
   constructor(apiKey?: string) {
     super(
-      'gumroad',
       'Gumroad',
-      'https://app.gumroad.com',
-      'DIGITAL_PRODUCT',
-      {
-        logo: 'https://assets.gumroad.com/packs/static/logo-70bb1a3e24e64626d874.svg',
-        apiKey
-      }
+      'gumroad',
+      'https://app.gumroad.com'
     );
     
     // Initialize axios instance
@@ -47,6 +42,34 @@ export class GumroadSource extends BaseOpportunitySource {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+  
+  /**
+   * Required implementation of the abstract method from BaseOpportunitySource
+   */
+  public async getOpportunities(
+    skills: string[], 
+    preferences: DiscoveryPreferences
+  ): Promise<RawOpportunity[]> {
+    try {
+      logger.info(`[${this.id}] Getting opportunities for skills: ${skills.join(', ')}`);
+      
+      // Create a minimal input for the fetchOpportunities method
+      const input: UserDiscoveryInput = {
+        userId: 0,
+        skills: skills,
+        timeAvailability: preferences.timeAvailability,
+        riskAppetite: preferences.riskAppetite,
+        incomeGoals: preferences.incomeGoals,
+        workPreference: preferences.workPreference
+      };
+      
+      // Call the existing implementation
+      return await this.fetchOpportunities(input);
+    } catch (error) {
+      logger.error(`Error in getOpportunities for ${this.id}: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
     }
   }
   

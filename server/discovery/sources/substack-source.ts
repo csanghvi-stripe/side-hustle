@@ -4,7 +4,7 @@
 
 import axios from "axios";
 import { BaseOpportunitySource } from "./base-source";
-import { UserDiscoveryInput, RawOpportunity } from "../types";
+import { UserDiscoveryInput, RawOpportunity, DiscoveryPreferences } from "../types";
 import { logger } from "../utils";
 
 /**
@@ -13,13 +13,9 @@ import { logger } from "../utils";
 export class SubstackSource extends BaseOpportunitySource {
   constructor() {
     super(
-      'substack',
       'Substack',
-      'https://substack.com',
-      'CONTENT',
-      {
-        logo: 'https://substack.com/img/substack.png'
-      }
+      'substack',
+      'https://substack.com'
     );
   }
   
@@ -34,6 +30,34 @@ export class SubstackSource extends BaseOpportunitySource {
       return response.status === 200;
     } catch (error) {
       return false;
+    }
+  }
+  
+  /**
+   * Required implementation of the abstract method from BaseOpportunitySource
+   */
+  public async getOpportunities(
+    skills: string[], 
+    preferences: DiscoveryPreferences
+  ): Promise<RawOpportunity[]> {
+    try {
+      logger.info(`[${this.id}] Getting opportunities for skills: ${skills.join(', ')}`);
+      
+      // Create a minimal input for the fetchOpportunities method
+      const input: UserDiscoveryInput = {
+        userId: 0,
+        skills: skills,
+        timeAvailability: preferences.timeAvailability,
+        riskAppetite: preferences.riskAppetite,
+        incomeGoals: preferences.incomeGoals,
+        workPreference: preferences.workPreference
+      };
+      
+      // Call the existing implementation
+      return await this.fetchOpportunities(input);
+    } catch (error) {
+      logger.error(`Error in getOpportunities for ${this.id}: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
     }
   }
   
