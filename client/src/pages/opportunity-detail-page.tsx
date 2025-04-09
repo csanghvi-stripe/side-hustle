@@ -326,7 +326,7 @@ const OpportunityDetailPage = () => {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container max-w-6xl mx-auto py-8 px-4 sm:px-6">
       <div className="mb-6">
         <Button variant="ghost" size="sm" asChild className="mb-2">
           <Link href="/saved-opportunities">
@@ -645,6 +645,121 @@ const OpportunityDetailPage = () => {
                     </CardContent>
                   </Card>
                 )}
+                
+                {/* Speak with an Expert Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <MessageSquare className="w-5 h-5 mr-2 text-primary" />
+                      Speak with an Expert
+                    </CardTitle>
+                    <CardDescription>
+                      Get personalized guidance from experienced professionals in this field
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg mb-6">
+                      <div className="flex items-center">
+                        <div className="bg-primary text-white p-3 rounded-lg mr-4">
+                          <MessageSquare className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-lg">Book a 1:1 Coaching Session</h3>
+                          <p className="text-sm text-neutral-600">Get personalized advice to accelerate your success</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => {
+                          toast({
+                            title: "Coming soon!",
+                            description: "Coaching sessions will be available in the next update.",
+                          });
+                        }}
+                      >
+                        Book a Call
+                      </Button>
+                    </div>
+                    
+                    <h3 className="font-medium mb-4">Community Experts</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="border rounded-lg p-4 flex items-start space-x-4 hover:border-primary/50 hover:bg-primary/5 transition cursor-pointer"
+                        onClick={() => {
+                          toast({
+                            title: "Message sent",
+                            description: "Your request to connect with Jessica has been sent.",
+                          });
+                        }}
+                      >
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0 font-semibold">
+                          J
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Jessica Wang</h4>
+                          <p className="text-xs text-neutral-500">5 years experience in {opportunityData.type}</p>
+                          <div className="flex items-center mt-2">
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 mr-1 text-xs">Top Mentor</Badge>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">Available</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg p-4 flex items-start space-x-4 hover:border-primary/50 hover:bg-primary/5 transition cursor-pointer"
+                        onClick={() => {
+                          toast({
+                            title: "Message sent",
+                            description: "Your request to connect with Michael has been sent.",
+                          });
+                        }}
+                      >
+                        <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0 font-semibold">
+                          M
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Michael Rodriguez</h4>
+                          <p className="text-xs text-neutral-500">Founder of a successful {opportunityData.type} business</p>
+                          <div className="flex items-center mt-2">
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700 text-xs">Strategy Expert</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg p-4 flex items-start space-x-4 hover:border-primary/50 hover:bg-primary/5 transition cursor-pointer"
+                        onClick={() => {
+                          toast({
+                            title: "Message sent",
+                            description: "Your request to connect with Priya has been sent.",
+                          });
+                        }}
+                      >
+                        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0 font-semibold">
+                          P
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Priya Sharma</h4>
+                          <p className="text-xs text-neutral-500">Career coach specializing in {opportunityData.type}</p>
+                          <div className="flex items-center mt-2">
+                            <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">Career Transition</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          toast({
+                            title: "Premium feature",
+                            description: "Unlock premium to access our full network of experts.",
+                          });
+                        }}
+                      >
+                        View All Community Experts
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               {/* ROI Analysis Tab */}

@@ -54,26 +54,27 @@ export default function AnalyticsDashboard() {
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
-        <Button variant="outline" onClick={() => window.print()} className="hidden md:flex">
-          Export Report
-        </Button>
-      </div>
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-6xl mx-auto px-4 py-10">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
+          <Button variant="outline" onClick={() => window.print()} className="hidden md:flex">
+            Export Report
+          </Button>
+        </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="w-full mb-8"
-      >
-        <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="progress">Progress</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-        </TabsList>
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full mb-8"
+        >
+          <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="progress">Progress</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6">
           {/* Key Metrics */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {isLoading ? (
@@ -205,112 +206,113 @@ export default function AnalyticsDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="progress" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Progress tracking list */}
-            <div className="md:col-span-1">
-              <ProgressTrackingList 
-                onSelect={handleProgressSelect}
-                onCreateNew={() => setIsCreateProgressFormOpen(true)}
-              />
-            </div>
-            
-            {/* Selected progress details */}
-            <div className="md:col-span-2 space-y-6">
-              {selectedProgress ? (
-                <>
+          <TabsContent value="progress" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Progress tracking list */}
+              <div className="md:col-span-1">
+                <ProgressTrackingList 
+                  onSelect={handleProgressSelect}
+                  onCreateNew={() => setIsCreateProgressFormOpen(true)}
+                />
+              </div>
+              
+              {/* Selected progress details */}
+              <div className="md:col-span-2 space-y-6">
+                {selectedProgress ? (
+                  <>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{selectedProgress.opportunityTitle}</CardTitle>
+                        <CardDescription>
+                          Started: {new Date(selectedProgress.startDate).toLocaleDateString()}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Current Stage</p>
+                            <p className="font-medium">{selectedProgress.currentStage}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
+                            <p className="font-medium">{formatCurrency(selectedProgress.totalRevenue || 0)}</p>
+                          </div>
+                          {selectedProgress.timeInvested && (
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-1">Time Invested</p>
+                              <p className="font-medium">{selectedProgress.timeInvested} hours</p>
+                            </div>
+                          )}
+                          {selectedProgress.costInvested && (
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-1">Cost Invested</p>
+                              <p className="font-medium">{formatCurrency(selectedProgress.costInvested)}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {selectedProgress.notes && (
+                          <div className="mt-4 pt-4 border-t">
+                            <p className="text-sm text-muted-foreground mb-1">Notes</p>
+                            <p>{selectedProgress.notes}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Milestones */}
+                    <MilestoneTimeline progressId={selectedProgress.id} />
+                  </>
+                ) : (
                   <Card>
-                    <CardHeader>
-                      <CardTitle>{selectedProgress.opportunityTitle}</CardTitle>
-                      <CardDescription>
-                        Started: {new Date(selectedProgress.startDate).toLocaleDateString()}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Current Stage</p>
-                          <p className="font-medium">{selectedProgress.currentStage}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
-                          <p className="font-medium">{formatCurrency(selectedProgress.totalRevenue || 0)}</p>
-                        </div>
-                        {selectedProgress.timeInvestedHours && (
-                          <div>
-                            <p className="text-sm text-muted-foreground mb-1">Time Invested</p>
-                            <p className="font-medium">{selectedProgress.timeInvestedHours} hours</p>
-                          </div>
-                        )}
-                        {selectedProgress.costInvested && (
-                          <div>
-                            <p className="text-sm text-muted-foreground mb-1">Cost Invested</p>
-                            <p className="font-medium">{formatCurrency(selectedProgress.costInvested)}</p>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {selectedProgress.notes && (
-                        <div className="mt-4 pt-4 border-t">
-                          <p className="text-sm text-muted-foreground mb-1">Notes</p>
-                          <p>{selectedProgress.notes}</p>
-                        </div>
-                      )}
+                    <CardContent className="flex flex-col items-center justify-center text-center py-20">
+                      <h3 className="text-lg font-medium mb-2">No progress tracking selected</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Select a progress tracking from the list or create a new one to view details
+                      </p>
+                      <Button onClick={() => setIsCreateProgressFormOpen(true)}>
+                        Create New Progress Tracking
+                      </Button>
                     </CardContent>
                   </Card>
-                  
-                  {/* Milestones */}
-                  <MilestoneTimeline progressId={selectedProgress.id} />
-                </>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center text-center py-20">
-                    <h3 className="text-lg font-medium mb-2">No progress tracking selected</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Select a progress tracking from the list or create a new one to view details
-                    </p>
-                    <Button onClick={() => setIsCreateProgressFormOpen(true)}>
-                      Create New Progress Tracking
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="revenue" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Progress/Opportunity select list (smaller version) */}
-            <div className="md:col-span-1">
-              <ProgressTrackingList 
-                onSelect={handleProgressSelect}
-                onCreateNew={() => setIsCreateProgressFormOpen(true)}
-              />
+          <TabsContent value="revenue" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Progress/Opportunity select list (smaller version) */}
+              <div className="md:col-span-1">
+                <ProgressTrackingList 
+                  onSelect={handleProgressSelect}
+                  onCreateNew={() => setIsCreateProgressFormOpen(true)}
+                />
+              </div>
+              
+              {/* Income history and entry */}
+              <div className="md:col-span-2 space-y-6">
+                <IncomeHistoryTable 
+                  progressId={selectedProgress?.id || null}
+                  onAddIncomeClick={() => setIsIncomeFormOpen(true)}
+                />
+              </div>
             </div>
-            
-            {/* Income history and entry */}
-            <div className="md:col-span-2 space-y-6">
-              <IncomeHistoryTable 
-                progressId={selectedProgress?.id || null}
-                onAddIncomeClick={() => setIsIncomeFormOpen(true)}
-              />
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      {/* Modals */}
-      <CreateProgressForm 
-        isOpen={isCreateProgressFormOpen}
-        onClose={() => setIsCreateProgressFormOpen(false)}
-      />
-      
-      <IncomeEntryForm 
-        progressId={selectedProgress?.id || null}
-        isOpen={isIncomeFormOpen}
-        onClose={() => setIsIncomeFormOpen(false)}
-      />
+          </TabsContent>
+        </Tabs>
+        
+        {/* Modals */}
+        <CreateProgressForm 
+          isOpen={isCreateProgressFormOpen}
+          onClose={() => setIsCreateProgressFormOpen(false)}
+        />
+        
+        <IncomeEntryForm 
+          progressId={selectedProgress?.id || null}
+          isOpen={isIncomeFormOpen}
+          onClose={() => setIsIncomeFormOpen(false)}
+        />
+      </div>
     </div>
   );
 }
