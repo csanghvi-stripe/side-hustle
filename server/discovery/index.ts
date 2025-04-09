@@ -8,47 +8,25 @@
 // Export the discovery service
 export { discoveryService } from './service';
 
-// Import the source classes
-import { BaseOpportunitySource } from './sources/base-source';
+// Import source implementations
+import { UpworkSource } from './sources/upwork-source';
+import { GumroadSource } from './sources/gumroad-source';
+import { SubstackSource } from './sources/substack-source';
+import { MavenSource } from './sources/maven-source';
+import { PodiaSource } from './sources/podia-source';
+import { TeachableSource } from './sources/teachable-source';
+import { KajabiSource } from './sources/kajabi-source';
+import { ContraSource } from './sources/contra-source';
+import { IndieHackersSource } from './sources/indiehackers-source';
 import { discoveryService } from './service';
 
-// Define source implementations
-// This will be a minimal implementation for now
-
-class MinimalUpworkSource extends BaseOpportunitySource {
-  constructor() {
-    super("Upwork", "upwork", "https://www.upwork.com");
-  }
-  
-  async getOpportunities(skills: string[], preferences: any) {
-    // For now, return empty array since we don't have actual implementation
-    return [];
-  }
-}
-
-class MinimalGumroadSource extends BaseOpportunitySource {
-  constructor() {
-    super("Gumroad", "gumroad", "https://www.gumroad.com");
-  }
-  
-  async getOpportunities(skills: string[], preferences: any) {
-    // For now, return empty array since we don't have actual implementation
-    return [];
-  }
-}
-
-class MinimalSubstackSource extends BaseOpportunitySource {
-  constructor() {
-    super("Substack", "substack", "https://substack.com");
-  }
-  
-  async getOpportunities(skills: string[], preferences: any) {
-    // For now, return empty array since we don't have actual implementation
-    return [];
-  }
-}
-
-// Auto-register the sources
-discoveryService.registerSource(new MinimalUpworkSource());
-discoveryService.registerSource(new MinimalGumroadSource());
-discoveryService.registerSource(new MinimalSubstackSource());
+// Register all opportunity sources with the discovery service
+discoveryService.registerSource(new UpworkSource());
+discoveryService.registerSource(new GumroadSource());
+discoveryService.registerSource(new SubstackSource());
+discoveryService.registerSource(new MavenSource());
+discoveryService.registerSource(new PodiaSource());
+discoveryService.registerSource(new TeachableSource());
+discoveryService.registerSource(new KajabiSource());
+discoveryService.registerSource(new ContraSource());
+discoveryService.registerSource(new IndieHackersSource());

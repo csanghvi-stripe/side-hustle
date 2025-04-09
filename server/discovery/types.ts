@@ -45,6 +45,10 @@ export interface DiscoveryPreferences {
   discoverable?: boolean;
   allowMessages?: boolean;
   useEnhanced?: boolean;
+  useML?: boolean;
+  useSkillGapAnalysis?: boolean;
+  includeROI?: boolean;
+  userId?: number;
 }
 
 // Interface for similar/compatible users
@@ -61,6 +65,8 @@ export interface DiscoveryResults {
   opportunities: RawOpportunity[];
   similarUsers: SimilarUser[];
   enhanced: boolean;
+  mlEnabled?: boolean;
+  skillGapAnalysisEnabled?: boolean;
 }
 
 // User input for discovery process

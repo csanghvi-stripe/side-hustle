@@ -47,6 +47,7 @@ export default function AppHeader() {
     { name: "Discover", path: "/" },
     { name: "Community", path: "/community" },
     { name: "Resources", path: "/resources" },
+    { name: "Blog", path: "/blog" },
     { name: "My Opportunities", path: "/saved-opportunities" },
     { name: "Analytics", path: "/analytics" },
     { name: "Skills Assessment", path: "/skills-assessment" },

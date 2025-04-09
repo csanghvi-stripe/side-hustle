@@ -11,6 +11,8 @@ import { db } from '../db';
 import { logger } from './utils';
 import { monetizationOpportunities, users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { MLEngine } from './ml-engine';
+import { SkillGapAnalyzer } from './skill-gap-analyzer';
 
 // Source Manager
 class DiscoveryService {
@@ -18,6 +20,8 @@ class DiscoveryService {
   private sourceTimeout = 30000; // 30 seconds timeout for sources
   private resultCache: Map<string, DiscoveryResults> = new Map();
   private cacheExpirationMs = 30 * 60 * 1000; // 30 minutes cache expiration
+  private mlEngine = new MLEngine();
+  private skillGapAnalyzer = new SkillGapAnalyzer();
   
   /**
    * Register a new opportunity source with the engine
@@ -163,7 +167,9 @@ class DiscoveryService {
       return {
         opportunities: filteredResults,
         similarUsers,
-        enhanced: preferences.useEnhanced ?? false
+        enhanced: preferences.useEnhanced ?? false,
+        mlEnabled: preferences.useML ?? false,
+        skillGapAnalysisEnabled: preferences.useSkillGapAnalysis ?? false
       };
     } catch (error) {
       logger.error(`Error in discovery service: ${error.message}`);
@@ -244,6 +250,8 @@ class DiscoveryService {
     preferences: DiscoveryPreferences,
     previousOpportunities: any[]
   ): RawOpportunity[] {
+    logger.info(`Filtering and scoring ${opportunities.length} opportunities`);
+    
     // Extract previous opportunity IDs to avoid duplicates
     const previousIds = new Set<string>();
     for (const prevOpp of previousOpportunities) {
@@ -298,43 +306,93 @@ class DiscoveryService {
       return true;
     });
     
-    // Score the opportunities by relevance to user
-    const scoredOpportunities = filteredOpportunities.map(opp => {
-      // Initial score based on skill match
-      let score = this.calculateSkillMatchScore(opp.requiredSkills, preferences.skills);
-      
-      // Adjust score based on nice-to-have skills
-      if (opp.niceToHaveSkills && opp.niceToHaveSkills.length > 0) {
-        const niceToHaveScore = this.calculateSkillMatchScore(opp.niceToHaveSkills, preferences.skills) * 0.5;
-        score += niceToHaveScore;
-      }
-      
-      // Adjust based on income potential (weight: 20%)
-      const incomeScore = this.calculateIncomeScore(opp.estimatedIncome, preferences.incomeGoals);
-      score += incomeScore * 0.2;
-      
-      // Adjust based on time requirement match (weight: 15%)
-      const timeScore = this.calculateTimeScore(opp.timeRequired, preferences.timeAvailability);
-      score += timeScore * 0.15;
-      
-      // Adjust based on risk level match (weight: 15%)
-      const riskScore = this.calculateRiskScore(opp.entryBarrier, preferences.riskAppetite);
-      score += riskScore * 0.15;
-      
-      // Return opportunity with calculated score
-      return {
-        ...opp,
-        matchScore: Math.min(1, Math.max(0, score)) // Ensure score is between 0-1
-      };
-    });
+    // Choose scoring method based on preferences
+    let scoredOpportunities: RawOpportunity[];
     
-    // Sort by score (highest first)
-    const sortedOpportunities = scoredOpportunities.sort((a, b) => 
-      (b.matchScore || 0) - (a.matchScore || 0)
-    );
+    // Use ML Engine if enabled
+    if (preferences.useML) {
+      logger.info(`Using ML Engine for opportunity scoring`);
+      
+      // Use ML engine to score and rank opportunities
+      scoredOpportunities = this.mlEngine.predictBestOpportunities(
+        filteredOpportunities,
+        preferences,
+        preferences.userId
+      );
+      
+      // Apply ROI prioritization if enabled
+      if (preferences.includeROI) {
+        logger.info(`Applying ROI prioritization`);
+        // ROI prioritization is already integrated into the ML engine
+      }
+    } else {
+      // Use classic scoring algorithm
+      logger.info(`Using classic scoring algorithm`);
+      
+      scoredOpportunities = filteredOpportunities.map(opp => {
+        // Initial score based on skill match
+        let score = this.calculateSkillMatchScore(opp.requiredSkills, preferences.skills);
+        
+        // Adjust score based on nice-to-have skills
+        if (opp.niceToHaveSkills && opp.niceToHaveSkills.length > 0) {
+          const niceToHaveScore = this.calculateSkillMatchScore(opp.niceToHaveSkills, preferences.skills) * 0.5;
+          score += niceToHaveScore;
+        }
+        
+        // Adjust based on income potential (weight: 20%)
+        const incomeScore = this.calculateIncomeScore(opp.estimatedIncome, preferences.incomeGoals);
+        score += incomeScore * 0.2;
+        
+        // Adjust based on time requirement match (weight: 15%)
+        const timeScore = this.calculateTimeScore(opp.timeRequired, preferences.timeAvailability);
+        score += timeScore * 0.15;
+        
+        // Adjust based on risk level match (weight: 15%)
+        const riskScore = this.calculateRiskScore(opp.entryBarrier, preferences.riskAppetite);
+        score += riskScore * 0.15;
+        
+        // Return opportunity with calculated score
+        return {
+          ...opp,
+          matchScore: Math.min(1, Math.max(0, score)) // Ensure score is between 0-1
+        };
+      });
+      
+      // Sort by score (highest first)
+      scoredOpportunities.sort((a, b) => 
+        (b.matchScore || 0) - (a.matchScore || 0)
+      );
+    }
+    
+    // Apply skill gap analysis if enabled
+    if (preferences.useSkillGapAnalysis) {
+      logger.info(`Applying skill gap analysis to top opportunities`);
+      
+      // We'll apply skill gap analysis to the top 15 opportunities for performance reasons
+      const topOpportunities = scoredOpportunities.slice(0, 15);
+      
+      // Enhance opportunities with skill gap analysis
+      topOpportunities.forEach(opportunity => {
+        try {
+          // Analyze skill gap
+          const skillAnalysis = this.skillGapAnalyzer.analyzeSkillGap(
+            preferences.skills,
+            opportunity
+          );
+          
+          // Enhance opportunity with skill gap information
+          (opportunity as any).skillGapAnalysis = skillAnalysis;
+        } catch (error) {
+          logger.error(`Error analyzing skill gap: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      });
+      
+      // Return enhanced opportunities
+      return topOpportunities;
+    }
     
     // Return top opportunities (max 15)
-    return sortedOpportunities.slice(0, 15);
+    return scoredOpportunities.slice(0, 15);
   }
   
   /**

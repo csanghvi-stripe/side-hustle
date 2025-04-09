@@ -17,6 +17,8 @@ import SkillsAssessmentPage from "@/pages/skills-assessment-page";
 import PricingCalculatorPage from "@/pages/pricing-calculator-page";
 import ActionPlanPage from "@/pages/action-plan-page";
 import OpportunityDetailPage from "@/pages/opportunity-detail-page";
+import BlogPage from "@/pages/blog-page";
+import BlogPostPage from "@/pages/blog-post-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
 import AppHeader from "@/components/AppHeader";
@@ -40,6 +42,8 @@ function Router() {
           <ProtectedRoute path="/pricing-calculator" component={PricingCalculatorPage} />
           <ProtectedRoute path="/action-plan" component={ActionPlanPage} />
           <ProtectedRoute path="/opportunity/:id" component={OpportunityDetailPage} />
+          <Route path="/blog" component={BlogPage} />
+          <Route path="/blog/:slug" component={BlogPostPage} />
           <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
         </Switch>

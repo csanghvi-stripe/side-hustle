@@ -20,6 +20,53 @@ export const logger = {
   }
 };
 
+/**
+ * Calculate Jaccard similarity coefficient between two arrays
+ * Measures similarity as the size of intersection divided by size of union
+ */
+export function jaccardSimilarity<T>(array1: T[], array2: T[]): number {
+  if (!array1.length || !array2.length) return 0;
+  if (array1.length === 0 && array2.length === 0) return 1.0;
+  
+  const set1 = new Set(array1);
+  const set2 = new Set(array2);
+  
+  // Calculate intersection size
+  const intersection = arrayIntersection(array1, array2).length;
+  
+  // Calculate union size
+  const union = new Set([...array1, ...array2]).size;
+  
+  // Return Jaccard index
+  return intersection / union;
+}
+
+/**
+ * Calculate weighted score from a features object and weights object
+ */
+export function calculateWeightedScore(
+  features: Record<string, number>,
+  weights: Record<string, number>
+): number {
+  let score = 0;
+  let totalWeight = 0;
+  
+  // Calculate weighted sum of all applicable features
+  for (const [key, weight] of Object.entries(weights)) {
+    if (features[key] !== undefined) {
+      score += features[key] * weight;
+      totalWeight += weight;
+    }
+  }
+  
+  // Normalize if not all weights were applied
+  if (totalWeight > 0) {
+    return score / totalWeight;
+  }
+  
+  return score;
+}
+
 // Helper function to wait/sleep
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -56,29 +103,6 @@ export function truncateText(text: string, maxLength: number): string {
 export function arrayIntersection<T>(a: T[], b: T[]): T[] {
   const setB = new Set(b);
   return [...new Set(a)].filter(x => setB.has(x));
-}
-
-// Calculate Jaccard similarity between two arrays
-export function jaccardSimilarity<T>(a: T[], b: T[]): number {
-  if (a.length === 0 && b.length === 0) return 1.0;
-  const intersection = arrayIntersection(a, b).length;
-  const union = new Set([...a, ...b]).size;
-  return intersection / union;
-}
-
-// Calculate weighted score for matching
-export function calculateWeightedScore(scores: Record<string, number>, weights: Record<string, number>): number {
-  let totalScore = 0;
-  let totalWeight = 0;
-  
-  for (const [key, weight] of Object.entries(weights)) {
-    if (scores[key] !== undefined) {
-      totalScore += scores[key] * weight;
-      totalWeight += weight;
-    }
-  }
-  
-  return totalWeight > 0 ? totalScore / totalWeight : 0;
 }
 
 // Utility to extract clean text from HTML
@@ -146,4 +170,19 @@ export function calculateReadability(text: string): number {
     logger.error(`Error calculating readability: ${error instanceof Error ? error.message : String(error)}`);
     return 0;
   }
+}
+
+// Convert income to monthly basis for comparison
+export function convertToMonthlyIncome(amount: number, timeframe: string): number {
+  if (!timeframe) return amount;
+  
+  const timeframeLower = timeframe.toLowerCase();
+  if (timeframeLower === 'hour') return amount * 160; // 40h × 4 weeks
+  if (timeframeLower === 'day') return amount * 20; // 5 days × 4 weeks
+  if (timeframeLower === 'week') return amount * 4;
+  if (timeframeLower === 'month') return amount;
+  if (timeframeLower === 'year') return amount / 12;
+  if (timeframeLower === 'project') return amount / 3; // Assume 3 months per project avg
+  
+  return amount; // Default if timeframe unknown
 }

@@ -10,4 +10,63 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+  
+  .prose img {
+    @apply rounded-lg mx-auto my-6;
+  }
+  
+  .prose figure {
+    @apply my-8;
+  }
+  
+  .prose figure figcaption {
+    @apply text-sm text-center text-gray-500 mt-2;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-primary/30 pl-4 italic text-gray-700 my-6;
+  }
+  
+  .prose blockquote p {
+    @apply text-lg;
+  }
+  
+  .prose h2 {
+    @apply text-2xl font-bold mt-8 mb-4 text-gray-800;
+  }
+  
+  .prose h3 {
+    @apply text-xl font-semibold mt-6 mb-3 text-gray-800;
+  }
+  
+  .prose p {
+    @apply mb-4 leading-relaxed;
+  }
+  
+  .prose ul, .prose ol {
+    @apply mb-4 pl-6;
+  }
+  
+  .prose li {
+    @apply mb-2;
+  }
+  
+  .prose .lead {
+    @apply text-lg font-medium text-gray-700 mb-6;
+  }
+  
+  /* Gradient text for headings */
+  .gradient-heading {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500 font-bold;
+  }
+  
+  /* Card hover effects */
+  .card-hover-effect {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  /* Button hover effects */
+  .button-hover-effect {
+    @apply hover:scale-105 transition-transform duration-200;
+  }
 }

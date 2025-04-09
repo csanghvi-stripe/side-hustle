@@ -913,7 +913,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         workPreference: preferences.workPreference,
         additionalDetails: preferences.additionalDetails,
         discoverable: preferences.discoverable || false,
-        useEnhanced: preferences.useEnhanced || false
+        useEnhanced: preferences.useEnhanced || false,
+        useML: preferences.useML !== false, // Enable ML by default
+        useSkillGapAnalysis: preferences.useSkillGapAnalysis !== false, // Enable skill gap analysis by default
+        includeROI: preferences.includeROI !== false // Enable ROI-based prioritization by default
       };
 
       // Call the discovery service to get personalized opportunities
