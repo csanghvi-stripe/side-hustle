@@ -239,7 +239,8 @@ const CommunityPage = () => {
   });
 
   return (
-    <div className="container py-8 max-w-6xl">
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Community</h1>
         <p className="text-muted-foreground">
@@ -356,6 +357,7 @@ const CommunityPage = () => {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };

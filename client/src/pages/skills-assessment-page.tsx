@@ -26,7 +26,8 @@ export default function SkillsAssessmentPage() {
   }
 
   return (
-    <div className="container py-6 space-y-8">
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6 space-y-8">
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 items-start">
         {/* Main Content */}
         <div className="flex-1 space-y-6">
@@ -193,6 +194,7 @@ export default function SkillsAssessmentPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
     </div>
   );

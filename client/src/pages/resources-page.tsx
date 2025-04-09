@@ -129,42 +129,26 @@ const resources = [
 
 const ResourcesPage = () => {
   return (
-    <div className="container py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Resources & Learning</h1>
-        <p className="text-muted-foreground">
-          Discover helpful guides, case studies, and tools to accelerate your side hustle success
-        </p>
-      </div>
-      
-      <Tabs defaultValue="all" className="mb-8">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">All Resources</TabsTrigger>
-          <TabsTrigger value="freelancing">Freelancing</TabsTrigger>
-          <TabsTrigger value="digital-products">Digital Products</TabsTrigger>
-          <TabsTrigger value="content-creation">Content Creation</TabsTrigger>
-        </TabsList>
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Resources & Learning</h1>
+          <p className="text-muted-foreground">
+            Discover helpful guides, case studies, and tools to accelerate your side hustle success
+          </p>
+        </div>
         
-        <TabsContent value="all">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {resources.map((resource) => (
-              <ResourceCard
-                key={resource.id}
-                title={resource.title}
-                description={resource.description}
-                icon={resource.icon}
-                link={resource.link}
-                category={resource.category}
-              />
-            ))}
-          </div>
-        </TabsContent>
+        <Tabs defaultValue="all" className="mb-8">
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">All Resources</TabsTrigger>
+            <TabsTrigger value="freelancing">Freelancing</TabsTrigger>
+            <TabsTrigger value="digital-products">Digital Products</TabsTrigger>
+            <TabsTrigger value="content-creation">Content Creation</TabsTrigger>
+          </TabsList>
         
-        <TabsContent value="freelancing">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {resources
-              .filter((resource) => resource.type === "freelancing")
-              .map((resource) => (
+          <TabsContent value="all">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {resources.map((resource) => (
                 <ResourceCard
                   key={resource.id}
                   title={resource.title}
@@ -174,50 +158,68 @@ const ResourcesPage = () => {
                   category={resource.category}
                 />
               ))}
-          </div>
-        </TabsContent>
+            </div>
+          </TabsContent>
         
-        <TabsContent value="digital-products">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {resources
-              .filter((resource) => resource.type === "digital-products")
-              .map((resource) => (
-                <ResourceCard
-                  key={resource.id}
-                  title={resource.title}
-                  description={resource.description}
-                  icon={resource.icon}
-                  link={resource.link}
-                  category={resource.category}
-                />
-              ))}
-          </div>
-        </TabsContent>
+          <TabsContent value="freelancing">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {resources
+                .filter((resource) => resource.type === "freelancing")
+                .map((resource) => (
+                  <ResourceCard
+                    key={resource.id}
+                    title={resource.title}
+                    description={resource.description}
+                    icon={resource.icon}
+                    link={resource.link}
+                    category={resource.category}
+                  />
+                ))}
+            </div>
+          </TabsContent>
         
-        <TabsContent value="content-creation">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {resources
-              .filter((resource) => resource.type === "content-creation")
-              .map((resource) => (
-                <ResourceCard
-                  key={resource.id}
-                  title={resource.title}
-                  description={resource.description}
-                  icon={resource.icon}
-                  link={resource.link}
-                  category={resource.category}
-                />
-              ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="mt-12 bg-muted/50 p-6 rounded-lg">
-        <h2 className="text-xl font-semibold mb-4">Submit a Resource</h2>
-        <p className="text-muted-foreground mb-4">
-          Know a great resource that should be included here? Let us know and we'll add it to our collection.
-        </p>
-        <Button>Suggest a Resource</Button>
+          <TabsContent value="digital-products">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {resources
+                .filter((resource) => resource.type === "digital-products")
+                .map((resource) => (
+                  <ResourceCard
+                    key={resource.id}
+                    title={resource.title}
+                    description={resource.description}
+                    icon={resource.icon}
+                    link={resource.link}
+                    category={resource.category}
+                  />
+                ))}
+            </div>
+          </TabsContent>
+        
+          <TabsContent value="content-creation">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {resources
+                .filter((resource) => resource.type === "content-creation")
+                .map((resource) => (
+                  <ResourceCard
+                    key={resource.id}
+                    title={resource.title}
+                    description={resource.description}
+                    icon={resource.icon}
+                    link={resource.link}
+                    category={resource.category}
+                  />
+                ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="mt-12 bg-muted/50 p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Submit a Resource</h2>
+          <p className="text-muted-foreground mb-4">
+            Know a great resource that should be included here? Let us know and we'll add it to our collection.
+          </p>
+          <Button>Suggest a Resource</Button>
+        </div>
       </div>
     </div>
   );

@@ -456,70 +456,72 @@ export default function CoachPage() {
   }
 
   return (
-    <div className="container py-6 max-w-6xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">AI Career Coach</h1>
-        <p className="text-muted-foreground">
-          Get personalized career advice and monetization strategies from your AI coach
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-16rem)]">
-        {/* Sidebar */}
-        <div className="md:col-span-1 border rounded-lg overflow-hidden">
-          {hasCoachAccess ? (
-            <ConversationSidebar 
-              conversations={conversations}
-              activeConversation={activeConversation}
-              onSelectConversation={setActiveConversation}
-              onNewConversation={handleNewConversation}
-              subscriptionInfo={subscriptionInfo}
-              isCreatingConversation={newConversationMutation.isPending}
-            />
-          ) : (
-            <div className="p-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Premium Feature</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Access personalized AI coaching by upgrading to a premium plan
-                  </p>
-                </CardContent>
-                <CardFooter className="flex flex-col gap-2">
-                  <Button 
-                    className="w-full"
-                    onClick={() => window.location.href = '/subscription'}
-                  >
-                    Upgrade Now
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setShowPromoForm(true)}
-                  >
-                    I Have a Promo Code
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          )}
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">AI Career Coach</h1>
+          <p className="text-muted-foreground">
+            Get personalized career advice and monetization strategies from your AI coach
+          </p>
         </div>
-        
-        {/* Chat area */}
-        <div className="md:col-span-3 border rounded-lg overflow-hidden">
-          {hasCoachAccess ? (
-            <ChatWindow 
-              conversationId={activeConversation}
-              messages={messages}
-              isLoading={isLoading === true}
-              isPending={sendMessageMutation.isPending}
-              onSendMessage={handleSendMessage}
-            />
-          ) : (
-            <SubscriptionRequired />
-          )}
+      
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-16rem)]">
+          {/* Sidebar */}
+          <div className="md:col-span-1 border rounded-lg overflow-hidden">
+            {hasCoachAccess ? (
+              <ConversationSidebar 
+                conversations={conversations}
+                activeConversation={activeConversation}
+                onSelectConversation={setActiveConversation}
+                onNewConversation={handleNewConversation}
+                subscriptionInfo={subscriptionInfo}
+                isCreatingConversation={newConversationMutation.isPending}
+              />
+            ) : (
+              <div className="p-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Premium Feature</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Access personalized AI coaching by upgrading to a premium plan
+                    </p>
+                  </CardContent>
+                  <CardFooter className="flex flex-col gap-2">
+                    <Button 
+                      className="w-full"
+                      onClick={() => window.location.href = '/subscription'}
+                    >
+                      Upgrade Now
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setShowPromoForm(true)}
+                    >
+                      I Have a Promo Code
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            )}
+          </div>
+          
+          {/* Chat area */}
+          <div className="md:col-span-3 border rounded-lg overflow-hidden">
+            {hasCoachAccess ? (
+              <ChatWindow 
+                conversationId={activeConversation}
+                messages={messages}
+                isLoading={isLoading === true}
+                isPending={sendMessageMutation.isPending}
+                onSendMessage={handleSendMessage}
+              />
+            ) : (
+              <SubscriptionRequired />
+            )}
+          </div>
         </div>
       </div>
     </div>
