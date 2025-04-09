@@ -61,7 +61,14 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset, saved
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-100">
       {/* Results Header */}
       <div className="bg-primary text-white px-6 py-4">
-        <h2 className="text-xl font-medium">Your Monetization Opportunities</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-medium">Your Monetization Opportunities</h2>
+          {results.enhanced && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-200 text-blue-800">
+              Enhanced Results
+            </span>
+          )}
+        </div>
         <p className="text-primary-50">Based on your skills in {skillsList}</p>
       </div>
       

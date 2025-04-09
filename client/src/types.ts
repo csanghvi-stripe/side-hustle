@@ -8,6 +8,8 @@ export interface UserInputForm {
   // Social networking options
   discoverable: boolean;
   allowMessages: boolean;
+  // Algorithm options
+  useEnhanced?: boolean;
 }
 
 export enum OpportunityType {
@@ -64,6 +66,7 @@ export interface MonetizationResults {
     preference: string;
   };
   similarUsers?: UserMatch[];
+  enhanced?: boolean; // Flag indicating if the enhanced algorithm was used
 }
 
 export interface UserProfile {

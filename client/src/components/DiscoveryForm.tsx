@@ -30,6 +30,8 @@ const formSchema = z.object({
   // Social network settings
   discoverable: z.boolean().default(true),
   allowMessages: z.boolean().default(true),
+  // Algorithm options
+  useEnhanced: z.boolean().default(false),
 });
 
 interface DiscoveryFormProps {
@@ -52,6 +54,8 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
       // Social network defaults
       discoverable: true,
       allowMessages: true,
+      // Algorithm option
+      useEnhanced: false,
     },
   });
 
@@ -94,7 +98,7 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
   };
 
   if (generateOpportunities.isPending) {
-    return <LoadingState />;
+    return <LoadingState useEnhanced={form.getValues().useEnhanced} />;
   }
 
   return (
@@ -452,6 +456,37 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                       <FormDescription>
                         Receive messages from community members who may want to collaborate
                         or share opportunities with you.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              
+              <div className="border p-4 rounded-lg bg-primary/5 mt-6">
+                <h3 className="text-base font-medium mb-2">Advanced Options</h3>
+                <p className="text-sm text-neutral-600 mb-1">
+                  Fine-tune how we generate your monetization opportunities:
+                </p>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="useEnhanced"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="font-medium">
+                        Use enhanced algorithm
+                      </FormLabel>
+                      <FormDescription>
+                        Combine AI with real-time web search for more up-to-date, actionable recommendations.
+                        This takes a bit longer but provides higher quality results.
                       </FormDescription>
                     </div>
                   </FormItem>

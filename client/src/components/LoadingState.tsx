@@ -1,29 +1,39 @@
 import React, { useState, useEffect } from "react";
 
-const LoadingState: React.FC = () => {
+interface LoadingStateProps {
+  useEnhanced?: boolean;
+}
+
+const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const maxSteps = 4;
+    // Enhanced algorithm has more steps and takes longer
+    const maxSteps = useEnhanced ? 6 : 4;
+    const stepTime = useEnhanced ? 2500 : 3000;
+    
     const interval = setInterval(() => {
-      setStep(current => current < maxSteps ? current + 1 : 1);
-    }, 3000);
+      setStep(current => current < maxSteps ? current + 1 : current);
+    }, stepTime);
 
+    // Progress speed is slower for enhanced algorithm
+    const progressSpeed = useEnhanced ? 800 : 600;
     const progressInterval = setInterval(() => {
       setProgress(current => {
         const newProgress = current + 1;
         return newProgress > 100 ? 100 : newProgress;
       });
-    }, 600);
+    }, progressSpeed);
 
     return () => {
       clearInterval(interval);
       clearInterval(progressInterval);
     };
-  }, []);
+  }, [useEnhanced]);
 
-  const searchSteps = [
+  // Regular algorithm steps
+  const regularSteps = [
     {
       title: "Analyzing your skills and preferences...",
       description: "Claude is assessing your unique skillset and constraints"
@@ -41,6 +51,37 @@ const LoadingState: React.FC = () => {
       description: "Preparing step-by-step instructions for immediate implementation"
     }
   ];
+  
+  // Enhanced algorithm steps
+  const enhancedSteps = [
+    {
+      title: "Analyzing your skills and preferences...",
+      description: "Claude is assessing your unique skillset and constraints"
+    },
+    {
+      title: "Researching current market opportunities...",
+      description: "Searching the web for real-time monetization data"
+    },
+    {
+      title: "Gathering success stories and case studies...",
+      description: "Finding examples of people who monetized similar skills"
+    },
+    {
+      title: "Researching market rates and demand...",
+      description: "Analyzing platforms for income potential and competition"
+    },
+    {
+      title: "Creating personalized recommendations...",
+      description: "Combining AI analysis with web research for custom opportunities"
+    },
+    {
+      title: "Building actionable guides with real resources...",
+      description: "Preparing detailed implementation steps with up-to-date resources"
+    }
+  ];
+  
+  // Choose the appropriate steps based on the algorithm
+  const searchSteps = useEnhanced ? enhancedSteps : regularSteps;
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-8 border border-neutral-100">
@@ -54,8 +95,15 @@ const LoadingState: React.FC = () => {
             </svg>
           </div>
         </div>
-        <h3 className="mt-4 text-xl font-semibold text-neutral-800">AI Research in Progress</h3>
-        <p className="text-neutral-500 mt-1">Claude is analyzing your skills and finding opportunity matches</p>
+        <h3 className="mt-4 text-xl font-semibold text-neutral-800">
+          {useEnhanced ? "Enhanced Research in Progress" : "AI Research in Progress"}
+        </h3>
+        <p className="text-neutral-500 mt-1">
+          {useEnhanced 
+            ? "Claude is analyzing your skills and searching the web for opportunity matches" 
+            : "Claude is analyzing your skills and finding opportunity matches"
+          }
+        </p>
       </div>
 
       <div className="mt-8 space-y-6">
@@ -103,7 +151,10 @@ const LoadingState: React.FC = () => {
       </div>
 
       <div className="mt-8 text-center text-sm text-neutral-500">
-        This may take 30-60 seconds to thoroughly research the best opportunities for you
+        {useEnhanced 
+          ? "This may take 60-90 seconds to thoroughly research the best opportunities with real-time web data" 
+          : "This may take 30-60 seconds to thoroughly research the best opportunities for you"
+        }
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateMonetizationOpportunities } from "./api/anthropic";
+import { generateEnhancedMonetizationOpportunities } from "./api/enhanced-anthropic";
 import { setupAuth } from "./auth";
 import { insertUserProfileSchema, insertMonetizationOpportunitySchema } from "@shared/schema";
 import { z } from "zod";
@@ -66,17 +67,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Generate monetization opportunities using Anthropic
-      const opportunities = await generateMonetizationOpportunities({
-        skills,
-        timePerWeek: timeAvailability,
-        incomeGoal: `$${incomeGoals}/month`,
-        riskTolerance: riskAppetite,
-        preference: workPreference,
-        additionalDetails: additionalDetails || "",
-        discoverable,
-        allowMessages,
-      });
+      // Set a flag to use enhanced or regular algorithm
+      const useEnhanced = req.query.enhanced === 'true' || req.body.useEnhanced === true;
+      
+      // Log which algorithm is being used
+      console.log(`Using ${useEnhanced ? 'enhanced' : 'regular'} monetization algorithm`);
+      
+      // Generate monetization opportunities using the appropriate algorithm
+      const opportunities = await (useEnhanced ? 
+        generateEnhancedMonetizationOpportunities({
+          skills,
+          timePerWeek: timeAvailability,
+          incomeGoal: `$${incomeGoals}/month`,
+          riskTolerance: riskAppetite,
+          preference: workPreference,
+          additionalDetails: additionalDetails || "",
+          discoverable,
+          allowMessages,
+        }) : 
+        generateMonetizationOpportunities({
+          skills,
+          timePerWeek: timeAvailability,
+          incomeGoal: `$${incomeGoals}/month`,
+          riskTolerance: riskAppetite,
+          preference: workPreference,
+          additionalDetails: additionalDetails || "",
+          discoverable,
+          allowMessages,
+        })
+      );
 
       // If user is authenticated, save their opportunity results
       if (req.isAuthenticated() && req.user?.id) {
