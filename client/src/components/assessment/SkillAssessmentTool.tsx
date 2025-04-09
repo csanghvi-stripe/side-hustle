@@ -552,7 +552,7 @@ export default function SkillAssessmentTool() {
               Save Recommendations
             </Button>
             
-            <Button onClick={() => window.location.href = "/analytics"}>
+            <Button onClick={() => window.location.href = "/action-plan"}>
               Create Action Plan
             </Button>
           </div>

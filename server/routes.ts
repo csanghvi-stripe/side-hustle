@@ -401,6 +401,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/analytics/time-to-first-dollar", isAuthenticated, analytics.getTimeToFirstDollar);
   app.get("/api/analytics/dashboard", isAuthenticated, analytics.getAllAnalytics);
   
+  // Action Plan endpoints
+  app.post("/api/analytics/action-plans", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const actionPlanData = req.body;
+      
+      // In a real implementation, you would save this to the database
+      // For now, just return success
+      return res.status(201).json({
+        id: new Date().getTime(),
+        userId,
+        createdAt: new Date().toISOString(),
+        ...actionPlanData
+      });
+    } catch (error) {
+      console.error("Error saving action plan:", error);
+      return res.status(500).json({
+        message: "Failed to save action plan",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.get("/api/analytics/action-plans", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // In a real implementation, you would fetch from the database
+      // For now, return an empty array
+      return res.status(200).json([]);
+    } catch (error) {
+      console.error("Error fetching action plans:", error);
+      return res.status(500).json({
+        message: "Failed to fetch action plans",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // === AI Coach API Endpoints ===
   
   // Subscription info
