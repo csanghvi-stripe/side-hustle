@@ -267,9 +267,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get publicly shared opportunities
+  app.get("/api/opportunities/shared", async (req, res) => {
+    try {
+      const opportunities = await storage.getSharedOpportunities();
+      
+      return res.status(200).json(opportunities);
+    } catch (error) {
+      console.error("Error fetching shared opportunities:", error);
+      return res.status(500).json({
+        message: "Failed to fetch shared opportunities",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Get a specific opportunity by ID
   app.get("/api/opportunities/:id", isAuthenticated, async (req, res) => {
     try {
+      // First, check if it's a string ID from the discovery service
+      if (req.params.id && req.params.id.includes('-')) {
+        console.log("Handling discovery-generated opportunity ID:", req.params.id);
+        try {
+          // Query the discovery service for this opportunity
+          const opportunity = await discoveryService.getOpportunityById(req.params.id);
+          if (opportunity) {
+            return res.status(200).json(opportunity);
+          }
+        } catch (err) {
+          console.error("Error fetching from discovery service:", err);
+          // Continue to check database opportunities
+        }
+      }
+      
+      // If not a discovery opportunity, try numeric ID from database
       const opportunityId = parseInt(req.params.id);
       
       if (isNaN(opportunityId)) {
@@ -333,21 +364,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error saving opportunity:", error);
       return res.status(500).json({
         message: "Failed to save opportunity",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
-
-  // Get publicly shared opportunities
-  app.get("/api/opportunities/shared", async (req, res) => {
-    try {
-      const opportunities = await storage.getSharedOpportunities();
-      
-      return res.status(200).json(opportunities);
-    } catch (error) {
-      console.error("Error fetching shared opportunities:", error);
-      return res.status(500).json({
-        message: "Failed to fetch shared opportunities",
         error: error instanceof Error ? error.message : String(error)
       });
     }
