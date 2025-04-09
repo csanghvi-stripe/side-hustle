@@ -408,14 +408,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const actionPlanData = req.body;
       
+      console.log(`Creating action plan for user ${userId}${actionPlanData.opportunityId ? ` linked to opportunity ${actionPlanData.opportunityId}` : ''}`);
+      
       // In a real implementation, you would save this to the database
-      // For now, just return success
-      return res.status(201).json({
-        id: new Date().getTime(),
+      // For now, just return success with the generated ID
+      const planId = new Date().getTime();
+      
+      const savedPlan = {
+        id: planId,
         userId,
+        opportunityId: actionPlanData.opportunityId || null,
         createdAt: new Date().toISOString(),
         ...actionPlanData
-      });
+      };
+      
+      // In the real implementation, this would be saved in the database
+      
+      return res.status(201).json(savedPlan);
     } catch (error) {
       console.error("Error saving action plan:", error);
       return res.status(500).json({

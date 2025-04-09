@@ -94,7 +94,11 @@ interface ActionPlan {
   userInputs: ActionPlanFormData;
 }
 
-export default function ActionPlanGenerator() {
+interface ActionPlanGeneratorProps {
+  opportunityId?: number;
+}
+
+export default function ActionPlanGenerator({ opportunityId }: ActionPlanGeneratorProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<FormStep>("skills");
@@ -372,9 +376,26 @@ export default function ActionPlanGenerator() {
   };
   
   // Save the generated plan
-  const saveActionPlan = () => {
+  const saveActionPlan = async () => {
     if (generatedPlan) {
-      saveActionPlanMutation.mutate(generatedPlan);
+      try {
+        // Associate the plan with an opportunity if provided
+        const planToSave = {
+          ...generatedPlan,
+          opportunityId: opportunityId || undefined
+        };
+        
+        // Remove any circular references or overly complex objects
+        const sanitizedPlan = JSON.parse(JSON.stringify(planToSave));
+        saveActionPlanMutation.mutate(sanitizedPlan);
+      } catch (error) {
+        console.error("Error preparing action plan for save:", error);
+        toast({
+          title: "Error Preparing Plan",
+          description: "There was an issue preparing your action plan for saving. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
   
