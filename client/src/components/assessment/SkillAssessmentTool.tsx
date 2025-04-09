@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,7 +10,9 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ChevronRight, ChevronLeft, CheckCircle, Award, Lightbulb, Sparkles } from "lucide-react";
+import { ChevronRight, ChevronLeft, CheckCircle, Award, Lightbulb, Sparkles, BookmarkPlus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { OpportunityType, RiskLevel } from "@/types";
 
 // Define question types
 type Question = {
@@ -145,11 +150,36 @@ interface SkillAssessmentResult {
 }
 
 export default function SkillAssessmentTool() {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [results, setResults] = useState<SkillAssessmentResult | null>(null);
+  
+  // Mutation to save the recommendations as opportunities
+  const saveOpportunityMutation = useMutation({
+    mutationFn: async (opportunityData: any) => {
+      const res = await apiRequest("POST", "/api/opportunities", { opportunityData });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      toast({
+        title: "Recommendations saved",
+        description: "Your skill recommendations have been added to your opportunities.",
+        variant: "default",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to save",
+        description: "There was a problem saving your recommendations. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const currentQuestion = assessmentQuestions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / assessmentQuestions.length) * 100;
@@ -449,9 +479,83 @@ export default function SkillAssessmentTool() {
             Retake Assessment
           </Button>
           
-          <Button>
-            Create Action Plan
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center"
+              onClick={() => {
+                if (!user) {
+                  toast({
+                    title: "Login required",
+                    description: "Please log in to save your recommendations.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
+                // Transform results to opportunities
+                const opportunities = results.potentialServices.map((service, index) => {
+                  // Get related skill from top skills
+                  const relatedSkill = results.topSkills[index] || results.topSkills[0];
+                  
+                  // Determine opportunity type based on recommended path
+                  let type = OpportunityType.FREELANCE;
+                  if (results.recommendedPath.includes("Digital Product")) {
+                    type = OpportunityType.DIGITAL_PRODUCT;
+                  } else if (results.recommendedPath.includes("Creative")) {
+                    type = OpportunityType.CONTENT;
+                  } else if (results.recommendedPath.includes("Technical")) {
+                    type = OpportunityType.SERVICE;
+                  }
+                  
+                  return {
+                    title: service,
+                    type,
+                    description: `Monetize your ${relatedSkill.skill} skills with this opportunity.`,
+                    icon: "",
+                    incomePotential: relatedSkill.rating >= 8 ? "$$$" : relatedSkill.rating >= 6 ? "$$" : "$",
+                    startupCost: "$",
+                    riskLevel: RiskLevel.LOW,
+                    stepsToStart: [
+                      "Research the market and competitors",
+                      "Define your unique selling proposition",
+                      "Create a basic portfolio or samples",
+                      "Set up your pricing structure",
+                      "Find your first clients"
+                    ],
+                    resources: [
+                      {
+                        title: "Getting Started Guide",
+                        url: "#",
+                        source: "SideHustle"
+                      }
+                    ]
+                  };
+                });
+                
+                // Create and save opportunity data
+                const opportunityData = {
+                  opportunities,
+                  userProfile: {
+                    skills: results.topSkills.map(s => s.skill),
+                    timeAvailability: answers["time-availability"] ? answers["time-availability"].join(", ") : "medium",
+                    incomeGoals: 1000, // Default
+                    riskTolerance: "low",
+                    preference: answers["work-preference"] ? answers["work-preference"].join(", ") : "client"
+                  }
+                };
+                
+                saveOpportunityMutation.mutate(opportunityData);
+              }}
+            >
+              <BookmarkPlus className="mr-2 h-4 w-4" />
+              Save Recommendations
+            </Button>
+            
+            <Button onClick={() => window.location.href = "/analytics"}>
+              Create Action Plan
+            </Button>
+          </div>
         </div>
       </div>
     );
