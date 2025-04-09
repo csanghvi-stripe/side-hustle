@@ -13,6 +13,7 @@ import { monetizationOpportunities, users, userProfiles } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { MLEngine } from './ml-engine';
 import { SkillGapAnalyzer } from './skill-gap-analyzer';
+import { anthropicHelper } from './anthropic-helper';
 
 // Source Manager
 class DiscoveryService {
@@ -142,7 +143,7 @@ class DiscoveryService {
       }
       
       // Filter and sort the opportunities based on user preferences
-      const filteredResults = this.filterAndScoreOpportunities(
+      const filteredResults = await this.filterAndScoreOpportunities(
         sourceResults,
         preferences,
         previousOpportunities.map(o => o.opportunityData)
@@ -263,11 +264,11 @@ class DiscoveryService {
    * Filter and score opportunities based on user preferences 
    * Returns opportunities scored and categorized by relevance
    */
-  private filterAndScoreOpportunities(
+  private async filterAndScoreOpportunities(
     opportunities: RawOpportunity[],
     preferences: DiscoveryPreferences,
     previousOpportunities: any[]
-  ): RawOpportunity[] {
+  ): Promise<RawOpportunity[]> {
     logger.info(`Filtering and scoring ${opportunities.length} opportunities`);
     
     // Extract previous opportunity IDs to avoid duplicates
@@ -289,7 +290,7 @@ class DiscoveryService {
     logger.info(`Adding supplementary opportunities to ensure variety and inspirational content`);
     
     // Add diverse opportunities regardless of the current count to ensure variety
-    this.addSupplementaryOpportunities(uniqueOpportunities, preferences);
+    await this.addSupplementaryOpportunities(uniqueOpportunities, preferences);
     
     // Enhanced filtering based on preferences, but ensure diversity
     const filteredOpportunities = uniqueOpportunities.filter(opp => {
@@ -604,11 +605,33 @@ class DiscoveryService {
    * Add supplementary opportunities to ensure variety and inspirational content
    * This method enriches the opportunity array with high-quality options
    */
-  private addSupplementaryOpportunities(
+  private async addSupplementaryOpportunities(
     opportunities: RawOpportunity[],
     preferences: DiscoveryPreferences
-  ): void {
+  ): Promise<void> {
     logger.info('Adding supplementary opportunities to enhance results');
+    
+    // Check if useEnhanced flag is set to use Anthropic AI for generating opportunities
+    if (preferences.useEnhanced) {
+      logger.info('Using Anthropic AI to generate enhanced opportunity suggestions');
+      
+      try {
+        // Generate 5 thoughtful opportunities using Anthropic AI
+        const anthropicOpportunities = await anthropicHelper.generateOpportunities(preferences, 5);
+        
+        if (anthropicOpportunities && anthropicOpportunities.length > 0) {
+          logger.info(`Successfully added ${anthropicOpportunities.length} AI-generated opportunities`);
+          opportunities.push(...anthropicOpportunities);
+          
+          // If we got AI-generated opportunities, we can return early
+          // as these are typically higher quality than the hardcoded ones
+          return;
+        }
+      } catch (error) {
+        logger.error(`Error generating opportunities with Anthropic AI: ${error instanceof Error ? error.message : String(error)}`);
+        logger.info('Falling back to standard supplementary opportunities');
+      }
+    }
     
     // Get any skills that are related to web design/development
     const hasWebSkills = preferences.skills.some(skill => 

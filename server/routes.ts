@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Using ${useEnhanced ? 'enhanced' : 'regular'} monetization discovery engine`);
       
       // Process input data
-      const skillsArray = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim());
+      const skillsArray = Array.isArray(skills) ? skills : skills.split(',').map((s: string) => s.trim());
       
       // If user is authenticated, use the discovery engine
       if (req.isAuthenticated() && req.user?.id) {
