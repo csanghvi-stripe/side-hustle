@@ -201,6 +201,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get a specific opportunity by ID
+  app.get("/api/opportunities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const opportunityId = parseInt(req.params.id);
+      
+      if (isNaN(opportunityId)) {
+        return res.status(400).json({ message: "Invalid opportunity ID" });
+      }
+      
+      // In a more robust implementation, we would check if the opportunity belongs to the user
+      // or is shared publicly before returning it
+      const opportunities = await storage.getUserOpportunities(req.user!.id);
+      const opportunity = opportunities.find(o => o.id === opportunityId);
+      
+      if (!opportunity) {
+        // If not found in user's opportunities, check shared opportunities
+        const sharedOpportunities = await storage.getSharedOpportunities();
+        const sharedOpportunity = sharedOpportunities.find(o => o.id === opportunityId);
+        
+        if (!sharedOpportunity) {
+          return res.status(404).json({ message: "Opportunity not found" });
+        }
+        
+        return res.status(200).json(sharedOpportunity);
+      }
+      
+      return res.status(200).json(opportunity);
+    } catch (error) {
+      console.error("Error fetching opportunity:", error);
+      return res.status(500).json({
+        message: "Failed to fetch opportunity",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Save a monetization opportunity
   app.post("/api/opportunities", isAuthenticated, async (req, res) => {
     try {

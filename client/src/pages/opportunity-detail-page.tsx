@@ -224,9 +224,9 @@ const OpportunityDetailPage = () => {
     );
   }
 
-  // Parse the opportunity data - in a real app this would come directly from the API
-  const opportunityData: OpportunityDataType = opportunity.data ? 
-    JSON.parse(opportunity.data as string) : 
+  // Parse the opportunity data - from the API
+  const opportunityData: OpportunityDataType = opportunity.opportunityData ? 
+    (typeof opportunity.opportunityData === 'string' ? JSON.parse(opportunity.opportunityData) : opportunity.opportunityData) : 
     {
       title: opportunity.title,
       type: "Freelancing",
