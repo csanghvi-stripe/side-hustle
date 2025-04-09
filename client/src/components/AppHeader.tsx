@@ -213,7 +213,7 @@ export default function AppHeader() {
               <Link href="/auth">Sign In</Link>
             </Button>
             <Button asChild>
-              <Link href="/auth/register">Get Started</Link>
+              <Link href="/auth?tab=register">Get Started</Link>
             </Button>
           </div>
         )}
