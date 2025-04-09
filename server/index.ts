@@ -4,6 +4,8 @@ import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { sessionPool } from "./db"; // Import sessionPool instead of pgClient
+import { exec } from "child_process";
+import { promisify } from "util";
 
 const PgStore = connectPg(session);
 
@@ -59,7 +61,26 @@ app.use((req, res, next) => {
   next();
 });
 
+// Function to run database migrations
+const execAsync = promisify(exec);
+
+async function runMigrations() {
+  try {
+    log("Running database migrations...");
+    const { stdout, stderr } = await execAsync('npx tsx server/run-migrations.ts');
+    if (stdout) console.log(stdout);
+    if (stderr) console.error(stderr);
+    log("Database migrations completed");
+  } catch (error) {
+    console.error("Error running migrations:", error.message);
+    // Continue with application startup even if migrations fail
+  }
+}
+
 (async () => {
+  // Run migrations before starting the server
+  await runMigrations();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

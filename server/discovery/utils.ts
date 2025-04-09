@@ -1,10 +1,8 @@
 /**
- * Utility functions for the discovery engine
+ * Utility functions and shared helpers for the discovery engine
  */
 
-/**
- * Simple logger for the discovery engine
- */
+// Logger utility for discovery engine
 export const logger = {
   info: (message: string) => {
     console.log(`[discovery] INFO: ${message}`);
@@ -16,183 +14,92 @@ export const logger = {
     console.warn(`[discovery] WARN: ${message}`);
   },
   debug: (message: string) => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.DEBUG) {
       console.debug(`[discovery] DEBUG: ${message}`);
     }
   }
 };
 
-/**
- * Format currency for display
- */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount);
+// Helper function to wait/sleep
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/**
- * Parse time availability string into hours per week
- */
-export function parseTimeAvailability(timeStr: string): number {
-  // Handle common formats like "10 hours/week", "2 hours per day", etc.
-  const hours = timeStr.match(/(\d+)\s*hours?/i);
-  const days = timeStr.match(/(\d+)\s*days?/i);
-  
-  if (hours) {
-    const hoursNum = parseInt(hours[1], 10);
-    
-    if (timeStr.includes('day')) {
-      return hoursNum * 7; // hours per day -> per week
-    } else if (timeStr.includes('month')) {
-      return hoursNum / 4.3; // hours per month -> per week (approximate)
-    } else {
-      return hoursNum; // already hours per week
-    }
+// Helper to safely parse JSON with error handling
+export function safeJsonParse<T>(text: string, defaultValue: T): T {
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    logger.error(`Failed to parse JSON: ${e.message}`);
+    return defaultValue;
   }
-  
-  if (days) {
-    const daysNum = parseInt(days[1], 10);
-    return daysNum * 8; // assume 8 hours per day
-  }
-  
-  // If no clear pattern, make a reasonable guess
-  if (timeStr.includes('weekend')) return 16; // weekend -> 16 hours
-  if (timeStr.includes('part-time')) return 20; // part-time -> 20 hours
-  if (timeStr.includes('full-time')) return 40; // full-time -> 40 hours
-  
-  // Default fallback
-  return 10; // default assumption: 10 hours/week
 }
 
-/**
- * Calculate a readability score for text (simplified Flesch-Kincaid)
- * Higher score = more readable (max 100)
- */
-export function calculateReadability(text: string): number {
-  const words = text.trim().split(/\s+/).length;
-  const sentences = text.split(/[.!?]+/).length;
-  const syllables = countSyllables(text);
-  
-  if (words === 0 || sentences === 0) return 0;
-  
-  // Simplified Flesch Reading Ease formula
-  const score = 206.835 - 1.015 * (words / sentences) - 84.6 * (syllables / words);
-  
-  // Clamp to 0-100 range
-  return Math.max(0, Math.min(100, score));
+// Create a random delay for scraper requests to avoid rate limiting
+export function randomDelay(min = 1000, max = 3000): Promise<void> {
+  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+  return sleep(delay);
 }
 
-/**
- * Rough approximation of syllable count (English only)
- */
-function countSyllables(text: string): number {
-  const words = text.toLowerCase().split(/\s+/);
-  let count = 0;
-  
-  for (const word of words) {
-    if (word.length <= 3) {
-      count += 1;
-      continue;
-    }
-    
-    // Count vowel groups as syllables
-    const vowelGroups = word.match(/[aeiouy]+/g);
-    if (!vowelGroups) {
-      count += 1;
-      continue;
-    }
-    
-    // Adjust for common patterns
-    let syllables = vowelGroups.length;
-    
-    // Subtract for silent 'e' at end
-    if (word.endsWith('e') && syllables > 1) {
-      syllables -= 1;
-    }
-    
-    // Add at least one syllable per word
-    count += Math.max(1, syllables);
-  }
-  
-  return count;
+// Formats a number with commas for display
+export function formatNumber(num: number): string {
+  return new Intl.NumberFormat().format(num);
 }
 
-/**
- * Extract keywords from text
- */
-export function extractKeywords(text: string, maxKeywords: number = 10): string[] {
-  // Remove common stop words
-  const stopWords = [
-    'a', 'an', 'the', 'and', 'or', 'but', 'is', 'are', 'was', 'were',
-    'in', 'on', 'at', 'to', 'for', 'with', 'by', 'about', 'as', 'of',
-    'this', 'that', 'these', 'those', 'it', 'its', 'from', 'be', 'have',
-    'has', 'had', 'do', 'does', 'did', 'will', 'would', 'shall', 'should',
-    'can', 'could', 'may', 'might', 'must', 'ought'
-  ];
-  
-  // Normalize text, remove punctuation
-  const normalized = text.toLowerCase().replace(/[^\w\s]/g, '');
-  
-  // Split into words
-  const words = normalized.split(/\s+/);
-  
-  // Count word frequency
-  const wordCounts = new Map<string, number>();
-  for (const word of words) {
-    if (word.length < 3 || stopWords.includes(word)) continue;
-    
-    const count = wordCounts.get(word) || 0;
-    wordCounts.set(word, count + 1);
-  }
-  
-  // Sort by frequency
-  return Array.from(wordCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, maxKeywords)
-    .map(entry => entry[0]);
+// Truncate text to a maximum length with ellipsis
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + "...";
 }
 
-/**
- * Calculate similarity between two skill arrays
- * Returns a number between 0 and 1
- */
-export function calculateSkillSimilarity(skills1: string[], skills2: string[]): number {
-  if (skills1.length === 0 || skills2.length === 0) return 0;
+// Utility function to calculate intersection between arrays
+export function arrayIntersection<T>(a: T[], b: T[]): T[] {
+  const setB = new Set(b);
+  return [...new Set(a)].filter(x => setB.has(x));
+}
+
+// Calculate Jaccard similarity between two arrays
+export function jaccardSimilarity<T>(a: T[], b: T[]): number {
+  if (a.length === 0 && b.length === 0) return 1.0;
+  const intersection = arrayIntersection(a, b).length;
+  const union = new Set([...a, ...b]).size;
+  return intersection / union;
+}
+
+// Calculate weighted score for matching
+export function calculateWeightedScore(scores: Record<string, number>, weights: Record<string, number>): number {
+  let totalScore = 0;
+  let totalWeight = 0;
   
-  const normalized1 = skills1.map(s => s.toLowerCase());
-  const normalized2 = skills2.map(s => s.toLowerCase());
-  
-  // Count exact matches
-  let exactMatches = 0;
-  for (const skill of normalized1) {
-    if (normalized2.includes(skill)) {
-      exactMatches++;
+  for (const [key, weight] of Object.entries(weights)) {
+    if (scores[key] !== undefined) {
+      totalScore += scores[key] * weight;
+      totalWeight += weight;
     }
   }
   
-  // Count partial matches
-  let partialMatches = 0;
-  for (const skill1 of normalized1) {
-    for (const skill2 of normalized2) {
-      if (skill1 === skill2) continue; // Skip exact matches we already counted
-      
-      if (skill1.includes(skill2) || skill2.includes(skill1)) {
-        partialMatches++;
-        break;
-      }
-    }
-  }
-  
-  // Calculate similarity score
-  const exactMatchWeight = 0.8;
-  const partialMatchWeight = 0.2;
-  
-  const exactScore = exactMatches / Math.min(normalized1.length, normalized2.length);
-  const partialScore = partialMatches / Math.min(normalized1.length, normalized2.length);
-  
-  return (exactScore * exactMatchWeight) + (partialScore * partialMatchWeight);
+  return totalWeight > 0 ? totalScore / totalWeight : 0;
+}
+
+// Utility to extract clean text from HTML
+export function extractTextFromHtml(html: string): string {
+  // Basic implementation - in a real app, use a proper HTML parser
+  return html
+    .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+    .replace(/\s+/g, ' ')     // Normalize whitespace
+    .trim();
+}
+
+// Normalize strings for comparison
+export function normalizeString(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '') // Remove special characters
+    .replace(/\s+/g, ' ')    // Normalize whitespace
+    .trim();
+}
+
+// Create a unique ID with prefix
+export function generateId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }

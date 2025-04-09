@@ -1,127 +1,128 @@
 /**
  * Base class for all opportunity sources
+ * 
+ * This provides common functionality and a standardized interface for 
+ * all platform-specific opportunity sources to implement.
  */
 
-import { v4 as uuidv4 } from "uuid";
-import { logger } from "../utils";
-import { 
-  OpportunitySource, 
-  UserDiscoveryInput, 
-  RawOpportunity,
-  OpportunityType
-} from "../types";
+import axios from 'axios';
+import { DiscoveryPreferences, OpportunitySource, RawOpportunity } from "../types";
+import { logger, randomDelay, sleep } from '../utils';
+import { OpportunityType, RiskLevel } from '../../../shared/schema';
 
-/**
- * Base implementation for all opportunity sources
- */
 export abstract class BaseOpportunitySource implements OpportunitySource {
-  id: string;
-  name: string;
-  url: string;
-  type: OpportunityType;
-  logo?: string;
-  apiKey?: string;
-  active: boolean;
+  // Basic properties that all sources must have
+  public readonly name: string;
+  public readonly id: string;
+  protected baseUrl: string;
+  protected requestDelay: number = 1000; // Time in ms between requests
+  protected cacheTimeMs: number = 60 * 60 * 1000; // Default 1 hour cache
+  protected cache: Map<string, {data: RawOpportunity[], timestamp: number}> = new Map();
   
-  constructor(
-    id: string,
-    name: string,
-    url: string,
-    type: OpportunityType,
-    options: {
-      logo?: string;
-      apiKey?: string;
-      active?: boolean;
-    } = {}
-  ) {
-    this.id = id;
+  constructor(name: string, id: string, baseUrl: string) {
     this.name = name;
-    this.url = url;
-    this.type = type;
-    this.logo = options.logo;
-    this.apiKey = options.apiKey;
-    this.active = options.active !== undefined ? options.active : true;
+    this.id = id;
+    this.baseUrl = baseUrl;
   }
   
   /**
-   * Main method to fetch opportunities based on user skills
-   * Each source must implement this method
+   * Main method that all sources must implement to get opportunities
    */
-  abstract fetchOpportunities(input: UserDiscoveryInput): Promise<RawOpportunity[]>;
+  public abstract getOpportunities(
+    skills: string[], 
+    preferences: DiscoveryPreferences
+  ): Promise<RawOpportunity[]>;
   
   /**
-   * Validate API credentials
+   * Helper for making HTTP requests with appropriate delays and error handling
    */
-  async validateCredentials(): Promise<boolean> {
-    if (!this.apiKey) {
-      logger.warn(`No API key provided for source: ${this.name}`);
-      return false;
+  protected async fetchWithRetry(
+    url: string, 
+    options?: { 
+      method?: string, 
+      headers?: Record<string, string>, 
+      data?: any,
+      retries?: number 
     }
+  ): Promise<any> {
+    const method = options?.method || 'GET';
+    const headers = options?.headers || {};
+    const data = options?.data;
+    const retries = options?.retries || 3;
+    
+    // Add slight random delay to avoid rate limiting
+    await randomDelay(500, 1500);
     
     try {
-      const valid = await this.testApiConnection();
+      const response = await axios({
+        method,
+        url,
+        headers,
+        data,
+        timeout: 15000, // 15 second timeout
+      });
       
-      if (!valid) {
-        logger.warn(`Invalid API credentials for source: ${this.name}`);
-        return false;
+      return response.data;
+    } catch (error) {
+      if (retries > 0) {
+        logger.warn(`Error fetching ${url}, retrying (${retries} attempts left): ${error.message}`);
+        // Exponential backoff
+        await sleep(2000 * (4 - retries));
+        return this.fetchWithRetry(url, {
+          ...options,
+          retries: retries - 1,
+        });
       }
       
-      return true;
-    } catch (error) {
-      logger.error(`Error validating credentials for ${this.name}: ${error.message}`);
-      return false;
+      logger.error(`Failed to fetch ${url} after retries: ${error.message}`);
+      return null;
     }
   }
   
   /**
-   * Test the API connection
-   * Each source should implement this method
+   * Shared method for categorizing risk level
    */
-  protected abstract testApiConnection(): Promise<boolean>;
-  
-  /**
-   * Create a raw opportunity object with source information
-   */
-  protected createOpportunity(data: Partial<RawOpportunity>): RawOpportunity {
-    return {
-      sourceId: this.id,
-      sourceName: this.name,
-      title: '',
-      description: '',
-      type: this.type,
-      skillsRequired: [],
-      estimatedIncome: {
-        min: 0,
-        max: 0,
-        timeframe: 'monthly'
-      },
-      startupCost: {
-        min: 0,
-        max: 0
-      },
-      timeCommitment: {
-        min: 0,
-        max: 0,
-        timeframe: 'weekly'
-      },
-      location: 'remote',
-      entryBarrier: 'LOW',
-      competition: 'medium',
-      growth: 'stable',
-      ...data
-    };
-  }
-  
-  /**
-   * Handle errors consistently
-   */
-  protected handleError(error: any, context: string): void {
-    const message = error.response?.data?.message || error.message || 'Unknown error';
-    logger.error(`Error in ${this.name} source (${context}): ${message}`);
+  protected categorizeRiskLevel(
+    startupCost: number, 
+    timeToFirstDollar: number, 
+    competitionLevel: 'low' | 'medium' | 'high'
+  ): RiskLevel {
+    // Default risk is LOW
+    let risk: RiskLevel = RiskLevel.LOW;
     
-    // Additional logging for debugging
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Error details: ${JSON.stringify(error.response?.data || error)}`);
+    // Startup cost factor
+    if (startupCost > 5000) {
+      risk = RiskLevel.HIGH;
+    } else if (startupCost > 1000) {
+      risk = RiskLevel.MEDIUM;
     }
+    
+    // Time to first income factor
+    if (timeToFirstDollar > 90) { // More than 3 months
+      risk = this.increaseRisk(risk);
+    }
+    
+    // Competition factor
+    if (competitionLevel === 'high') {
+      risk = this.increaseRisk(risk);
+    }
+    
+    return risk;
+  }
+  
+  /**
+   * Helper to increase risk level
+   */
+  private increaseRisk(current: RiskLevel): RiskLevel {
+    if (current === RiskLevel.LOW) return RiskLevel.MEDIUM;
+    if (current === RiskLevel.MEDIUM) return RiskLevel.HIGH;
+    return RiskLevel.HIGH;
+  }
+  
+  /**
+   * Generate a unique id for an opportunity
+   */
+  protected generateOpportunityId(platform: string, uniqueIdentifier: string): string {
+    return `${platform.toLowerCase()}-${uniqueIdentifier.replace(/[^a-z0-9]/gi, '-')}`;
   }
 }
