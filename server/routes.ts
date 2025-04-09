@@ -7,6 +7,7 @@ import { setupAuth } from "./auth";
 import { insertUserProfileSchema, insertMonetizationOpportunitySchema } from "@shared/schema";
 import * as analytics from "./api/analytics";
 import * as coach from "./api/coach";
+import * as progressAnalysis from "./api/progress-analysis";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
@@ -429,8 +430,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       
       // In a real implementation, you would fetch from the database
-      // For now, return an empty array
-      return res.status(200).json([]);
+      // For now, return a sample action plan for demo purposes
+      const sampleActionPlan = {
+        id: 123456789,
+        userId: userId,
+        title: "Freelance Content Creation Action Plan",
+        createdAt: new Date().toISOString(),
+        phases: [
+          {
+            title: "Phase 1: Foundation",
+            duration: "2 weeks",
+            tasks: [
+              {
+                id: "task-1-1",
+                title: "Research Content Creation Opportunities",
+                description: "Identify top platforms and niches with high demand for content creators.",
+                priority: "high",
+                durationDays: 3,
+                status: "completed",
+                completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+                notes: "Found promising opportunities in tech tutorials and lifestyle content.",
+                resourceLinks: [
+                  { title: "Market Research Template", url: "#" },
+                  { title: "Content Creator Pay Rates Guide", url: "#" }
+                ]
+              },
+              {
+                id: "task-1-2",
+                title: "Define Your Content Niche",
+                description: "Select a specific content area based on your skills and market demand.",
+                priority: "high",
+                durationDays: 2,
+                status: "completed",
+                completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+                dependsOn: ["task-1-1"]
+              },
+              {
+                id: "task-1-3",
+                title: "Create Sample Content Pieces",
+                description: "Develop 2-3 high-quality samples that showcase your content creation abilities.",
+                priority: "medium",
+                durationDays: 5,
+                status: "in-progress",
+              },
+              {
+                id: "task-1-4",
+                title: "Set Up Professional Profiles",
+                description: "Create accounts on relevant platforms and optimize your profile.",
+                priority: "medium",
+                durationDays: 2,
+                status: "pending"
+              }
+            ]
+          },
+          {
+            title: "Phase 2: Launch Preparation",
+            duration: "3 weeks",
+            tasks: [
+              {
+                id: "task-2-1",
+                title: "Develop Service Packages",
+                description: "Create 2-3 different service tiers with clear deliverables and pricing.",
+                priority: "high",
+                durationDays: 4,
+                status: "pending",
+                dependsOn: ["task-1-2"]
+              },
+              {
+                id: "task-2-2",
+                title: "Create Client Onboarding Process",
+                description: "Develop questionnaires, contracts, and workflow documents.",
+                priority: "medium",
+                durationDays: 3,
+                status: "pending"
+              },
+              {
+                id: "task-2-3",
+                title: "Set Up Payment System",
+                description: "Create accounts on payment platforms and set up invoicing templates.",
+                priority: "high",
+                durationDays: 2,
+                status: "pending"
+              },
+              {
+                id: "task-2-4",
+                title: "Develop Marketing Strategy",
+                description: "Create a plan to promote your content creation services.",
+                priority: "medium",
+                durationDays: 5,
+                status: "pending",
+                resourceLinks: [
+                  { title: "Content Creator Marketing Guide", url: "#" },
+                  { title: "Social Media Strategy Template", url: "#" }
+                ]
+              }
+            ]
+          },
+          {
+            title: "Phase 3: First Clients",
+            duration: "4 weeks",
+            tasks: [
+              {
+                id: "task-3-1",
+                title: "Identify Potential Clients",
+                description: "Research and list 20-30 potential clients who would benefit from your services.",
+                priority: "high",
+                durationDays: 3,
+                status: "pending",
+                dependsOn: ["task-2-1", "task-2-4"]
+              },
+              {
+                id: "task-3-2",
+                title: "Launch Outreach Campaign",
+                description: "Contact potential clients with personalized pitches.",
+                priority: "high",
+                durationDays: 14,
+                status: "pending",
+                dependsOn: ["task-3-1"]
+              },
+              {
+                id: "task-3-3",
+                title: "Set Up Feedback System",
+                description: "Create a process to collect and incorporate client feedback.",
+                priority: "medium",
+                durationDays: 2,
+                status: "pending"
+              },
+              {
+                id: "task-3-4",
+                title: "Secure First Client",
+                description: "Close your first deal and deliver exceptional content.",
+                priority: "high",
+                durationDays: 7,
+                status: "pending",
+                dependsOn: ["task-3-2"]
+              }
+            ]
+          },
+          {
+            title: "Phase 4: Optimization & Growth",
+            duration: "Ongoing",
+            tasks: [
+              {
+                id: "task-4-1",
+                title: "Track Key Metrics",
+                description: "Implement systems to track performance and income.",
+                priority: "medium",
+                durationDays: 3,
+                status: "pending"
+              },
+              {
+                id: "task-4-2",
+                title: "Refine Service Offerings",
+                description: "Adjust your packages based on client feedback and market response.",
+                priority: "medium",
+                durationDays: 4,
+                status: "pending",
+                dependsOn: ["task-3-4"]
+              },
+              {
+                id: "task-4-3",
+                title: "Develop Referral System",
+                description: "Create incentives for existing clients to refer new business.",
+                priority: "medium",
+                durationDays: 2,
+                status: "pending",
+                dependsOn: ["task-3-4"]
+              },
+              {
+                id: "task-4-4",
+                title: "Scale Your Operation",
+                description: "Identify processes that can be automated or outsourced.",
+                priority: "low",
+                durationDays: 7,
+                status: "pending",
+                dependsOn: ["task-4-2"]
+              }
+            ]
+          }
+        ],
+        userInputs: {
+          skills: {
+            primarySkill: "Content Creation",
+            secondarySkills: ["Copywriting", "Social Media Management"],
+            confidenceRating: 4,
+            experience: "I've been creating content for my personal blog for 2 years.",
+            timeAvailablePerWeek: 15
+          },
+          goals: {
+            targetMonthlyIncome: 2000,
+            timeline: 3,
+            riskTolerance: 3,
+            workStyle: "client"
+          },
+          resources: {
+            existingTools: "Adobe Creative Suite, Canva Pro",
+            initialBudget: 200,
+            existingAudience: "Small following on Instagram (~500) and Twitter (~300)",
+            strengths: "Creativity, reliability, quick learner",
+            weaknesses: "Sometimes perfectionist, need to improve networking"
+          }
+        }
+      };
+      
+      return res.status(200).json([sampleActionPlan]);
     } catch (error) {
       console.error("Error fetching action plans:", error);
       return res.status(500).json({
@@ -439,6 +642,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // AI-powered Progress Tracking and Motivation System endpoints
+  app.get("/api/analytics/action-plans/:actionPlanId/progress", isAuthenticated, progressAnalysis.getProgressAnalysis);
+  app.patch("/api/analytics/action-plans/:actionPlanId/tasks/:taskId", isAuthenticated, progressAnalysis.updateTaskStatus);
+  app.get("/api/analytics/action-plans/:actionPlanId/predictions", isAuthenticated, progressAnalysis.getTaskPredictions);
+  app.get("/api/analytics/motivation", isAuthenticated, progressAnalysis.getMotivationalMessage);
   
   // === AI Coach API Endpoints ===
   
