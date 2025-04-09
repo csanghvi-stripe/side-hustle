@@ -343,8 +343,8 @@ const OpportunityDetailPage = () => {
             <h1 className="text-3xl font-bold">{opportunityData.title}</h1>
             <div className="flex items-center mt-2">
               <Badge variant="outline" className="mr-2 flex items-center">
-                {getIconForType(opportunityData.type)}
-                <span className="ml-1">{opportunityData.type}</span>
+                {getIconForType(opportunityData.type || 'FREELANCE')}
+                <span className="ml-1">{opportunityData.type || 'Opportunity'}</span>
               </Badge>
               {opportunityData.riskLevel && (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${riskStyle?.bg || ''} ${riskStyle?.text || ''}`}>
@@ -547,7 +547,7 @@ const OpportunityDetailPage = () => {
                           <li className="flex items-start">
                             <Check className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
                             <p className="text-neutral-700 text-sm">
-                              <span className="font-medium">Growing market:</span> Increasing demand for {opportunityData.type.toLowerCase()} services across industries.
+                              <span className="font-medium">Growing market:</span> Increasing demand for {opportunityData.type ? opportunityData.type.toLowerCase() : 'these'} services across industries.
                             </p>
                           </li>
                         </ul>
@@ -772,7 +772,7 @@ const OpportunityDetailPage = () => {
                         </div>
                         <div>
                           <h4 className="font-medium">Jessica Wang</h4>
-                          <p className="text-xs text-neutral-500">5 years experience in {opportunityData.type}</p>
+                          <p className="text-xs text-neutral-500">5 years experience in {opportunityData.type || 'this field'}</p>
                           <div className="flex items-center mt-2">
                             <Badge variant="outline" className="bg-blue-50 text-blue-700 mr-1 text-xs">Top Mentor</Badge>
                             <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">Available</Badge>
@@ -793,7 +793,7 @@ const OpportunityDetailPage = () => {
                         </div>
                         <div>
                           <h4 className="font-medium">Michael Rodriguez</h4>
-                          <p className="text-xs text-neutral-500">Founder of a successful {opportunityData.type} business</p>
+                          <p className="text-xs text-neutral-500">Founder of a successful {opportunityData.type || 'similar'} business</p>
                           <div className="flex items-center mt-2">
                             <Badge variant="outline" className="bg-purple-50 text-purple-700 text-xs">Strategy Expert</Badge>
                           </div>
@@ -813,7 +813,7 @@ const OpportunityDetailPage = () => {
                         </div>
                         <div>
                           <h4 className="font-medium">Priya Sharma</h4>
-                          <p className="text-xs text-neutral-500">Career coach specializing in {opportunityData.type}</p>
+                          <p className="text-xs text-neutral-500">Career coach specializing in {opportunityData.type || 'this field'}</p>
                           <div className="flex items-center mt-2">
                             <Badge variant="outline" className="bg-green-50 text-green-700 text-xs">Career Transition</Badge>
                           </div>
@@ -1335,7 +1335,7 @@ const OpportunityDetailPage = () => {
                                 <GraduationCap className="w-5 h-5" />
                               </div>
                               <div>
-                                <h4 className="font-medium">Getting Started with {opportunityData.type}</h4>
+                                <h4 className="font-medium">Getting Started with {opportunityData.type || 'This Opportunity'}</h4>
                                 <p className="text-sm text-neutral-500">Free • 2 hours</p>
                               </div>
                             </div>
@@ -1357,7 +1357,7 @@ const OpportunityDetailPage = () => {
                                 <DollarSign className="w-5 h-5" />
                               </div>
                               <div>
-                                <h4 className="font-medium">Pricing Strategies for {opportunityData.type}</h4>
+                                <h4 className="font-medium">Pricing Strategies for {opportunityData.type || 'This Opportunity'}</h4>
                                 <p className="text-sm text-neutral-500">Premium • 4 hours</p>
                               </div>
                             </div>
