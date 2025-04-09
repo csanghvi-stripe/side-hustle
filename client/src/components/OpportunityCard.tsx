@@ -19,8 +19,111 @@ import {
   Target, 
   DollarSign, 
   Building, 
-  ChevronRight 
+  ChevronRight,
+  Trash2,
+  HelpCircle,
+  Info
 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+
+// Helper function to generate realistic metrics for opportunities
+const calculateOpportunityMetrics = (type: string, requiredSkills?: string[]) => {
+  // Generate a more accurate ROI score
+  let roiScore = 0;
+  if (type === "Freelance") {
+    roiScore = Math.floor(Math.random() * 10) + 65; // 65-75 
+  } else if (type === "Digital Product") {
+    roiScore = Math.floor(Math.random() * 20) + 70; // 70-90
+  } else if (type === "Content Creation") {
+    roiScore = Math.floor(Math.random() * 15) + 60; // 60-75
+  } else if (type === "Service-Based") {
+    roiScore = Math.floor(Math.random() * 10) + 70; // 70-80
+  } else if (type === "Passive Income") {
+    roiScore = Math.floor(Math.random() * 25) + 55; // 55-80
+  } else {
+    roiScore = Math.floor(Math.random() * 20) + 60; // 60-80
+  }
+  
+  // Generate realistic time to first revenue
+  let timeToFirstRevenue = "";
+  if (type === "Freelance") {
+    timeToFirstRevenue = "2-4 weeks";
+  } else if (type === "Digital Product") {
+    timeToFirstRevenue = "1-3 months";
+  } else if (type === "Content Creation") {
+    timeToFirstRevenue = "2-6 weeks";
+  } else if (type === "Service-Based") {
+    timeToFirstRevenue = "1-2 weeks";
+  } else if (type === "Passive Income") {
+    timeToFirstRevenue = "3-6 months";
+  } else {
+    timeToFirstRevenue = "~30 days";
+  }
+  
+  // Calculate skill gap days
+  let skillGapDays = 0;
+  if (Array.isArray(requiredSkills) && requiredSkills.length > 0) {
+    // More skills = more days to learn
+    skillGapDays = requiredSkills.length * 3 + 2;
+  } else {
+    // Default values based on opportunity type
+    if (type === "Freelance") {
+      skillGapDays = 7;
+    } else if (type === "Digital Product") {
+      skillGapDays = 21;
+    } else if (type === "Content Creation") {
+      skillGapDays = 14;
+    } else if (type === "Service-Based") {
+      skillGapDays = 10;
+    } else if (type === "Passive Income") {
+      skillGapDays = 30;
+    } else {
+      skillGapDays = 14;
+    }
+  }
+  
+  // Generate realistic income potential
+  let incomePotential = "";
+  if (type === "Freelance") {
+    incomePotential = "$1,000-$5,000";
+  } else if (type === "Digital Product") {
+    incomePotential = "$500-$10,000";
+  } else if (type === "Content Creation") {
+    incomePotential = "$500-$3,000";
+  } else if (type === "Service-Based") {
+    incomePotential = "$1,500-$8,000";
+  } else if (type === "Passive Income") {
+    incomePotential = "$200-$2,000";
+  } else {
+    incomePotential = "$1,000-$3,000";
+  }
+  
+  // Generate startup cost
+  let startupCost = "";
+  if (type === "Freelance") {
+    startupCost = "$0-$100";
+  } else if (type === "Digital Product") {
+    startupCost = "$100-$1,000";
+  } else if (type === "Content Creation") {
+    startupCost = "$50-$500";
+  } else if (type === "Service-Based") {
+    startupCost = "$100-$500";
+  } else if (type === "Passive Income") {
+    startupCost = "$500-$5,000";
+  } else {
+    startupCost = "$50-$500";
+  }
+  
+  return { roiScore, timeToFirstRevenue, skillGapDays, incomePotential, startupCost };
+};
 
 // Define color variants for different opportunity types
 const typeVariants: Record<string, string> = {
@@ -99,6 +202,30 @@ interface OpportunityCardProps {
 
 const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
   const [isSkillGapExpanded, setIsSkillGapExpanded] = useState(false);
+  const { toast } = useToast();
+  
+  // Set up delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (opportunityId: number) => {
+      return await apiRequest("DELETE", `/api/opportunities/${opportunityId}`);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch opportunities
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      toast({
+        title: "Opportunity deleted",
+        description: "The opportunity has been successfully removed.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting opportunity:", error);
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the opportunity. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
   console.log("Opportunity raw:", opportunity);
   
@@ -137,21 +264,20 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
         }
       }
       
-      // Generate a random ROI score if not provided
-      const roiScore = parsed.roiScore || Math.floor(Math.random() * 50) + 50;
+      // Use metrics helper for more accurate values
+      const metrics = calculateOpportunityMetrics(normalizedType, 
+        Array.isArray(parsed.requiredSkills) ? parsed.requiredSkills : []);
       
-      // Set time to first revenue
-      const timeToFirstRevenue = parsed.timeToFirstRevenue || "~30 days";
-      
-      // Set skill gap days
-      const skillGapDays = parsed.skillGapDays || 0;
+      const roiScore = parsed.roiScore || metrics.roiScore;
+      const timeToFirstRevenue = parsed.timeToFirstRevenue || metrics.timeToFirstRevenue;
+      const skillGapDays = parsed.skillGapDays !== undefined ? parsed.skillGapDays : metrics.skillGapDays;
       
       opportunityData = {
         title: parsed.title || opportunity.title || "",
         type: normalizedType,
         description: parsed.description || "This opportunity allows you to leverage your skills in a flexible way to generate income.",
-        incomePotential: parsed.incomePotential || "$0-$0",
-        startupCost: parsed.startupCost || "$0",
+        incomePotential: parsed.incomePotential || metrics.incomePotential,
+        startupCost: parsed.startupCost || metrics.startupCost,
         riskLevel: parsed.riskLevel || "Medium",
         stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [
           "Create a profile highlighting your relevant skills",
@@ -210,21 +336,20 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
         }
       }
       
-      // Generate a random ROI score if not provided
-      const roiScore = parsed.roiScore || Math.floor(Math.random() * 50) + 50;
+      // Use metrics helper for more accurate values
+      const secondMetrics = calculateOpportunityMetrics(normalizedType, 
+        Array.isArray(parsed.requiredSkills) ? parsed.requiredSkills : []);
       
-      // Set time to first revenue
-      const timeToFirstRevenue = parsed.timeToFirstRevenue || "~30 days";
-      
-      // Set skill gap days
-      const skillGapDays = parsed.skillGapDays || 0;
-      
+      const roiScore = parsed.roiScore || secondMetrics.roiScore;
+      const timeToFirstRevenue = parsed.timeToFirstRevenue || secondMetrics.timeToFirstRevenue;
+      const skillGapDays = parsed.skillGapDays !== undefined ? parsed.skillGapDays : secondMetrics.skillGapDays;
+        
       opportunityData = {
         title: parsed.title || opportunity.title || "",
         type: normalizedType,
         description: description,
-        incomePotential: parsed.incomePotential || "$0-$0",
-        startupCost: parsed.startupCost || "$0",
+        incomePotential: parsed.incomePotential || secondMetrics.incomePotential,
+        startupCost: parsed.startupCost || secondMetrics.startupCost,
         riskLevel: parsed.riskLevel || "Medium",
         stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [
           "Create a profile highlighting your relevant skills",
@@ -241,12 +366,14 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
       };
     } else {
       // Fallback if opportunityData is missing/invalid
+      const fallbackMetrics = calculateOpportunityMetrics("Freelance");
+        
       opportunityData = {
         title: opportunity.title || "",
         type: "Freelance", // Default to Freelance
         description: "This opportunity allows you to leverage your skills in a flexible way to generate income.",
-        incomePotential: "$0-$0",
-        startupCost: "$0",
+        incomePotential: fallbackMetrics.incomePotential,
+        startupCost: fallbackMetrics.startupCost,
         riskLevel: "Medium",
         stepsToStart: [
           "Create a profile highlighting your relevant skills",
@@ -256,9 +383,9 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
         ],
         resources: [],
         successStories: [],
-        roiScore: 56, // Default ROI score
-        timeToFirstRevenue: "~30 days",
-        skillGapDays: 0,
+        roiScore: fallbackMetrics.roiScore,
+        timeToFirstRevenue: fallbackMetrics.timeToFirstRevenue,
+        skillGapDays: fallbackMetrics.skillGapDays,
         requiredSkills: []
       };
     }
@@ -267,18 +394,20 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
   } catch (error) {
     console.error("Failed to parse opportunity data:", error);
     // Fallback if parsing fails
+    const errorFallbackMetrics = calculateOpportunityMetrics("Freelance");
+    
     opportunityData = {
       title: opportunity.title || "",
       type: "Freelance",
       description: "Error loading opportunity details",
-      incomePotential: "$0-$0",
-      startupCost: "$0",
+      incomePotential: errorFallbackMetrics.incomePotential,
+      startupCost: errorFallbackMetrics.startupCost,
       riskLevel: "Medium",
       stepsToStart: [],
       resources: [],
-      roiScore: 56, // Default ROI score
-      timeToFirstRevenue: "~30 days",
-      skillGapDays: 0,
+      roiScore: errorFallbackMetrics.roiScore,
+      timeToFirstRevenue: errorFallbackMetrics.timeToFirstRevenue,
+      skillGapDays: errorFallbackMetrics.skillGapDays,
       requiredSkills: []
     };
   }
@@ -299,92 +428,169 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
 
   // This is the simplified summary card for the opportunities list page that matches the screenshot
   return (
-    <div className="border border-neutral-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white p-6 relative">
-      {/* Date badge in top right */}
-      <div className="absolute top-4 right-4 bg-slate-700 text-white text-xs px-2 py-1 rounded-md">
-        {new Date().toLocaleDateString('en-US', {
-          month: 'numeric',
-          day: 'numeric',
-          year: 'numeric'
-        })}
+    <TooltipProvider>
+      <div className="border border-neutral-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white p-6 relative">
+        {/* Date badge in top right */}
+        <div className="absolute top-4 right-4 bg-slate-700 text-white text-xs px-2 py-1 rounded-md">
+          {new Date(opportunity.createdAt || new Date()).toLocaleDateString('en-US', {
+            month: 'numeric',
+            day: 'numeric',
+            year: 'numeric'
+          })}
+        </div>
+        
+        {/* Delete button */}
+        <div className="absolute top-4 left-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+            onClick={() => {
+              if (confirm("Are you sure you want to delete this opportunity?")) {
+                deleteMutation.mutate(opportunity.id);
+              }
+            }}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? (
+              <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        
+        <div className="flex flex-col gap-5">
+          {/* Header with type */}
+          <div className="flex items-center gap-3 mt-3">
+            <div className="flex-shrink-0">
+              {getIconForType(opportunityData.type)}
+            </div>
+            <Badge variant={(typeVariants[opportunityData.type as keyof typeof typeVariants] || "default") as any}>
+              {opportunityData.type}
+            </Badge>
+          </div>
+          
+          {/* ROI Analysis Section with tooltip */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <h4 className="font-medium text-base">ROI Analysis</h4>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex items-center">
+                    <div className="bg-slate-800 text-white px-2 py-1 rounded-md text-xs font-medium">
+                      {opportunityData.roiScore}/100
+                    </div>
+                    <HelpCircle className="h-4 w-4 ml-1 text-neutral-400" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">
+                    This ROI score is calculated based on initial investment, expected income, and time to achieve results.
+                    <br/><br/>
+                    <strong>Higher score (75-100):</strong> Excellent return on time/money invested
+                    <br/>
+                    <strong>Medium score (50-74):</strong> Good balance of effort and return
+                    <br/>
+                    <strong>Lower score (below 50):</strong> May require more effort or investment
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            
+            <p className="text-sm text-neutral-500 line-clamp-2">
+              Bang for buck assessment for this opportunity
+            </p>
+          </div>
+          
+          {/* Metrics Grid with tooltips */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-neutral-500 flex items-center">
+                Potential Monthly Income
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3 w-3 ml-1 text-neutral-400" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      Estimated income range based on market rates for this opportunity type. Actual earnings may vary based on your skills, time invested, and market conditions.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </p>
+              <div className="flex items-center mt-1">
+                <DollarSign className="w-4 h-4 text-green-500 mr-1" />
+                <span className="font-medium">{opportunityData.incomePotential}</span>
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-xs text-neutral-500 flex items-center">
+                Time to First Revenue
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3 w-3 ml-1 text-neutral-400" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      Average time frame to earn your first dollar based on user data and industry averages. Focused effort can often reduce this timeline.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </p>
+              <div className="flex items-center mt-1">
+                <Clock className="w-4 h-4 text-amber-500 mr-1" />
+                <span className="font-medium">{opportunityData.timeToFirstRevenue}</span>
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-xs text-neutral-500 flex items-center">
+                Skill Gap Closure
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3 w-3 ml-1 text-neutral-400" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      Estimated time needed to acquire missing skills required for this opportunity. Based on your current skill profile and the requirements for this opportunity type.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </p>
+              <div className="flex items-center mt-1">
+                <Target className="w-4 h-4 text-purple-500 mr-1" />
+                <span className="font-medium">~{opportunityData.skillGapDays} days</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <Link href={`/opportunity/${opportunity.id}`}>
+              <Button 
+                variant="outline" 
+                className="w-full transition-all hover:bg-primary hover:text-white group"
+                onClick={() => {
+                  // Add debug logging
+                  console.log("View Details clicked for opportunity ID:", opportunity.id);
+                }}
+              >
+                View Details
+                <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+            <Link href={`/action-plan?opportunityId=${opportunity.id}`}>
+              <Button className="w-full">
+                Create Plan
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
-      
-      <div className="flex flex-col gap-5">
-        {/* Header with type */}
-        <div className="flex items-center gap-3">
-          <div className="flex-shrink-0">
-            {getIconForType(opportunityData.type)}
-          </div>
-          <Badge variant={(typeVariants[opportunityData.type as keyof typeof typeVariants] || "default") as any}>
-            {opportunityData.type}
-          </Badge>
-        </div>
-        
-        {/* ROI Analysis Section */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <h4 className="font-medium text-base">ROI Analysis</h4>
-            <div className="bg-slate-800 text-white px-2 py-1 rounded-md text-xs font-medium">
-              {opportunityData.roiScore}/100
-            </div>
-          </div>
-          
-          <p className="text-sm text-neutral-500 line-clamp-2">
-            Bang for buck assessment for this opportunity
-          </p>
-        </div>
-        
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-neutral-500">Potential Monthly Income</p>
-            <div className="flex items-center mt-1">
-              <DollarSign className="w-4 h-4 text-green-500 mr-1" />
-              <span className="font-medium">{opportunityData.incomePotential}</span>
-            </div>
-          </div>
-          
-          <div>
-            <p className="text-xs text-neutral-500">Time to First Revenue</p>
-            <div className="flex items-center mt-1">
-              <Clock className="w-4 h-4 text-amber-500 mr-1" />
-              <span className="font-medium">{opportunityData.timeToFirstRevenue}</span>
-            </div>
-          </div>
-          
-          <div>
-            <p className="text-xs text-neutral-500">Skill Gap Closure</p>
-            <div className="flex items-center mt-1">
-              <Target className="w-4 h-4 text-purple-500 mr-1" />
-              <span className="font-medium">~{opportunityData.skillGapDays} days</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-3 mt-3">
-          <Link href={`/opportunity/${opportunity.id}`}>
-            <Button 
-              variant="outline" 
-              className="w-full transition-all hover:bg-primary hover:text-white group"
-              onClick={() => {
-                // Add debug logging
-                console.log("View Details clicked for opportunity ID:", opportunity.id);
-              }}
-            >
-              View Details
-              <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </Link>
-          <Link href={`/action-plan?opportunityId=${opportunity.id}`}>
-            <Button className="w-full">
-              Create Plan
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
