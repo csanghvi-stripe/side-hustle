@@ -8,6 +8,7 @@ import AuthPage from "@/pages/auth-page";
 import InboxPage from "@/pages/inbox-page";
 import SettingsPage from "@/pages/settings-page";
 import SavedOpportunitiesPage from "@/pages/saved-opportunities-page";
+import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
 import AppHeader from "@/components/AppHeader";
@@ -22,6 +23,7 @@ function Router() {
           <ProtectedRoute path="/inbox" component={InboxPage} />
           <ProtectedRoute path="/settings" component={SettingsPage} />
           <ProtectedRoute path="/saved-opportunities" component={SavedOpportunitiesPage} />
+          <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
           <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
         </Switch>
