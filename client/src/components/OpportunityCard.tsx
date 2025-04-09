@@ -38,7 +38,7 @@ interface OpportunityCardProps {
 }
 
 // Define type variants for styling
-const typeVariants: Record<string, string> = {
+const typeVariants: Record<string, "default" | "secondary" | "destructive" | "outline" | "service" | "passive" | "info"> = {
   "Freelance": "service",
   "Digital Product": "passive",
   "Content Creation": "info",
@@ -160,16 +160,66 @@ const getIconForType = (type: string) => {
 const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // Debug the opportunity object
+  console.log("Opportunity raw:", opportunity);
+  
   // Safely parse opportunityData from JSON to object if it's a string
   let opportunityData: OpportunityDataType | null = null;
   try {
     if (typeof opportunity.opportunityData === 'string') {
-      opportunityData = JSON.parse(opportunity.opportunityData);
-    } else if (typeof opportunity.opportunityData === 'object') {
-      opportunityData = opportunity.opportunityData as OpportunityDataType;
+      // Parse from JSON string
+      const parsed = JSON.parse(opportunity.opportunityData);
+      opportunityData = {
+        title: parsed.title || opportunity.title || "",
+        type: parsed.type || "Freelance",
+        description: parsed.description || "",
+        incomePotential: parsed.incomePotential || "$0-$0",
+        startupCost: parsed.startupCost || "$0",
+        riskLevel: parsed.riskLevel || "Medium",
+        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [],
+        resources: Array.isArray(parsed.resources) ? parsed.resources : []
+      };
+    } else if (opportunity.opportunityData && typeof opportunity.opportunityData === 'object') {
+      // It's already an object
+      const parsed = opportunity.opportunityData as any;
+      opportunityData = {
+        title: parsed.title || opportunity.title || "",
+        type: parsed.type || "Freelance",
+        description: parsed.description || "",
+        incomePotential: parsed.incomePotential || "$0-$0",
+        startupCost: parsed.startupCost || "$0",
+        riskLevel: parsed.riskLevel || "Medium",
+        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [],
+        resources: Array.isArray(parsed.resources) ? parsed.resources : []
+      };
+    } else {
+      // Fallback if opportunityData is missing/invalid
+      opportunityData = {
+        title: opportunity.title || "",
+        type: "Freelance",
+        description: "No description available",
+        incomePotential: "$0-$0",
+        startupCost: "$0",
+        riskLevel: "Medium",
+        stepsToStart: [],
+        resources: []
+      };
     }
+    
+    console.log("Using opportunityData:", opportunityData);
   } catch (error) {
     console.error("Failed to parse opportunity data:", error);
+    // Fallback if parsing fails
+    opportunityData = {
+      title: opportunity.title || "",
+      type: "Freelance",
+      description: "Error loading opportunity details",
+      incomePotential: "$0-$0",
+      startupCost: "$0",
+      riskLevel: "Medium",
+      stepsToStart: [],
+      resources: []
+    };
   }
 
   // If we couldn't parse the data, show a simplified card
