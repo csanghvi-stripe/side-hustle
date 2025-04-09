@@ -136,7 +136,7 @@ class DiscoveryService {
           
           sourceResults.push(...opportunities);
         } catch (error) {
-          logger.error(`Error fetching from source ${source.id}: ${error.message}`);
+          logger.error(`Error fetching from source ${source.id}: ${error instanceof Error ? error.message : String(error)}`);
           // Continue with other sources even if one fails
         }
       }
@@ -161,7 +161,7 @@ class DiscoveryService {
         
         logger.info(`Saved discovery results for user ${userId}`);
       } catch (error) {
-        logger.error(`Error saving discovery results: ${error.message}`);
+        logger.error(`Error saving discovery results: ${error instanceof Error ? error.message : String(error)}`);
         // Continue even if saving fails
       }
       
@@ -173,7 +173,7 @@ class DiscoveryService {
         skillGapAnalysisEnabled: preferences.useSkillGapAnalysis ?? false
       };
     } catch (error) {
-      logger.error(`Error in discovery service: ${error.message}`);
+      logger.error(`Error in discovery service: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }
@@ -254,7 +254,7 @@ class DiscoveryService {
       logger.info(`Found ${result.length} similar users`);
       return result;
     } catch (error) {
-      logger.error(`Error finding similar users: ${error.message}`);
+      logger.error(`Error finding similar users: ${error instanceof Error ? error.message : String(error)}`);
       return [];
     }
   }
@@ -433,10 +433,10 @@ class DiscoveryService {
     // 2. Create a balanced selection of opportunities across types
     const diverseOpportunities: RawOpportunity[] = [];
     
-    // Get top 3 from each category (if available)
+    // Get top 5 from each category (if available)
     Object.values(opportunitiesByType).forEach(opps => {
-      // Take top 3 from each type
-      diverseOpportunities.push(...opps.slice(0, 3));
+      // Take top 5 from each type to show more diverse opportunities
+      diverseOpportunities.push(...opps.slice(0, 5));
     });
     
     // 3. Add any remaining top opportunities until we reach 15-20 opportunities total
@@ -674,11 +674,11 @@ class DiscoveryService {
         description: 'Create responsive, mobile-friendly websites for small businesses and entrepreneurs. Many businesses need affordable, professional websites to establish their online presence. This opportunity allows you to leverage your web design skills while building a portfolio.',
         requiredSkills: ['HTML', 'CSS', 'Responsive Design'],
         niceToHaveSkills: ['JavaScript', 'UI/UX', 'WordPress'],
-        type: 'FREELANCE',
+        type: OpportunityType.FREELANCE,
         estimatedIncome: { min: 50, max: 150, timeframe: 'hour' },
         startupCost: { min: 0, max: 300 },
         timeRequired: { min: 10, max: 30 },
-        entryBarrier: 'MEDIUM',
+        entryBarrier: RiskLevel.MEDIUM,
         marketDemand: 'HIGH',
         stepsToStart: [
           'Create a portfolio website showcasing your design skills',
@@ -711,11 +711,11 @@ class DiscoveryService {
         description: 'Package your web design and development knowledge into an online course. Teaching others while earning passive income is a winning combination for those with technical skills.',
         requiredSkills: ['Web Development', 'HTML/CSS'],
         niceToHaveSkills: ['Teaching', 'Video Production'],
-        type: 'DIGITAL_PRODUCT',
+        type: OpportunityType.DIGITAL_PRODUCT,
         estimatedIncome: { min: 2000, max: 10000, timeframe: 'month' },
         startupCost: { min: 200, max: 1000 },
         timeRequired: { min: 10, max: 20 },
-        entryBarrier: 'MEDIUM',
+        entryBarrier: RiskLevel.MEDIUM,
         marketDemand: 'HIGH',
         stepsToStart: [
           'Create an outline of your course curriculum',
@@ -750,11 +750,11 @@ class DiscoveryService {
         description: 'Create blog posts, tutorials, and documentation for tech companies. The demand for clear, engaging technical content is growing as more companies need to explain their products.',
         requiredSkills: ['Writing', 'Editing'],
         niceToHaveSkills: ['Technical Knowledge', 'SEO'],
-        type: 'FREELANCE',
+        type: OpportunityType.FREELANCE,
         estimatedIncome: { min: 50, max: 200, timeframe: 'hour' },
         startupCost: { min: 0, max: 100 },
         timeRequired: { min: 5, max: 20 },
-        entryBarrier: 'LOW',
+        entryBarrier: RiskLevel.LOW,
         marketDemand: 'HIGH',
         stepsToStart: [
           'Create writing samples relevant to your target industries',
@@ -787,11 +787,11 @@ class DiscoveryService {
         description: 'Launch a specialized newsletter for professionals in your niche. Email newsletters are making a comeback as people seek curated content from trusted sources.',
         requiredSkills: ['Writing', 'Content Curation'],
         niceToHaveSkills: ['Marketing', 'Subject Expertise'],
-        type: 'CONTENT',
+        type: OpportunityType.CONTENT,
         estimatedIncome: { min: 1000, max: 5000, timeframe: 'month' },
         startupCost: { min: 0, max: 500 },
         timeRequired: { min: 5, max: 15 },
-        entryBarrier: 'LOW',
+        entryBarrier: RiskLevel.LOW,
         marketDemand: 'MEDIUM',
         stepsToStart: [
           'Choose a specific niche where you have expertise',
@@ -826,11 +826,11 @@ class DiscoveryService {
         description: 'Create and sell templates for social media, websites, presentations, and more. Templates are in high demand from businesses and individuals who need professional designs but lack design skills.',
         requiredSkills: ['Graphic Design'],
         niceToHaveSkills: ['Typography', 'Branding', 'Social Media'],
-        type: 'DIGITAL_PRODUCT',
+        type: OpportunityType.DIGITAL_PRODUCT,
         estimatedIncome: { min: 1000, max: 5000, timeframe: 'month' },
         startupCost: { min: 100, max: 500 },
         timeRequired: { min: 10, max: 20 },
-        entryBarrier: 'MEDIUM',
+        entryBarrier: RiskLevel.MEDIUM,
         marketDemand: 'HIGH',
         stepsToStart: [
           'Identify popular template categories with high demand',
@@ -863,11 +863,11 @@ class DiscoveryService {
         description: 'Provide custom logo design services for new businesses and rebrands. Every business needs a logo, making this a consistently in-demand service with good earning potential.',
         requiredSkills: ['Logo Design', 'Typography'],
         niceToHaveSkills: ['Branding', 'Client Communication'],
-        type: 'SERVICE',
+        type: OpportunityType.SERVICE,
         estimatedIncome: { min: 300, max: 2000, timeframe: 'project' },
         startupCost: { min: 0, max: 200 },
         timeRequired: { min: 5, max: 15 },
-        entryBarrier: 'MEDIUM',
+        entryBarrier: RiskLevel.MEDIUM,
         marketDemand: 'HIGH',
         stepsToStart: [
           'Build a portfolio of logo designs (can include speculative work)',
@@ -902,11 +902,11 @@ class DiscoveryService {
       description: 'Offer one-on-one or group coaching in your area of expertise. Coaching is a high-value service that can be delivered remotely and scales well with your available time.',
       requiredSkills: ['Expertise in a Topic', 'Communication'],
       niceToHaveSkills: ['Teaching', 'Marketing'],
-      type: 'SERVICE',
+      type: OpportunityType.SERVICE,
       estimatedIncome: { min: 50, max: 300, timeframe: 'hour' },
       startupCost: { min: 0, max: 500 },
       timeRequired: { min: 5, max: 20 },
-      entryBarrier: 'LOW',
+      entryBarrier: RiskLevel.LOW,
       marketDemand: 'MEDIUM',
       stepsToStart: [
         'Define your coaching niche and target audience',
@@ -939,11 +939,11 @@ class DiscoveryService {
       description: 'Design and sell custom merchandise without inventory using print-on-demand services. This business model eliminates inventory risk while allowing you to monetize your creativity.',
       requiredSkills: ['Basic Design'],
       niceToHaveSkills: ['Marketing', 'Trend Awareness'],
-      type: 'PASSIVE',
+      type: OpportunityType.PASSIVE,
       estimatedIncome: { min: 500, max: 5000, timeframe: 'month' },
       startupCost: { min: 0, max: 200 },
       timeRequired: { min: 5, max: 15 },
-      entryBarrier: 'LOW',
+      entryBarrier: RiskLevel.LOW,
       marketDemand: 'MEDIUM',
       stepsToStart: [
         'Choose a print-on-demand platform like Printful or Printify',
@@ -1208,7 +1208,7 @@ class DiscoveryService {
                   min: 10,
                   max: 30
                 },
-                entryBarrier: "MEDIUM",
+                entryBarrier: RiskLevel.MEDIUM,
                 stepsToStart: [
                   `Research ${parts[1]} opportunities on ${parts[0]}`,
                   "Create a professional profile",
@@ -1230,7 +1230,7 @@ class DiscoveryService {
               this.opportunityCache.set(opportunityId, syntheticOpportunity);
               return syntheticOpportunity;
             } catch (error) {
-              logger.error(`Error getting opportunities from source ${sourceId}:`, error);
+              logger.error(`Error getting opportunities from source ${sourceId}: ${error}`);
             }
           }
         }
@@ -1239,7 +1239,7 @@ class DiscoveryService {
       logger.info(`No opportunity found for ID ${opportunityId}`);
       return null;
     } catch (error) {
-      logger.error(`Error getting opportunity by ID ${opportunityId}:`, error);
+      logger.error(`Error getting opportunity by ID ${opportunityId}: ${error}`);
       return null;
     }
   }

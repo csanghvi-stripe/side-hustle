@@ -1,12 +1,20 @@
 import { OpportunityType, RiskLevel } from "../../shared/schema";
 
 // Base raw opportunity interface
+// Success story interface for detailed stories
+export interface SuccessStoryDetail {
+  name: string;
+  background: string;
+  journey: string;
+  outcome: string;
+}
+
 export interface RawOpportunity {
   id: string;
   title: string;
   description: string;
-  url: string;
-  platform: string;
+  url?: string;
+  platform?: string;
   type: OpportunityType;
   requiredSkills: string[];
   niceToHaveSkills?: string[];
@@ -25,13 +33,19 @@ export interface RawOpportunity {
   };
   entryBarrier: RiskLevel;
   stepsToStart: string[];
-  resourceLinks: string[]; // Links to resources (URLs)
-  successStories?: string[];
+  resourceLinks?: string[]; // Links to resources (URLs)
+  resources?: { title: string, url: string }[];
+  successStories?: (string | SuccessStoryDetail)[];
   matchScore?: number; // Added during matching process
   location?: string; // Optional location information
   competition?: string; // Competition level information
   skillsRequired?: string[]; // Alternative property name for skills
   sourceName?: string; // Name of the source that provided this opportunity
+  marketDemand?: string; // Market demand level
+  skillGapDays?: number; // Days needed to learn required skills
+  timeToFirstRevenue?: string; // Estimated time to first revenue
+  roiScore?: number; // Return on investment score
+  source?: string; // Source of the opportunity
 }
 
 // User preferences for opportunity discovery

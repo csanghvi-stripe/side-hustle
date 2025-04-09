@@ -13,21 +13,34 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
     const maxSteps = useEnhanced ? 6 : 4;
     const stepTime = useEnhanced ? 2500 : 3000;
     
-    const interval = setInterval(() => {
-      setStep(current => current < maxSteps ? current + 1 : current);
-    }, stepTime);
-
-    // Progress speed is slower for enhanced algorithm
-    const progressSpeed = useEnhanced ? 800 : 600;
+    // Ensure all steps complete
+    const timings = Array(maxSteps).fill(0)
+      .map((_, index) => (index + 1) * stepTime);
+    
+    // Create a timeout for each step
+    const timeouts = timings.map((time, index) => 
+      setTimeout(() => setStep(index + 1), time)
+    );
+    
+    // Track when we started for progress calculation
+    const startTime = Date.now();
+    
+    // Progress speed calculation
+    const totalDuration = stepTime * maxSteps;
     const progressInterval = setInterval(() => {
-      setProgress(current => {
-        const newProgress = current + 1;
-        return newProgress > 100 ? 100 : newProgress;
-      });
-    }, progressSpeed);
+      const elapsedTime = Date.now() - startTime;
+      const calculatedProgress = Math.min(Math.floor((elapsedTime / totalDuration) * 100), 100);
+      setProgress(calculatedProgress);
+      
+      // Stop updating progress once we reach 100%
+      if (calculatedProgress >= 100) {
+        clearInterval(progressInterval);
+      }
+    }, 50);
 
     return () => {
-      clearInterval(interval);
+      // Clean up all timeouts and intervals
+      timeouts.forEach(timeout => clearTimeout(timeout));
       clearInterval(progressInterval);
     };
   }, [useEnhanced]);
