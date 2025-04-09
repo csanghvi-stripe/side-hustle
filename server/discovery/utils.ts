@@ -2,20 +2,25 @@
  * Utility functions and shared helpers for the discovery engine
  */
 
-// Logger utility for discovery engine
+// Helper function to get current timestamp in ISO format
+const getTimestamp = (): string => {
+  return new Date().toISOString();
+};
+
+// Logger utility for discovery engine with timestamps
 export const logger = {
   info: (message: string) => {
-    console.log(`[discovery] INFO: ${message}`);
+    console.log(`[${getTimestamp()}] [discovery] INFO: ${message}`);
   },
   error: (message: string) => {
-    console.error(`[discovery] ERROR: ${message}`);
+    console.error(`[${getTimestamp()}] [discovery] ERROR: ${message}`);
   },
   warn: (message: string) => {
-    console.warn(`[discovery] WARN: ${message}`);
+    console.warn(`[${getTimestamp()}] [discovery] WARN: ${message}`);
   },
   debug: (message: string) => {
     if (process.env.DEBUG) {
-      console.debug(`[discovery] DEBUG: ${message}`);
+      console.debug(`[${getTimestamp()}] [discovery] DEBUG: ${message}`);
     }
   }
 };
