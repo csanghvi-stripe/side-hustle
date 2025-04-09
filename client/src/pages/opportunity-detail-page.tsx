@@ -29,6 +29,7 @@ import {
   Building,
   ChevronsUp,
   ChevronRight,
+  Check,
   Clipboard,
   Clock,
   Code,
@@ -40,12 +41,14 @@ import {
   GraduationCap,
   HelpCircle,
   Home,
+  Info,
   Laptop,
   LayoutDashboard,
   LayoutList,
   Lightbulb,
   Link as LinkIcon,
   ListChecks,
+  ListOrdered,
   Megaphone,
   MessageSquare,
   Monitor,
@@ -516,20 +519,94 @@ const OpportunityDetailPage = () => {
                       {opportunityData.description}
                     </p>
                     
-                    <div className="mt-6">
-                      <h3 className="font-medium text-base mb-3">Steps to Start</h3>
-                      <ol className="space-y-3">
-                        {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.map((step, index) => (
-                          <li key={index} className="flex">
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3 mt-0.5">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="text-neutral-700">{step}</p>
-                            </div>
+                    <div className="mt-6 space-y-6">
+                      <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                        <h3 className="font-medium text-base mb-3 flex items-center">
+                          <Lightbulb className="w-5 h-5 mr-2 text-amber-500" />
+                          What Makes This Opportunity Great
+                        </h3>
+                        <ul className="space-y-2 ml-2">
+                          <li className="flex items-start">
+                            <Check className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              <span className="font-medium">Low barrier to entry:</span> You can start with minimal investment and existing skills.
+                            </p>
                           </li>
-                        ))}
-                      </ol>
+                          <li className="flex items-start">
+                            <Check className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              <span className="font-medium">Flexible scaling:</span> Start small and grow as your skills and client base develop.
+                            </p>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              <span className="font-medium">Direct monetization:</span> Your skills translate directly to income without complex business structures.
+                            </p>
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              <span className="font-medium">Growing market:</span> Increasing demand for {opportunityData.type.toLowerCase()} services across industries.
+                            </p>
+                          </li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium text-base mb-3 flex items-center">
+                          <ListOrdered className="w-5 h-5 mr-2 text-primary" />
+                          Steps to Start
+                        </h3>
+                        <ol className="space-y-3">
+                          {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.map((step, index) => (
+                            <li key={index} className="flex">
+                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3 mt-0.5">
+                                {index + 1}
+                              </div>
+                              <div>
+                                <p className="text-neutral-700">{step}</p>
+                                <p className="text-xs text-neutral-500 mt-1">
+                                  Estimated time: {getStepTimeEstimate(index)} • Difficulty: {getStepDifficulty(index)}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                      
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                        <h3 className="font-medium text-base mb-3 flex items-center text-blue-700">
+                          <Info className="w-5 h-5 mr-2 text-blue-500" />
+                          How to Maximize Success
+                        </h3>
+                        <ul className="space-y-2 ml-2">
+                          <li className="flex items-start">
+                            <ArrowRight className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              Focus on a specific niche rather than being a generalist to command higher rates.
+                            </p>
+                          </li>
+                          <li className="flex items-start">
+                            <ArrowRight className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              Build a strong portfolio with quality examples of your best work.
+                            </p>
+                          </li>
+                          <li className="flex items-start">
+                            <ArrowRight className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              Consistently deliver exceptional work to get referrals and repeat business.
+                            </p>
+                          </li>
+                          <li className="flex items-start">
+                            <ArrowRight className="w-4 h-4 text-blue-500 mr-2 mt-1 flex-shrink-0" />
+                            <p className="text-neutral-700 text-sm">
+                              Gradually increase your rates as you gain experience and client testimonials.
+                            </p>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

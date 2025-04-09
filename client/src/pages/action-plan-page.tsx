@@ -65,7 +65,7 @@ export default function ActionPlanPage() {
   };
   
   return (
-    <div className="container py-8 max-w-6xl">
+    <div className="container py-8 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Monetization Action Plan</h1>
