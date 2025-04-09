@@ -662,7 +662,7 @@ const OpportunityDetailPage = () => {
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-neutral-600">Monthly Income (Optimistic)</span>
-                            <span className="font-medium">${parseInt(opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0") * 1.2}</span>
+                            <span className="font-medium">${parseInt(typeof opportunityData.incomePotential === 'string' ? opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0" : "0") * 1.2}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-neutral-600">Monthly Income (Expected)</span>
@@ -670,11 +670,11 @@ const OpportunityDetailPage = () => {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-neutral-600">Monthly Income (Conservative)</span>
-                            <span className="font-medium">${parseInt(opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0") * 0.7}</span>
+                            <span className="font-medium">${parseInt(typeof opportunityData.incomePotential === 'string' ? opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0" : "0") * 0.7}</span>
                           </div>
                           <div className="flex justify-between font-medium text-primary pt-2 border-t">
                             <span>Annual Income Potential</span>
-                            <span>${parseInt(opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0") * 12}</span>
+                            <span>${parseInt(typeof opportunityData.incomePotential === 'string' ? opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0" : "0") * 12}</span>
                           </div>
                         </div>
                       </div>
@@ -688,20 +688,20 @@ const OpportunityDetailPage = () => {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-neutral-600">Monthly Operating Cost</span>
-                            <span className="font-medium">${parseInt(opportunityData.startupCost.replace(/[^0-9]/g, '') || "0") * 0.15}</span>
+                            <span className="font-medium">${parseInt(typeof opportunityData.startupCost === 'string' ? opportunityData.startupCost.replace(/[^0-9]/g, '') || "0" : "0") * 0.15}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-neutral-600">Break-even Timeline</span>
                             <span className="font-medium">
-                              {parseInt(opportunityData.incomePotential.replace(/[^0-9]/g, '') || "1") === 0 
+                              {parseInt(typeof opportunityData.incomePotential === 'string' ? opportunityData.incomePotential.replace(/[^0-9]/g, '') || "1" : "1") === 0 
                                 ? "N/A" 
-                                : `${Math.ceil(parseInt(opportunityData.startupCost.replace(/[^0-9]/g, '') || "0") / parseInt(opportunityData.incomePotential.replace(/[^0-9]/g, '') || "1"))} months`}
+                                : `${Math.ceil(parseInt(typeof opportunityData.startupCost === 'string' ? opportunityData.startupCost.replace(/[^0-9]/g, '') || "0" : "0") / parseInt(typeof opportunityData.incomePotential === 'string' ? opportunityData.incomePotential.replace(/[^0-9]/g, '') || "1" : "1"))} months`}
                             </span>
                           </div>
                           <div className="flex justify-between font-medium pt-2 border-t">
                             <span>First Year Profit (Est.)</span>
                             <span className="text-green-600">
-                              ${parseInt(opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0") * 12 - parseInt(opportunityData.startupCost.replace(/[^0-9]/g, '') || "0") - (parseInt(opportunityData.startupCost.replace(/[^0-9]/g, '') || "0") * 0.15 * 12)}
+                              ${parseInt(typeof opportunityData.incomePotential === 'string' ? opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0" : "0") * 12 - parseInt(typeof opportunityData.startupCost === 'string' ? opportunityData.startupCost.replace(/[^0-9]/g, '') || "0" : "0") - (parseInt(typeof opportunityData.startupCost === 'string' ? opportunityData.startupCost.replace(/[^0-9]/g, '') || "0" : "0") * 0.15 * 12)}
                             </span>
                           </div>
                         </div>
@@ -724,7 +724,7 @@ const OpportunityDetailPage = () => {
                         <div className="p-4 bg-neutral-50 rounded-lg">
                           <h4 className="text-sm text-neutral-500 mb-1">Hourly Rate Potential</h4>
                           <p className="font-medium text-lg">
-                            ${Math.round(parseInt(opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0") / 50)}/hr
+                            ${Math.round(parseInt(typeof opportunityData.incomePotential === 'string' ? opportunityData.incomePotential.replace(/[^0-9]/g, '') || "0" : "0") / 50)}/hr
                           </p>
                         </div>
                       </div>
