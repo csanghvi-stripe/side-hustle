@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Filter, Search, Bookmark, BookmarkCheck } from "lucide-react";
 import { Link } from "wouter";
-import { OpportunityType } from "@/types";
+import { OpportunityType, RiskLevel } from "@/types";
 
 export default function SavedOpportunitiesPage() {
   const { user } = useAuth();
@@ -157,7 +157,18 @@ export default function SavedOpportunitiesPage() {
                                 {new Date(opportunity.createdAt).toLocaleDateString()}
                               </Badge>
                             </div>
-                            <OpportunityCard opportunity={opp} />
+                            <OpportunityCard 
+                              opportunity={{
+                                ...opp,
+                                riskLevel: typeof opp.riskLevel === 'string' 
+                                  ? opp.riskLevel 
+                                  : (opp.riskLevel as any)?.high 
+                                    ? RiskLevel.HIGH 
+                                    : (opp.riskLevel as any)?.medium 
+                                      ? RiskLevel.MEDIUM 
+                                      : RiskLevel.LOW
+                              }} 
+                            />
                           </div>
                         ));
                       })}

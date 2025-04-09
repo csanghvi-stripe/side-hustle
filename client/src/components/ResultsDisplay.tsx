@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MonetizationResults, OpportunityType } from "@/types";
+import { MonetizationResults, OpportunityType, RiskLevel } from "@/types";
 import OpportunityCard from "./OpportunityCard";
 import UserMatchCard from "./UserMatchCard";
 import { useAuth } from "@/hooks/use-auth";
@@ -132,7 +132,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset, saved
       <div className="p-6 space-y-6">
         {filteredOpportunities.length > 0 ? (
           filteredOpportunities.map((opportunity) => (
-            <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+            <OpportunityCard 
+              key={opportunity.id} 
+              opportunity={{
+                ...opportunity,
+                riskLevel: typeof opportunity.riskLevel === 'string' 
+                  ? opportunity.riskLevel 
+                  : (opportunity.riskLevel as any)?.high 
+                    ? RiskLevel.HIGH 
+                    : (opportunity.riskLevel as any)?.medium 
+                      ? RiskLevel.MEDIUM 
+                      : RiskLevel.LOW
+              }} 
+            />
           ))
         ) : (
           <div className="p-4 text-center text-neutral-500">
