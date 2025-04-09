@@ -24,10 +24,12 @@ import {
   ArrowUpRight,
   Award,
   BarChart4,
+  BookOpen,
   Briefcase,
   Building,
   ChevronsUp,
   ChevronRight,
+  Clipboard,
   Clock,
   Code,
   DollarSign,
@@ -43,6 +45,7 @@ import {
   LayoutList,
   Lightbulb,
   Link as LinkIcon,
+  ListChecks,
   Megaphone,
   MessageSquare,
   Monitor,
@@ -433,8 +436,13 @@ const OpportunityDetailPage = () => {
                   </div>
                 </div>
               ))}
-              <Button variant="outline" size="sm" className="w-full mt-2" asChild>
-                <Link href="#skills">View Skill Development Plan</Link>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2" 
+                onClick={() => setActiveTab("skills")}
+              >
+                View Skill Development Plan
               </Button>
             </CardContent>
           </Card>
@@ -464,8 +472,13 @@ const OpportunityDetailPage = () => {
                 </a>
               ))}
               
-              <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link href="#resources">View All Resources</Link>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full" 
+                onClick={() => setActiveTab("resources")}
+              >
+                View All Resources
               </Button>
             </CardContent>
           </Card>
@@ -1021,28 +1034,48 @@ const OpportunityDetailPage = () => {
                   <CardContent>
                     <div className="space-y-6">
                       <div className="relative border-l-2 border-primary/30 pl-6 ml-4">
-                        {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.map((step, index) => (
-                          <div key={index} className="mb-8 relative">
-                            <div className="absolute -left-8 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-sm">
-                              {index + 1}
+                        {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.length > 0 ? (
+                          opportunityData.stepsToStart.map((step, index) => (
+                            <div key={index} className="mb-8 relative">
+                              <div className="absolute -left-8 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-sm">
+                                {index + 1}
+                              </div>
+                              <h3 className="text-lg font-medium mb-2">{step}</h3>
+                              <p className="text-neutral-600 text-sm mb-3">
+                                {getStepDescription(index)}
+                              </p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <Badge variant="outline" className="bg-primary/5">Estimated time: {getStepTimeEstimate(index)}</Badge>
+                                <Badge variant="outline" className="bg-primary/5">Difficulty: {getStepDifficulty(index)}</Badge>
+                              </div>
+                              {index < (opportunityData.stepsToStart.length - 1) && (
+                                <div className="absolute -left-[0.3rem] bottom-[-1rem] h-8 border-l-2 border-primary/30"></div>
+                              )}
                             </div>
-                            <h3 className="text-lg font-medium mb-2">{step}</h3>
-                            <p className="text-neutral-600 text-sm mb-3">
-                              {getStepDescription(index)}
+                          ))
+                        ) : (
+                          <div className="py-8 text-center">
+                            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
+                              <ListChecks className="h-6 w-6 text-primary" />
+                            </div>
+                            <h3 className="mb-2 text-lg font-medium">Success path coming soon</h3>
+                            <p className="text-sm text-neutral-500 max-w-md mx-auto">
+                              We're currently developing a detailed step-by-step path to success for this opportunity.
                             </p>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              <Badge variant="outline" className="bg-primary/5">Estimated time: {getStepTimeEstimate(index)}</Badge>
-                              <Badge variant="outline" className="bg-primary/5">Difficulty: {getStepDifficulty(index)}</Badge>
-                            </div>
-                            {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && index < opportunityData.stepsToStart.length - 1 && (
-                              <div className="absolute -left-[0.3rem] bottom-[-1rem] h-8 border-l-2 border-primary/30"></div>
-                            )}
                           </div>
-                        ))}
+                        )}
                       </div>
                       
                       <div className="mt-6">
-                        <Button className="w-full">
+                        <Button 
+                          className="w-full"
+                          onClick={() => {
+                            toast({
+                              title: "Action plan created",
+                              description: "A custom action plan has been created and added to your dashboard.",
+                            });
+                          }}
+                        >
                           Create Custom Action Plan
                         </Button>
                       </div>
@@ -1063,28 +1096,40 @@ const OpportunityDetailPage = () => {
                   <CardContent>
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {opportunityData.resources && Array.isArray(opportunityData.resources) && opportunityData.resources.map((resource, index) => (
-                          <a 
-                            key={index}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer" 
-                            className="block p-4 border border-neutral-200 rounded-lg hover:border-primary/50 hover:bg-primary/5 transition"
-                          >
-                            <div className="flex items-start">
-                              {getResourceIcon(resource)}
-                              <div>
-                                <div className="text-base font-medium">{resource.title}</div>
-                                {resource.source && (
-                                  <div className="text-sm text-neutral-500 mt-1 flex items-center">
-                                    <LinkIcon className="w-3.5 h-3.5 mr-1" />
-                                    {resource.source}
-                                  </div>
-                                )}
+                        {opportunityData.resources && Array.isArray(opportunityData.resources) && opportunityData.resources.length > 0 ? (
+                          opportunityData.resources.map((resource, index) => (
+                            <a 
+                              key={index}
+                              href={resource.url || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer" 
+                              className="block p-4 border border-neutral-200 rounded-lg hover:border-primary/50 hover:bg-primary/5 transition"
+                            >
+                              <div className="flex items-start">
+                                {getResourceIcon(resource)}
+                                <div>
+                                  <div className="text-base font-medium">{resource.title || `Resource ${index + 1}`}</div>
+                                  {resource.source && (
+                                    <div className="text-sm text-neutral-500 mt-1 flex items-center">
+                                      <LinkIcon className="w-3.5 h-3.5 mr-1" />
+                                      {resource.source}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
+                            </a>
+                          ))
+                        ) : (
+                          <div className="col-span-2 py-8 text-center">
+                            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
+                              <FileText className="h-6 w-6 text-primary" />
                             </div>
-                          </a>
-                        ))}
+                            <h3 className="mb-2 text-lg font-medium">Resources coming soon</h3>
+                            <p className="text-sm text-neutral-500 max-w-md mx-auto">
+                              We're currently curating a list of valuable resources to help you succeed with this opportunity.
+                            </p>
+                          </div>
+                        )}
                       </div>
                       
                       <Separator className="my-6" />
@@ -1102,7 +1147,17 @@ const OpportunityDetailPage = () => {
                                 <p className="text-sm text-neutral-500">Free • 2 hours</p>
                               </div>
                             </div>
-                            <Button size="sm">Enroll</Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                toast({
+                                  title: "Enrolled successfully",
+                                  description: "You have been enrolled in the free course.",
+                                });
+                              }}
+                            >
+                              Enroll
+                            </Button>
                           </div>
                           <div className="p-4 border border-neutral-200 rounded-lg flex items-center justify-between">
                             <div className="flex items-center">
@@ -1114,13 +1169,32 @@ const OpportunityDetailPage = () => {
                                 <p className="text-sm text-neutral-500">Premium • 4 hours</p>
                               </div>
                             </div>
-                            <Button size="sm">Enroll</Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                toast({
+                                  title: "Premium Content",
+                                  description: "This is a premium course. Subscribe to access premium content.",
+                                  variant: "default"
+                                });
+                              }}
+                            >
+                              Enroll
+                            </Button>
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-8">
-                        <Button className="w-full flex items-center justify-center">
+                        <Button 
+                          className="w-full flex items-center justify-center"
+                          onClick={() => {
+                            toast({
+                              title: "Additional resources",
+                              description: "We'll notify you when more resources are available for this opportunity.",
+                            });
+                          }}
+                        >
                           Get More Learning Resources
                           <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
