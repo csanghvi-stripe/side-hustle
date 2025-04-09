@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, uniqueIndex, varchar, date, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -145,3 +145,97 @@ export type Message = typeof messages.$inferSelect;
 
 export type InsertConnection = z.infer<typeof insertConnectionSchema>;
 export type Connection = typeof connections.$inferSelect;
+
+// Analytics & Tracking
+export const progressTracking = pgTable("progress_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  opportunityId: integer("opportunity_id").references(() => monetizationOpportunities.id).notNull(),
+  opportunityTitle: text("opportunity_title").notNull(),
+  opportunityType: text("opportunity_type").notNull(),
+  startDate: timestamp("start_date").defaultNow().notNull(),
+  targetDate: timestamp("target_date"),
+  firstRevenueDate: timestamp("first_revenue_date"),
+  firstRevenueAmount: numeric("first_revenue_amount"),
+  currentStage: text("current_stage").notNull(), // planning, started, first_milestone, consistent_income, etc.
+  nextMilestone: text("next_milestone"),
+  timeInvested: integer("time_invested_hours"),
+  costInvested: numeric("cost_invested"),
+  totalRevenue: numeric("total_revenue").default("0"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  notes: text("notes"),
+});
+
+export const insertProgressTrackingSchema = createInsertSchema(progressTracking).pick({
+  userId: true,
+  opportunityId: true,
+  opportunityTitle: true,
+  opportunityType: true,
+  startDate: true,
+  targetDate: true,
+  firstRevenueDate: true,
+  firstRevenueAmount: true,
+  currentStage: true,
+  nextMilestone: true,
+  timeInvested: true,
+  costInvested: true,
+  totalRevenue: true,
+  notes: true,
+});
+
+// Progress Milestones table
+export const progressMilestones = pgTable("progress_milestones", {
+  id: serial("id").primaryKey(),
+  progressId: integer("progress_id").references(() => progressTracking.id).notNull(),
+  milestoneName: text("milestone_name").notNull(),
+  description: text("description"),
+  targetDate: timestamp("target_date"),
+  completedDate: timestamp("completed_date"),
+  isCompleted: boolean("is_completed").default(false),
+  notes: text("notes"),
+  revenueImpact: numeric("revenue_impact"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProgressMilestoneSchema = createInsertSchema(progressMilestones).pick({
+  progressId: true,
+  milestoneName: true,
+  description: true,
+  targetDate: true,
+  completedDate: true,
+  isCompleted: true,
+  notes: true,
+  revenueImpact: true,
+});
+
+// Income Tracking
+export const incomeEntries = pgTable("income_entries", {
+  id: serial("id").primaryKey(),
+  progressId: integer("progress_id").references(() => progressTracking.id).notNull(),
+  amount: numeric("amount").notNull(),
+  source: text("source").notNull(),
+  entryDate: timestamp("entry_date").defaultNow().notNull(),
+  notes: text("notes"),
+  category: text("category"), // client_work, product_sale, affiliate, etc.
+  isRecurring: boolean("is_recurring").default(false),
+});
+
+export const insertIncomeEntrySchema = createInsertSchema(incomeEntries).pick({
+  progressId: true,
+  amount: true,
+  source: true,
+  entryDate: true,
+  notes: true,
+  category: true,
+  isRecurring: true,
+});
+
+// Types for analytics tables
+export type InsertProgressTracking = z.infer<typeof insertProgressTrackingSchema>;
+export type ProgressTracking = typeof progressTracking.$inferSelect;
+
+export type InsertProgressMilestone = z.infer<typeof insertProgressMilestoneSchema>;
+export type ProgressMilestone = typeof progressMilestones.$inferSelect;
+
+export type InsertIncomeEntry = z.infer<typeof insertIncomeEntrySchema>;
+export type IncomeEntry = typeof incomeEntries.$inferSelect;

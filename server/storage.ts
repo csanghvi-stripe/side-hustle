@@ -4,6 +4,9 @@ import {
   monetizationOpportunities,
   messages,
   connections,
+  progressTracking,
+  progressMilestones,
+  incomeEntries,
   type User,
   type InsertUser,
   type UserProfile,
@@ -14,9 +17,15 @@ import {
   type InsertMessage,
   type Connection,
   type InsertConnection,
+  type ProgressTracking,
+  type InsertProgressTracking,
+  type ProgressMilestone,
+  type InsertProgressMilestone,
+  type IncomeEntry,
+  type InsertIncomeEntry,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or } from "drizzle-orm";
+import { eq, and, or, inArray, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import pkg from "pg";
@@ -57,6 +66,30 @@ export interface IStorage {
     status: string,
   ): Promise<Connection | undefined>;
 
+  // Progress & Analytics Tracking
+  // Progress Tracking
+  createProgressTracking(tracking: InsertProgressTracking): Promise<ProgressTracking>;
+  getUserProgressTrackings(userId: number): Promise<ProgressTracking[]>;
+  getProgressTrackingById(id: number): Promise<ProgressTracking | undefined>;
+  updateProgressTracking(id: number, data: Partial<InsertProgressTracking>): Promise<ProgressTracking | undefined>;
+  deleteProgressTracking(id: number): Promise<void>;
+  
+  // Milestones
+  createProgressMilestone(milestone: InsertProgressMilestone): Promise<ProgressMilestone>;
+  getProgressMilestones(progressId: number): Promise<ProgressMilestone[]>;
+  updateProgressMilestone(id: number, data: Partial<InsertProgressMilestone>): Promise<ProgressMilestone | undefined>;
+  deleteProgressMilestone(id: number): Promise<void>;
+  
+  // Income Tracking
+  createIncomeEntry(entry: InsertIncomeEntry): Promise<IncomeEntry>;
+  getIncomeEntries(progressId: number): Promise<IncomeEntry[]>;
+  getIncomeEntriesByUser(userId: number): Promise<IncomeEntry[]>;
+  updateIncomeEntry(id: number, data: Partial<InsertIncomeEntry>): Promise<IncomeEntry | undefined>;
+  deleteIncomeEntry(id: number): Promise<void>;
+  
+  // Time to First Dollar Analytics
+  getTimeToFirstDollar(userId: number): Promise<{opportunityId: number, opportunityTitle: string, days: number}[]>;
+  
   // Session management
   sessionStore: session.Store;
 }
@@ -230,6 +263,234 @@ export class DatabaseStorage implements IStorage {
       .where(eq(connections.id, connectionId))
       .returning();
     return result[0];
+  }
+
+  // Progress Tracking Methods
+  async createProgressTracking(tracking: InsertProgressTracking): Promise<ProgressTracking> {
+    const result = await db
+      .insert(progressTracking)
+      .values(tracking)
+      .returning();
+    return result[0];
+  }
+
+  async getUserProgressTrackings(userId: number): Promise<ProgressTracking[]> {
+    return db
+      .select()
+      .from(progressTracking)
+      .where(eq(progressTracking.userId, userId));
+  }
+
+  async getProgressTrackingById(id: number): Promise<ProgressTracking | undefined> {
+    const result = await db
+      .select()
+      .from(progressTracking)
+      .where(eq(progressTracking.id, id));
+    return result[0];
+  }
+
+  async updateProgressTracking(
+    id: number,
+    data: Partial<InsertProgressTracking>
+  ): Promise<ProgressTracking | undefined> {
+    // Add lastUpdated timestamp
+    const updatedData = {
+      ...data,
+      lastUpdated: new Date(),
+    };
+
+    const result = await db
+      .update(progressTracking)
+      .set(updatedData)
+      .where(eq(progressTracking.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteProgressTracking(id: number): Promise<void> {
+    // First delete all related milestones and income entries
+    await db
+      .delete(progressMilestones)
+      .where(eq(progressMilestones.progressId, id));
+    
+    await db
+      .delete(incomeEntries)
+      .where(eq(incomeEntries.progressId, id));
+    
+    // Then delete the progress tracking itself
+    await db
+      .delete(progressTracking)
+      .where(eq(progressTracking.id, id));
+  }
+
+  // Milestone Methods
+  async createProgressMilestone(milestone: InsertProgressMilestone): Promise<ProgressMilestone> {
+    const result = await db
+      .insert(progressMilestones)
+      .values(milestone)
+      .returning();
+    return result[0];
+  }
+
+  async getProgressMilestones(progressId: number): Promise<ProgressMilestone[]> {
+    return db
+      .select()
+      .from(progressMilestones)
+      .where(eq(progressMilestones.progressId, progressId));
+  }
+
+  async updateProgressMilestone(
+    id: number,
+    data: Partial<InsertProgressMilestone>
+  ): Promise<ProgressMilestone | undefined> {
+    const result = await db
+      .update(progressMilestones)
+      .set(data)
+      .where(eq(progressMilestones.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteProgressMilestone(id: number): Promise<void> {
+    await db
+      .delete(progressMilestones)
+      .where(eq(progressMilestones.id, id));
+  }
+
+  // Income Entry Methods
+  async createIncomeEntry(entry: InsertIncomeEntry): Promise<IncomeEntry> {
+    const result = await db
+      .insert(incomeEntries)
+      .values(entry)
+      .returning();
+    
+    // Update the total revenue in the related progress tracking
+    const progressTrack = await this.getProgressTrackingById(entry.progressId);
+    if (progressTrack) {
+      // If this is the first revenue entry, update the firstRevenueDate and firstRevenueAmount
+      if (!progressTrack.firstRevenueDate) {
+        await this.updateProgressTracking(progressTrack.id, {
+          firstRevenueDate: entry.entryDate,
+          firstRevenueAmount: entry.amount,
+          totalRevenue: entry.amount,
+        });
+      } else {
+        // Just add to the total revenue
+        const currentTotal = progressTrack.totalRevenue ? parseFloat(progressTrack.totalRevenue.toString()) : 0;
+        const newTotal = currentTotal + parseFloat(entry.amount.toString());
+        await this.updateProgressTracking(progressTrack.id, {
+          totalRevenue: newTotal.toString(),
+        });
+      }
+    }
+    
+    return result[0];
+  }
+
+  async getIncomeEntries(progressId: number): Promise<IncomeEntry[]> {
+    return db
+      .select()
+      .from(incomeEntries)
+      .where(eq(incomeEntries.progressId, progressId));
+  }
+
+  async getIncomeEntriesByUser(userId: number): Promise<IncomeEntry[]> {
+    // Get all progress tracking ids for this user
+    const userProgress = await this.getUserProgressTrackings(userId);
+    const progressIds = userProgress.map(p => p.id);
+    
+    if (progressIds.length === 0) return [];
+    
+    // Get all income entries for these progress trackings
+    if (progressIds.length === 1) {
+      return db
+        .select()
+        .from(incomeEntries)
+        .where(eq(incomeEntries.progressId, progressIds[0]));
+    } else if (progressIds.length > 1) {
+      // Create a SQL "IN" condition
+      return db
+        .select()
+        .from(incomeEntries)
+        .where(sql`${incomeEntries.progressId} IN (${progressIds.join(',')})`);
+    } else {
+      return [];
+    }
+  }
+
+  async updateIncomeEntry(
+    id: number,
+    data: Partial<InsertIncomeEntry>
+  ): Promise<IncomeEntry | undefined> {
+    // Get the current entry to calculate revenue difference
+    const currentEntry = await db
+      .select()
+      .from(incomeEntries)
+      .where(eq(incomeEntries.id, id));
+    
+    const result = await db
+      .update(incomeEntries)
+      .set(data)
+      .where(eq(incomeEntries.id, id))
+      .returning();
+    
+    // Update the total revenue in the related progress tracking if amount changed
+    if (data.amount && currentEntry[0]) {
+      const progressTrack = await this.getProgressTrackingById(currentEntry[0].progressId);
+      if (progressTrack) {
+        const amountDiff = parseFloat(data.amount.toString()) - parseFloat(currentEntry[0].amount.toString());
+        const currentTotal = progressTrack.totalRevenue ? parseFloat(progressTrack.totalRevenue.toString()) : 0;
+        const newTotal = currentTotal + amountDiff;
+        await this.updateProgressTracking(progressTrack.id, {
+          totalRevenue: newTotal.toString(),
+        });
+      }
+    }
+    
+    return result[0];
+  }
+
+  async deleteIncomeEntry(id: number): Promise<void> {
+    // Get the entry first to update the total revenue
+    const entry = await db
+      .select()
+      .from(incomeEntries)
+      .where(eq(incomeEntries.id, id));
+    
+    if (entry[0]) {
+      const progressTrack = await this.getProgressTrackingById(entry[0].progressId);
+      if (progressTrack) {
+        const currentTotal = progressTrack.totalRevenue ? parseFloat(progressTrack.totalRevenue.toString()) : 0;
+        const newTotal = currentTotal - parseFloat(entry[0].amount.toString());
+        await this.updateProgressTracking(progressTrack.id, {
+          totalRevenue: Math.max(0, newTotal).toString(),
+        });
+      }
+    }
+    
+    await db
+      .delete(incomeEntries)
+      .where(eq(incomeEntries.id, id));
+  }
+
+  // Analytics Methods
+  async getTimeToFirstDollar(userId: number): Promise<{opportunityId: number, opportunityTitle: string, days: number}[]> {
+    const userProgress = await this.getUserProgressTrackings(userId);
+    
+    return userProgress
+      .filter(p => p.firstRevenueDate) // Only include those with first revenue
+      .map(p => {
+        const startDate = new Date(p.startDate);
+        // Make sure firstRevenueDate is not null (it's guaranteed by the filter above)
+        const firstRevenueDate = p.firstRevenueDate ? new Date(p.firstRevenueDate) : new Date();
+        const daysDiff = Math.floor((firstRevenueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        return {
+          opportunityId: p.opportunityId,
+          opportunityTitle: p.opportunityTitle,
+          days: daysDiff,
+        };
+      });
   }
 }
 

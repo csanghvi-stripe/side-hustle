@@ -5,6 +5,7 @@ import { generateMonetizationOpportunities } from "./api/anthropic";
 import { generateEnhancedMonetizationOpportunities } from "./api/enhanced-anthropic";
 import { setupAuth } from "./auth";
 import { insertUserProfileSchema, insertMonetizationOpportunitySchema } from "@shared/schema";
+import * as analytics from "./api/analytics";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
@@ -372,6 +373,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // === Analytics Dashboard API Endpoints ===
+  
+  // Progress Tracking endpoints
+  app.post("/api/analytics/progress", isAuthenticated, analytics.createProgressTracking);
+  app.get("/api/analytics/progress", isAuthenticated, analytics.getUserProgressTrackings);
+  app.get("/api/analytics/progress/:id", isAuthenticated, analytics.getProgressTrackingById);
+  app.patch("/api/analytics/progress/:id", isAuthenticated, analytics.updateProgressTracking);
+  app.delete("/api/analytics/progress/:id", isAuthenticated, analytics.deleteProgressTracking);
+  
+  // Milestone endpoints
+  app.post("/api/analytics/progress/:progressId/milestones", isAuthenticated, analytics.createMilestone);
+  app.get("/api/analytics/progress/:progressId/milestones", isAuthenticated, analytics.getMilestones);
+  app.patch("/api/analytics/milestones/:id", isAuthenticated, analytics.updateMilestone);
+  app.delete("/api/analytics/milestones/:id", isAuthenticated, analytics.deleteMilestone);
+  
+  // Income Entry endpoints
+  app.post("/api/analytics/progress/:progressId/income", isAuthenticated, analytics.createIncomeEntry);
+  app.get("/api/analytics/progress/:progressId/income", isAuthenticated, analytics.getIncomeEntries);
+  app.get("/api/analytics/income", isAuthenticated, analytics.getUserIncomeEntries);
+  app.patch("/api/analytics/income/:id", isAuthenticated, analytics.updateIncomeEntry);
+  app.delete("/api/analytics/income/:id", isAuthenticated, analytics.deleteIncomeEntry);
+  
+  // Analytics metrics endpoints
+  app.get("/api/analytics/time-to-first-dollar", isAuthenticated, analytics.getTimeToFirstDollar);
+  app.get("/api/analytics/dashboard", isAuthenticated, analytics.getAllAnalytics);
 
   const httpServer = createServer(app);
 
