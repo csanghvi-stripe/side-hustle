@@ -78,6 +78,21 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
   });
 
   const onSubmit = (data: UserInputForm) => {
+    console.log("Form submitted with data:", data);
+    // Check if form validation passes
+    const isValid = form.formState.isValid;
+    console.log("Form validation status:", isValid);
+    if (!isValid) {
+      console.log("Form validation errors:", form.formState.errors);
+      toast({
+        title: "Form validation failed",
+        description: "Please make sure all required fields are filled correctly.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // If validation passes, submit the form
     generateOpportunities.mutate(data);
   };
 
@@ -516,11 +531,16 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                 <Button 
                   type="submit" 
                   disabled={generateOpportunities.isPending}
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all px-5 py-6 text-lg font-medium button-hover-effect"
+                  onClick={(e) => {
+                    console.log("Submit button clicked");
+                    // We'll keep the type="submit" to let the form's onSubmit handle it
+                    // This is just for additional debugging
+                  }}
                 >
                   Find Monetization Opportunities
                   <svg
-                    className="ml-1 h-4 w-4"
+                    className="ml-2 h-5 w-5"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="none"
