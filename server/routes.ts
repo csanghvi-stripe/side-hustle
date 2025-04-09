@@ -348,6 +348,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete a monetization opportunity
+  app.delete("/api/opportunities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const opportunityId = parseInt(req.params.id);
+      
+      if (isNaN(opportunityId)) {
+        return res.status(400).json({ message: "Invalid opportunity ID" });
+      }
+      
+      // Check if the opportunity exists and belongs to this user
+      const opportunities = await storage.getUserOpportunities(req.user!.id);
+      const opportunity = opportunities.find(o => o.id === opportunityId);
+      
+      if (!opportunity) {
+        return res.status(404).json({ message: "Opportunity not found or doesn't belong to you" });
+      }
+      
+      // Delete the opportunity
+      await storage.deleteOpportunity(opportunityId, req.user!.id);
+      
+      return res.status(200).json({ message: "Opportunity deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting opportunity:", error);
+      return res.status(500).json({
+        message: "Failed to delete opportunity",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Save a monetization opportunity
   app.post("/api/opportunities", isAuthenticated, async (req, res) => {
     try {

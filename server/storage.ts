@@ -64,6 +64,7 @@ export interface IStorage {
   ): Promise<MonetizationOpportunity>;
   getUserOpportunities(userId: number): Promise<MonetizationOpportunity[]>;
   getSharedOpportunities(): Promise<MonetizationOpportunity[]>;
+  deleteOpportunity(id: number, userId: number): Promise<void>;
 
   // Messaging
   sendMessage(message: InsertMessage): Promise<Message>;
@@ -239,6 +240,18 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(monetizationOpportunities)
       .where(eq(monetizationOpportunities.shared, true));
+  }
+  
+  async deleteOpportunity(id: number, userId: number): Promise<void> {
+    // Only allow deletion if the opportunity belongs to the user
+    await db
+      .delete(monetizationOpportunities)
+      .where(
+        and(
+          eq(monetizationOpportunities.id, id),
+          eq(monetizationOpportunities.userId, userId)
+        )
+      );
   }
 
   // Messaging
