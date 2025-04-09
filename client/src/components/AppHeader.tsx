@@ -49,6 +49,7 @@ export default function AppHeader() {
     { name: "Resources", path: "/resources" },
     { name: "My Opportunities", path: "/saved-opportunities" },
     { name: "Analytics", path: "/analytics" },
+    { name: "AI Coach", path: "/coach" },
   ];
 
   const renderMobileMenu = () => {

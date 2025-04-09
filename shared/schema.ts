@@ -2,7 +2,7 @@ import { pgTable, text, serial, integer, boolean, jsonb, timestamp, uniqueIndex,
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User table with social networking features
+// User table with social networking features and subscription info
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -16,6 +16,15 @@ export const users = pgTable("users", {
   allowMessages: boolean("allow_messages").default(true),
   lastActive: timestamp("last_active"),
   createdAt: timestamp("created_at").defaultNow(),
+  // Subscription data
+  subscriptionStatus: text("subscription_status").default("free"), // free, active, canceled, expired
+  subscriptionTier: text("subscription_tier").default("free"), // free, basic, premium, etc.
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  // Remaining chat credits for usage-based billing
+  chatCredits: integer("chat_credits").default(0),
+  lastCreditReset: timestamp("last_credit_reset"),
 }, (table) => {
   return {
     usernameIdx: uniqueIndex("username_idx").on(table.username),
@@ -32,6 +41,13 @@ export const insertUserSchema = createInsertSchema(users).pick({
   bio: true,
   discoverable: true,
   allowMessages: true,
+  // Subscription fields
+  subscriptionStatus: true,
+  subscriptionTier: true,
+  subscriptionExpiresAt: true,
+  stripeCustomerId: true,
+  stripeSubscriptionId: true,
+  chatCredits: true,
 });
 
 // User profiles table for storing monetization preferences
@@ -230,6 +246,83 @@ export const insertIncomeEntrySchema = createInsertSchema(incomeEntries).pick({
   isRecurring: true,
 });
 
+// Chatbot conversations and messages
+export const chatConversations = pgTable("chat_conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  title: text("title").default("Conversation"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  context: text("context"), // Optional context/topic for the conversation
+  isArchived: boolean("is_archived").default(false),
+});
+
+export const insertChatConversationSchema = createInsertSchema(chatConversations).pick({
+  userId: true,
+  title: true,
+  context: true,
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => chatConversations.id).notNull(),
+  role: text("role").notNull(), // user, assistant
+  content: text("content").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+  tokensUsed: integer("tokens_used").default(0),
+  creditsCost: integer("credits_cost").default(1),
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
+  conversationId: true,
+  role: true,
+  content: true,
+  tokensUsed: true,
+  creditsCost: true,
+});
+
+// Subscription Pricing
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  stripePriceId: text("stripe_price_id").notNull(),
+  description: text("description"),
+  monthlyCredits: integer("monthly_credits").notNull(),
+  pricePerMonth: numeric("price_per_month").notNull(),
+  features: jsonb("features").default([]),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).pick({
+  name: true,
+  stripePriceId: true,
+  description: true,
+  monthlyCredits: true,
+  pricePerMonth: true,
+  features: true,
+  isActive: true,
+});
+
+// Transaction history
+export const creditTransactions = pgTable("credit_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  amount: integer("amount").notNull(), // Positive for additions, negative for usages
+  reason: text("reason").notNull(), // subscription, message, purchase, promotion
+  messageId: integer("message_id").references(() => chatMessages.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  balanceAfter: integer("balance_after").notNull(),
+});
+
+export const insertCreditTransactionSchema = createInsertSchema(creditTransactions).pick({
+  userId: true,
+  amount: true,
+  reason: true,
+  messageId: true,
+  balanceAfter: true,
+});
+
 // Types for analytics tables
 export type InsertProgressTracking = z.infer<typeof insertProgressTrackingSchema>;
 export type ProgressTracking = typeof progressTracking.$inferSelect;
@@ -239,3 +332,16 @@ export type ProgressMilestone = typeof progressMilestones.$inferSelect;
 
 export type InsertIncomeEntry = z.infer<typeof insertIncomeEntrySchema>;
 export type IncomeEntry = typeof incomeEntries.$inferSelect;
+
+// Types for chat and subscription
+export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
+export type ChatConversation = typeof chatConversations.$inferSelect;
+
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+
+export type InsertCreditTransaction = z.infer<typeof insertCreditTransactionSchema>;
+export type CreditTransaction = typeof creditTransactions.$inferSelect;

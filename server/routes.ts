@@ -6,6 +6,7 @@ import { generateEnhancedMonetizationOpportunities } from "./api/enhanced-anthro
 import { setupAuth } from "./auth";
 import { insertUserProfileSchema, insertMonetizationOpportunitySchema } from "@shared/schema";
 import * as analytics from "./api/analytics";
+import * as coach from "./api/coach";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
@@ -399,6 +400,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics metrics endpoints
   app.get("/api/analytics/time-to-first-dollar", isAuthenticated, analytics.getTimeToFirstDollar);
   app.get("/api/analytics/dashboard", isAuthenticated, analytics.getAllAnalytics);
+  
+  // === AI Coach API Endpoints ===
+  
+  // Subscription info
+  app.get("/api/coach/subscription-info", isAuthenticated, coach.getSubscriptionInfo);
+  
+  // Conversation management
+  app.post("/api/coach/conversations", isAuthenticated, coach.hasCoachAccess, coach.createConversation);
+  app.get("/api/coach/conversations", isAuthenticated, coach.hasCoachAccess, coach.getConversations);
+  app.patch("/api/coach/conversations/:conversationId/archive", isAuthenticated, coach.hasCoachAccess, coach.archiveConversation);
+  
+  // Message management
+  app.get("/api/coach/conversations/:conversationId/messages", isAuthenticated, coach.hasCoachAccess, coach.getMessages);
+  app.post("/api/coach/conversations/:conversationId/messages", isAuthenticated, coach.hasCoachAccess, coach.sendMessage);
 
   const httpServer = createServer(app);
 

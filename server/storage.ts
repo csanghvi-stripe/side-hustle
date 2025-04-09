@@ -7,6 +7,9 @@ import {
   progressTracking,
   progressMilestones,
   incomeEntries,
+  chatConversations,
+  chatMessages,
+  creditTransactions,
   type User,
   type InsertUser,
   type UserProfile,
@@ -23,6 +26,12 @@ import {
   type InsertProgressMilestone,
   type IncomeEntry,
   type InsertIncomeEntry,
+  type ChatConversation,
+  type InsertChatConversation,
+  type ChatMessage,
+  type InsertChatMessage,
+  type CreditTransaction,
+  type InsertCreditTransaction,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, inArray, sql } from "drizzle-orm";
@@ -89,6 +98,21 @@ export interface IStorage {
   
   // Time to First Dollar Analytics
   getTimeToFirstDollar(userId: number): Promise<{opportunityId: number, opportunityTitle: string, days: number}[]>;
+  
+  // AI Coach Management
+  // Chat conversations
+  createChatConversation(conversation: InsertChatConversation): Promise<ChatConversation>;
+  getChatConversation(id: number): Promise<ChatConversation | undefined>;
+  getUserChatConversations(userId: number): Promise<ChatConversation[]>;
+  updateChatConversation(id: number, data: Partial<InsertChatConversation>): Promise<ChatConversation | undefined>;
+  
+  // Chat messages
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  getChatMessages(conversationId: number): Promise<ChatMessage[]>;
+  
+  // Credit transactions
+  createCreditTransaction(transaction: InsertCreditTransaction): Promise<CreditTransaction>;
+  getUserCreditTransactions(userId: number): Promise<CreditTransaction[]>;
   
   // Session management
   sessionStore: session.Store;
@@ -491,6 +515,77 @@ export class DatabaseStorage implements IStorage {
           days: daysDiff,
         };
       });
+  }
+  
+  // AI Coach Methods - Chat Conversations
+  async createChatConversation(conversation: InsertChatConversation): Promise<ChatConversation> {
+    const result = await db
+      .insert(chatConversations)
+      .values(conversation)
+      .returning();
+    return result[0];
+  }
+
+  async getChatConversation(id: number): Promise<ChatConversation | undefined> {
+    const result = await db
+      .select()
+      .from(chatConversations)
+      .where(eq(chatConversations.id, id));
+    return result[0];
+  }
+
+  async getUserChatConversations(userId: number): Promise<ChatConversation[]> {
+    return db
+      .select()
+      .from(chatConversations)
+      .where(eq(chatConversations.userId, userId))
+      .orderBy(sql`${chatConversations.updatedAt} DESC`);
+  }
+
+  async updateChatConversation(
+    id: number,
+    data: Partial<InsertChatConversation>
+  ): Promise<ChatConversation | undefined> {
+    const result = await db
+      .update(chatConversations)
+      .set(data)
+      .where(eq(chatConversations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // AI Coach Methods - Chat Messages
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const result = await db
+      .insert(chatMessages)
+      .values(message)
+      .returning();
+    return result[0];
+  }
+
+  async getChatMessages(conversationId: number): Promise<ChatMessage[]> {
+    return db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.conversationId, conversationId))
+      .orderBy(sql`${chatMessages.timestamp} ASC`);
+  }
+
+  // AI Coach Methods - Credit Transactions
+  async createCreditTransaction(transaction: InsertCreditTransaction): Promise<CreditTransaction> {
+    const result = await db
+      .insert(creditTransactions)
+      .values(transaction)
+      .returning();
+    return result[0];
+  }
+
+  async getUserCreditTransactions(userId: number): Promise<CreditTransaction[]> {
+    return db
+      .select()
+      .from(creditTransactions)
+      .where(eq(creditTransactions.userId, userId))
+      .orderBy(sql`${creditTransactions.createdAt} DESC`);
   }
 }
 
