@@ -454,8 +454,22 @@ class DiscoveryService {
     // 4. Sort the diverse set by score
     diverseOpportunities.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
     
+    // Cache all opportunities for future lookups
+    scoredOpportunities.forEach(opp => {
+      if (opp.id && !this.opportunityCache.has(opp.id)) {
+        this.opportunityCache.set(opp.id, opp);
+      }
+    });
+
+    // Include all opportunities in our cache, not just the ones we're returning
+    diverseOpportunities.forEach(opp => {
+      if (opp.id && !this.opportunityCache.has(opp.id)) {
+        this.opportunityCache.set(opp.id, opp);
+      }
+    });
+    
     // Return the diverse set of opportunities (up to 20)
-    logger.info(`Returning ${diverseOpportunities.length} diverse opportunities`);
+    logger.info(`Returning ${diverseOpportunities.length} diverse opportunities (cached ${scoredOpportunities.length} total)`);
     return diverseOpportunities;
   }
   
@@ -1171,6 +1185,28 @@ class DiscoveryService {
       if (this.opportunityCache.has(opportunityId)) {
         logger.info(`Found opportunity ${opportunityId} in cache`);
         return this.opportunityCache.get(opportunityId)!;
+      }
+      
+      // If not in cache, check if we have a saved opportunity in the database
+      try {
+        // We need to search all user opportunities in the database
+        const savedOpportunities = await db.query.monetizationOpportunities.findMany();
+        
+        // Look through all saved opportunities for a matching ID
+        for (const savedOpp of savedOpportunities) {
+          if (savedOpp.opportunityData && Array.isArray(savedOpp.opportunityData)) {
+            const matchingOpp = savedOpp.opportunityData.find(opp => opp.id === opportunityId);
+            if (matchingOpp) {
+              logger.info(`Found opportunity ${opportunityId} in database`);
+              // Store in cache for future lookups
+              this.opportunityCache.set(opportunityId, matchingOpp);
+              return matchingOpp;
+            }
+          }
+        }
+        logger.info(`Opportunity ${opportunityId} not found in database`);
+      } catch (error) {
+        logger.error(`Error searching database for opportunity: ${error instanceof Error ? error.message : String(error)}`);
       }
       
       // If we don't have it cached, construct an opportunity with the ID pattern

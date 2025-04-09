@@ -24,9 +24,13 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset, saved
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const { toast } = useToast();
   
-  const filteredOpportunities = activeTab === "all" 
+  // Fix bug: showing all opportunities of selected type rather than limiting to 3
+const filteredOpportunities = activeTab === "all" 
     ? results.opportunities 
-    : results.opportunities.filter(opp => opp.type === activeTab);
+    : results.opportunities.filter(opp => {
+        const oppType = typeof opp.type === 'string' ? opp.type : String(opp.type);
+        return oppType === activeTab || oppType === String(activeTab);
+      });
 
   const skillsList = results.userProfile.skills.join(", ");
   
