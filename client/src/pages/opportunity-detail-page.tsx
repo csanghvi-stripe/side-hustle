@@ -444,7 +444,7 @@ const OpportunityDetailPage = () => {
               <CardTitle>Resources</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {opportunityData.resources.slice(0, 3).map((resource, index) => (
+              {opportunityData.resources && Array.isArray(opportunityData.resources) && opportunityData.resources.slice(0, 3).map((resource, index) => (
                 <a 
                   key={index}
                   href={resource.url}
@@ -506,7 +506,7 @@ const OpportunityDetailPage = () => {
                     <div className="mt-6">
                       <h3 className="font-medium text-base mb-3">Steps to Start</h3>
                       <ol className="space-y-3">
-                        {opportunityData.stepsToStart.map((step, index) => (
+                        {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.map((step, index) => (
                           <li key={index} className="flex">
                             <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3 mt-0.5">
                               {index + 1}
@@ -589,7 +589,7 @@ const OpportunityDetailPage = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {opportunityData.successStories.map((story, index) => (
+                      {opportunityData.successStories && Array.isArray(opportunityData.successStories) && opportunityData.successStories.map((story, index) => (
                         <div key={index} className="p-4 border border-primary/10 bg-gradient-to-br from-white to-primary/5 rounded-lg mb-4 last:mb-0">
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-lg flex-shrink-0 font-semibold">
@@ -1021,7 +1021,7 @@ const OpportunityDetailPage = () => {
                   <CardContent>
                     <div className="space-y-6">
                       <div className="relative border-l-2 border-primary/30 pl-6 ml-4">
-                        {opportunityData.stepsToStart.map((step, index) => (
+                        {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.map((step, index) => (
                           <div key={index} className="mb-8 relative">
                             <div className="absolute -left-8 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-sm">
                               {index + 1}
@@ -1034,7 +1034,7 @@ const OpportunityDetailPage = () => {
                               <Badge variant="outline" className="bg-primary/5">Estimated time: {getStepTimeEstimate(index)}</Badge>
                               <Badge variant="outline" className="bg-primary/5">Difficulty: {getStepDifficulty(index)}</Badge>
                             </div>
-                            {index < opportunityData.stepsToStart.length - 1 && (
+                            {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && index < opportunityData.stepsToStart.length - 1 && (
                               <div className="absolute -left-[0.3rem] bottom-[-1rem] h-8 border-l-2 border-primary/30"></div>
                             )}
                           </div>
@@ -1063,7 +1063,7 @@ const OpportunityDetailPage = () => {
                   <CardContent>
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {opportunityData.resources.map((resource, index) => (
+                        {opportunityData.resources && Array.isArray(opportunityData.resources) && opportunityData.resources.map((resource, index) => (
                           <a 
                             key={index}
                             href={resource.url}
