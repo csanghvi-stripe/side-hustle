@@ -635,6 +635,33 @@ class DiscoveryService {
       skill.toLowerCase().includes('photo')
     );
     
+    // Check for marketing/business skills
+    const hasMarketingSkills = preferences.skills.some(skill => 
+      skill.toLowerCase().includes('market') || 
+      skill.toLowerCase().includes('seo') || 
+      skill.toLowerCase().includes('social media') ||
+      skill.toLowerCase().includes('advertis') ||
+      skill.toLowerCase().includes('sales')
+    );
+    
+    // Check for teaching/coaching skills
+    const hasTeachingSkills = preferences.skills.some(skill => 
+      skill.toLowerCase().includes('teach') || 
+      skill.toLowerCase().includes('coach') || 
+      skill.toLowerCase().includes('mentor') ||
+      skill.toLowerCase().includes('train') ||
+      skill.toLowerCase().includes('educat')
+    );
+    
+    // Check for product/ecommerce skills
+    const hasEcommerceSkills = preferences.skills.some(skill => 
+      skill.toLowerCase().includes('ecommerce') || 
+      skill.toLowerCase().includes('product') || 
+      skill.toLowerCase().includes('retail') ||
+      skill.toLowerCase().includes('shop') ||
+      skill.toLowerCase().includes('merch')
+    );
+    
     // Generate unique IDs for our supplementary opportunities
     const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
@@ -941,6 +968,171 @@ class DiscoveryService {
       timeToFirstRevenue: "2-3 weeks",
       roiScore: 78
     });
+    
+    // Add Medium-specific content opportunities
+    if (hasWritingSkills) {
+      opportunities.push({
+        id: generateId('medium-content'),
+        source: 'supplementary',
+        title: 'Medium Partner Program Content Creation',
+        description: 'Write and publish articles on Medium through their Partner Program to earn based on member engagement. Medium offers a built-in audience and monetization system for writers.',
+        requiredSkills: ['Writing', 'Content Creation'],
+        niceToHaveSkills: ['Storytelling', 'Research'],
+        type: OpportunityType.CONTENT,
+        estimatedIncome: { min: 100, max: 1000, timeframe: 'month' },
+        startupCost: { min: 0, max: 0 },
+        timeRequired: { min: 5, max: 15 },
+        entryBarrier: RiskLevel.LOW,
+        marketDemand: 'MEDIUM',
+        stepsToStart: [
+          'Create a Medium account and join the Partner Program',
+          'Research popular topics in your areas of expertise',
+          'Write high-quality articles with compelling headlines',
+          'Publish consistently and engage with the Medium community',
+          'Apply to popular publications to increase visibility'
+        ],
+        successStories: [
+          {
+            name: 'Jamie Peters',
+            background: 'Marketing specialist with side interest in psychology',
+            journey: 'Started writing one article per week about work-life balance',
+            outcome: 'Now earns $800-1,200/month from 40+ articles with minimal ongoing work'
+          }
+        ],
+        resources: [
+          { title: "Medium Partner Program Guide", url: "https://medium.com/creators" },
+          { title: "How to Succeed on Medium", url: "https://bettermarketing.pub/medium-success" }
+        ],
+        skillGapDays: 0,
+        matchScore: 0.9,
+        timeToFirstRevenue: "2-4 weeks",
+        roiScore: 87
+      });
+    }
+    
+    // Add Shopify-specific ecommerce opportunities
+    if (hasEcommerceSkills || hasMarketingSkills) {
+      opportunities.push({
+        id: generateId('shopify-dropshipping'),
+        source: 'supplementary',
+        title: 'Shopify Dropshipping Store',
+        description: 'Launch a dropshipping business on Shopify selling products without holding inventory. This model lets you focus on marketing and customer service while suppliers handle fulfillment.',
+        requiredSkills: ['Marketing', 'Customer Service'],
+        niceToHaveSkills: ['Product Research', 'Social Media', 'Copywriting'],
+        type: OpportunityType.DIGITAL_PRODUCT,
+        estimatedIncome: { min: 1000, max: 10000, timeframe: 'month' },
+        startupCost: { min: 500, max: 2000 },
+        timeRequired: { min: 15, max: 40 },
+        entryBarrier: RiskLevel.MEDIUM,
+        marketDemand: 'HIGH',
+        stepsToStart: [
+          'Research profitable niches and trending products',
+          'Set up a Shopify store and install dropshipping apps',
+          'Find reliable suppliers on platforms like AliExpress or Spocket',
+          'Create compelling product pages with professional photos',
+          'Develop a marketing strategy focused on social media and ads'
+        ],
+        successStories: [
+          {
+            name: 'Ryan Zhang',
+            background: 'College student with interest in fitness',
+            journey: 'Started dropshipping fitness accessories targeting home gym enthusiasts',
+            outcome: 'Built store to $15,000/month in revenue with 30% profit margin within a year'
+          }
+        ],
+        resources: [
+          { title: "Dropshipping Masterclass", url: "https://dropshiplifestyle.com" },
+          { title: "Shopify Startup Guide", url: "https://shopify.com/guides/dropshipping" }
+        ],
+        skillGapDays: 14,
+        matchScore: 0.75,
+        timeToFirstRevenue: "3-6 weeks",
+        roiScore: 80
+      });
+    }
+    
+    // Add AI-assisted content creation opportunities
+    if (hasWritingSkills || hasMarketingSkills) {
+      opportunities.push({
+        id: generateId('ai-content-production'),
+        source: 'supplementary',
+        title: 'AI-Assisted Content Production Service',
+        description: 'Offer content creation services leveraging AI tools to increase efficiency. Companies need high-quality content but struggle with production scale—AI tools enable you to produce more while maintaining quality.',
+        requiredSkills: ['Content Creation', 'Editing'],
+        niceToHaveSkills: ['AI Prompt Engineering', 'SEO', 'Content Strategy'],
+        type: OpportunityType.SERVICE,
+        estimatedIncome: { min: 2000, max: 8000, timeframe: 'month' },
+        startupCost: { min: 200, max: 500 },
+        timeRequired: { min: 10, max: 30 },
+        entryBarrier: RiskLevel.LOW,
+        marketDemand: 'HIGH',
+        stepsToStart: [
+          'Develop expertise with AI writing tools like GPT-4 and Claude',
+          'Create sample content that showcases your quality and efficiency',
+          'Define service packages for different content types and volumes',
+          'Build a simple website explaining your process and advantages',
+          'Reach out to marketing agencies and content-heavy businesses'
+        ],
+        successStories: [
+          {
+            name: 'Maya Johnson',
+            background: 'Former copywriter at an agency',
+            journey: 'Started offering AI-enhanced blog packages to SMBs',
+            outcome: 'Now runs a team of 3 with 15 clients on retainer, earning $12K/month'
+          }
+        ],
+        resources: [
+          { title: "AI Content Creator's Handbook", url: "https://aicontent.pro" },
+          { title: "Prompt Engineering Masterclass", url: "https://learnprompting.com" }
+        ],
+        skillGapDays: 7,
+        matchScore: 0.85,
+        timeToFirstRevenue: "2-3 weeks",
+        roiScore: 90
+      });
+    }
+    
+    // Add teaching/course opportunities on specialized platforms
+    if (hasTeachingSkills) {
+      opportunities.push({
+        id: generateId('teachable-course'),
+        source: 'supplementary',
+        title: 'Create and Sell Online Courses on Teachable',
+        description: 'Develop and sell comprehensive online courses in your area of expertise. The e-learning market continues to grow, with professionals seeking to upskill through flexible, on-demand education.',
+        requiredSkills: ['Expertise in a Subject', 'Teaching'],
+        niceToHaveSkills: ['Video Production', 'Course Design', 'Marketing'],
+        type: OpportunityType.INFO_PRODUCT,
+        estimatedIncome: { min: 2000, max: 15000, timeframe: 'month' },
+        startupCost: { min: 500, max: 2000 },
+        timeRequired: { min: 20, max: 40 },
+        entryBarrier: RiskLevel.MEDIUM,
+        marketDemand: 'HIGH',
+        stepsToStart: [
+          'Identify a specialized topic where you have deep knowledge',
+          'Create a detailed course outline and learning objectives',
+          'Set up a Teachable account and course structure',
+          'Record and edit high-quality video lessons',
+          'Develop supplementary materials like workbooks and quizzes',
+          'Create a marketing funnel to attract students'
+        ],
+        successStories: [
+          {
+            name: 'Carlos Mendez',
+            background: 'Software developer specializing in cybersecurity',
+            journey: 'Created a practical course on ethical hacking and security',
+            outcome: 'Course has enrolled 3,800 students with $140K in total revenue over 18 months'
+          }
+        ],
+        resources: [
+          { title: "Course Creator Pro", url: "https://teachable.com/creators/resources" },
+          { title: "E-Learning Production Guide", url: "https://courseformula.com" }
+        ],
+        skillGapDays: 21,
+        matchScore: 0.8,
+        timeToFirstRevenue: "2-3 months",
+        roiScore: 85
+      });
+    }
     
     logger.info(`Added ${opportunities.length} supplementary opportunities`);
   }

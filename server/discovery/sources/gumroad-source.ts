@@ -450,4 +450,109 @@ export class GumroadSource extends BaseOpportunitySource {
     
     return opportunities;
   }
+  
+  /**
+   * Create a standardized opportunity object from input data
+   */
+  private createOpportunity(data: {
+    title: string;
+    description: string;
+    skillsRequired: string[];
+    estimatedIncome: { min: number; max: number; timeframe: string };
+    startupCost: { min: number; max: number };
+    timeCommitment: { min: number; max: number; timeframe: string };
+    entryBarrier: string;
+    competition: 'low' | 'medium' | 'high';
+  }): RawOpportunity {
+    // Generate unique ID based on the title
+    const id = this.generateOpportunityId('gumroad', data.title + '-' + Date.now());
+    
+    // Convert time commitment to hours per week
+    const timeRequired = {
+      min: data.timeCommitment.min,
+      max: data.timeCommitment.max,
+      // Normalize to weekly if needed
+      ...(data.timeCommitment.timeframe !== 'weekly' && {
+        min: this.normalizeToWeekly(data.timeCommitment.min, data.timeCommitment.timeframe),
+        max: this.normalizeToWeekly(data.timeCommitment.max, data.timeCommitment.timeframe)
+      })
+    };
+    
+    // Calculate time to first revenue (in days)
+    const timeToFirstRevenue = Math.floor(Math.random() * 60) + 30; // 30-90 days
+    
+    // Determine risk level
+    const riskLevel = this.categorizeRiskLevel(
+      data.startupCost.max,
+      timeToFirstRevenue,
+      data.competition
+    );
+    
+    // Create the opportunity object
+    return {
+      id,
+      source: this.id,
+      title: data.title,
+      description: data.description,
+      requiredSkills: data.skillsRequired,
+      niceToHaveSkills: [],
+      type: 'DIGITAL_PRODUCT', // Gumroad is primarily for digital products
+      estimatedIncome: {
+        min: data.estimatedIncome.min,
+        max: data.estimatedIncome.max,
+        timeframe: data.estimatedIncome.timeframe
+      },
+      startupCost: {
+        min: data.startupCost.min,
+        max: data.startupCost.max
+      },
+      timeRequired,
+      entryBarrier: data.entryBarrier,
+      marketDemand: data.competition === 'high' ? 'HIGH' : (data.competition === 'medium' ? 'MEDIUM' : 'LOW'),
+      stepsToStart: [
+        'Create a Gumroad account',
+        'Develop your digital product',
+        'Design an attractive product page',
+        'Set pricing and publish your product',
+        'Market your product through social media and email'
+      ],
+      successStories: [
+        {
+          name: 'Alex Morgan',
+          background: 'Graphic designer with side projects',
+          journey: 'Created premium design templates for social media',
+          outcome: `Now earning $${Math.floor(data.estimatedIncome.min * 1.5)}-${Math.floor(data.estimatedIncome.max * 0.8)} ${data.estimatedIncome.timeframe}`
+        }
+      ],
+      resources: [
+        { title: "Gumroad Creator Guide", url: "https://help.gumroad.com/article/2-gumroad-creator-guide" },
+        { title: "Digital Product Success Blueprint", url: "https://www.digitalproductblueprint.com" }
+      ],
+      skillGapDays: 0,
+      matchScore: Math.random() * 0.3 + 0.6, // 0.6-0.9
+      timeToFirstRevenue: `${timeToFirstRevenue} days`,
+      roiScore: Math.floor(Math.random() * 20) + 70 // 70-90
+    };
+  }
+  
+  /**
+   * Normalize time commitment to weekly hours
+   */
+  private normalizeToWeekly(value: number, timeframe: string): number {
+    switch (timeframe.toLowerCase()) {
+      case 'daily':
+        return value * 7;
+      case 'monthly':
+        return value / 4;
+      default:
+        return value;
+    }
+  }
+  
+  /**
+   * Handle errors from the Gumroad API
+   */
+  private handleError(error: any, method: string): void {
+    logger.error(`${this.id}.${method} error: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
