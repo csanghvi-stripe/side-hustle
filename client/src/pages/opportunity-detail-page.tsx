@@ -1,38 +1,71 @@
-import React, { useState } from "react";
-import { useParams, useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "wouter";
 import { MonetizationOpportunity } from "@shared/schema";
-import {
-  ArrowLeft,
+import { 
+  ArrowRight,
+  ArrowUpRight,
+  Award,
+  BarChart4,
   Briefcase,
   Building,
-  Calendar,
+  ChevronsUp,
   ChevronRight,
-  CircleDollarSign,
   Clock,
   Code,
   DollarSign,
+  Download,
   ExternalLink,
-  FileCheck,
+  FileText,
+  Gem,
   GraduationCap,
-  Layers,
+  HelpCircle,
+  Home,
+  Laptop,
+  LayoutDashboard,
   LayoutList,
+  Lightbulb,
+  Link as LinkIcon,
+  Megaphone,
   MessageSquare,
   Monitor,
-  Presentation,
+  Palette,
+  Pencil,
+  PencilLine,
+  PenLine,
+  PieChart,
+  Search,
+  ShoppingCart,
   Target,
+  Truck,
   TrendingUp,
   Users,
+  UserPlus,
+  Video,
+  VideoIcon,
 } from "lucide-react";
-import SkillGapAnalyzer from "@/components/analytics/SkillGapAnalyzer";
+import { useState } from "react";
+import { Link } from "wouter";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
-// Define the shape of opportunity data we'll parse from JSON
 type ResourceType = {
   title?: string;
   url?: string;
@@ -63,427 +96,372 @@ type OpportunityDataType = {
   requiredSkills?: string[];
 };
 
-const OpportunityDetailPage = () => {
-  const [activeTab, setActiveTab] = useState("overview");
-  const params = useParams();
-  const [, setLocation] = useLocation();
-  const opportunityId = params.id;
+// Function to get icon for opportunity type
+const getIconForType = (type: string) => {
+  const iconClasses = "w-6 h-6";
+  
+  switch (type?.toLowerCase()) {
+    case 'freelancing':
+      return <Briefcase className={iconClasses} />;
+    case 'consulting':
+      return <PieChart className={iconClasses} />;
+    case 'e-commerce':
+      return <ShoppingCart className={iconClasses} />;
+    case 'content creation':
+      return <PencilLine className={iconClasses} />;
+    case 'digital products':
+      return <Laptop className={iconClasses} />;
+    case 'online courses':
+      return <GraduationCap className={iconClasses} />;
+    case 'app development':
+      return <Code className={iconClasses} />;
+    case 'coaching':
+      return <MessageSquare className={iconClasses} />;
+    case 'design services':
+      return <Palette className={iconClasses} />;
+    case 'marketing services':
+      return <Megaphone className={iconClasses} />;
+    case 'drop shipping':
+      return <Truck className={iconClasses} />;
+    default:
+      return <Lightbulb className={iconClasses} />;
+  }
+};
 
-  // Fetch opportunity details
+// Define risk level styles
+const riskLevelStyles = {
+  'low': {
+    bg: 'bg-green-100',
+    text: 'text-green-700',
+    icon: <ChevronsUp className="w-4 h-4" />,
+  },
+  'medium': {
+    bg: 'bg-amber-100',
+    text: 'text-amber-700',
+    icon: <Target className="w-4 h-4" />,
+  },
+  'high': {
+    bg: 'bg-red-100',
+    text: 'text-red-700',
+    icon: <TrendingUp className="w-4 h-4" />,
+  },
+};
+
+// Helper functions
+function getStepDescription(index: number): string {
+  const descriptions = [
+    "Understand your marketable skills and identify where they're most valuable. Research successful individuals in this space.",
+    "Create a professional online presence that highlights your expertise and showcases examples of your work.",
+    "Choose the right platforms to find clients or customers. Set up profiles and optimize them for maximum visibility.",
+    "Develop clear service offerings with tiered pricing models. Research market rates for similar services.",
+    "Create templates and scripts for outreach. Identify potential clients and start making connections.",
+    "Start with smaller projects to build your portfolio and reputation. Deliver exceptional work to get positive reviews."
+  ];
+  
+  return descriptions[index] || "Complete this step to progress on your journey.";
+}
+
+function getStepTimeEstimate(index: number): string {
+  const estimates = ["1-2 days", "2-3 days", "1 day", "1-2 days", "1 day", "Ongoing"];
+  return estimates[index] || "1-2 days";
+}
+
+function getStepDifficulty(index: number): string {
+  const difficulties = ["Easy", "Medium", "Easy", "Medium", "Medium", "Hard"];
+  return difficulties[index] || "Medium";
+}
+
+function getResourceIcon(resource: ResourceType) {
+  const title = resource.title?.toLowerCase() || '';
+  let icon = <FileText className="w-5 h-5 mr-3 text-primary" />;
+  
+  if (title.includes('guide') || title.includes('how to')) {
+    icon = <FileText className="w-5 h-5 mr-3 text-blue-500" />;
+  } else if (title.includes('video') || title.includes('course')) {
+    icon = <VideoIcon className="w-5 h-5 mr-3 text-red-500" />;
+  } else if (title.includes('template') || title.includes('toolkit')) {
+    icon = <Download className="w-5 h-5 mr-3 text-green-500" />;
+  } else if (title.includes('community') || title.includes('forum')) {
+    icon = <Users className="w-5 h-5 mr-3 text-purple-500" />;
+  } else if (title.includes('pricing') || title.includes('financial')) {
+    icon = <DollarSign className="w-5 h-5 mr-3 text-green-500" />;
+  }
+  
+  return icon;
+}
+
+const OpportunityDetailPage = () => {
+  const params = useParams();
+  const id = params.id;
+  const [activeTab, setActiveTab] = useState("overview");
+  const [expandedSkill, setExpandedSkill] = useState<number | null>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const { toast } = useToast();
+
+  // This will fetch the actual opportunity data from the API
+  // For now we'll use mock data
   const { data: opportunity, isLoading, error } = useQuery<MonetizationOpportunity>({
-    queryKey: ["/api/opportunities", opportunityId],
-    enabled: !!opportunityId,
+    queryKey: [`/api/opportunities/${id}`],
   });
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="mt-4 text-neutral-600">Loading opportunity details...</p>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error || !opportunity) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>
-              We couldn't load the opportunity details. Please try again.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => setLocation("/saved-opportunities")}>
-              Back to Opportunities
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-2xl font-bold mb-4">Opportunity Not Found</h2>
+        <p className="text-neutral-600 mb-6">We couldn't find the opportunity you're looking for.</p>
+        <Button asChild>
+          <Link href="/saved-opportunities">Back to My Opportunities</Link>
+        </Button>
       </div>
     );
   }
 
-  // Parse opportunity data
-  let opportunityData: OpportunityDataType | null = null;
-  try {
-    if (typeof opportunity.opportunityData === 'string') {
-      const parsed = JSON.parse(opportunity.opportunityData);
-      
-      // Generate a random ROI score if not provided
-      const roiScore = parsed.roiScore || Math.floor(Math.random() * 50) + 50;
-      
-      // Set time to first revenue
-      const timeToFirstRevenue = parsed.timeToFirstRevenue || "~30 days";
-      
-      // Set skill gap days
-      const skillGapDays = parsed.skillGapDays || 0;
-      
-      opportunityData = {
-        title: parsed.title || opportunity.title || "",
-        type: parsed.type || "Freelance",
-        description: parsed.description || "This opportunity allows you to leverage your skills in a flexible way to generate income.",
-        incomePotential: parsed.incomePotential || "$0-$0",
-        startupCost: parsed.startupCost || "$0",
-        riskLevel: parsed.riskLevel || "Medium",
-        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [
-          "Create a profile highlighting your relevant skills",
-          "Identify your target clients or audience",
-          "Set up the necessary tools and accounts",
-          "Start marketing your services"
-        ],
-        resources: Array.isArray(parsed.resources) ? parsed.resources : [],
-        successStories: Array.isArray(parsed.successStories) ? parsed.successStories : [],
-        roiScore: roiScore,
-        timeToFirstRevenue: timeToFirstRevenue,
-        skillGapDays: skillGapDays,
-        requiredSkills: Array.isArray(parsed.requiredSkills) ? parsed.requiredSkills : []
-      };
-    } else if (opportunity.opportunityData && typeof opportunity.opportunityData === 'object') {
-      const parsed = opportunity.opportunityData as any;
-      
-      // Let's check for different possible data structures
-      let description = "";
-      if (parsed.description) {
-        description = parsed.description;
-      } else if (parsed.howItWorks) {
-        description = parsed.howItWorks;
-      } else if (parsed.details) {
-        description = parsed.details;
-      } else {
-        description = "This opportunity allows you to leverage your skills in a flexible way to generate income.";
-      }
-      
-      // Generate a random ROI score if not provided
-      const roiScore = parsed.roiScore || Math.floor(Math.random() * 50) + 50;
-      
-      // Set time to first revenue
-      const timeToFirstRevenue = parsed.timeToFirstRevenue || "~30 days";
-      
-      // Set skill gap days
-      const skillGapDays = parsed.skillGapDays || 0;
-      
-      opportunityData = {
-        title: parsed.title || opportunity.title || "",
-        type: parsed.type || "Freelance",
-        description: description,
-        incomePotential: parsed.incomePotential || "$0-$0",
-        startupCost: parsed.startupCost || "$0",
-        riskLevel: parsed.riskLevel || "Medium",
-        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [
-          "Create a profile highlighting your relevant skills",
-          "Identify your target clients or audience",
-          "Set up the necessary tools and accounts",
-          "Start marketing your services"
-        ],
-        resources: Array.isArray(parsed.resources) ? parsed.resources : [],
-        successStories: Array.isArray(parsed.successStories) ? parsed.successStories : [],
-        roiScore: roiScore,
-        timeToFirstRevenue: timeToFirstRevenue,
-        skillGapDays: skillGapDays,
-        requiredSkills: Array.isArray(parsed.requiredSkills) ? parsed.requiredSkills : []
-      };
-    } else {
-      // Fallback if opportunityData is missing/invalid
-      opportunityData = {
-        title: opportunity.title || "",
-        type: "Freelance", // Default to Freelance
-        description: "This opportunity allows you to leverage your skills in a flexible way to generate income.",
-        incomePotential: "$0-$0",
-        startupCost: "$0",
-        riskLevel: "Medium",
-        stepsToStart: [
-          "Create a profile highlighting your relevant skills",
-          "Identify your target clients or audience",
-          "Set up the necessary tools and accounts",
-          "Start marketing your services"
-        ],
-        resources: [],
-        successStories: [],
-        roiScore: 56, // Default ROI score
-        timeToFirstRevenue: "~30 days",
-        skillGapDays: 0,
-        requiredSkills: []
-      };
-    }
-  } catch (error) {
-    console.error("Failed to parse opportunity data:", error);
-    // Fallback if parsing fails
-    opportunityData = {
-      title: opportunity.title || "",
-      type: "Freelance",
-      description: "Error loading opportunity details",
-      incomePotential: "$0-$0",
-      startupCost: "$0",
-      riskLevel: "Medium",
-      stepsToStart: [],
-      resources: [],
-      roiScore: 56, // Default ROI score
-      timeToFirstRevenue: "~30 days",
-      skillGapDays: 0,
-      requiredSkills: []
+  // Parse the opportunity data - in a real app this would come directly from the API
+  const opportunityData: OpportunityDataType = opportunity.data ? 
+    JSON.parse(opportunity.data as string) : 
+    {
+      title: opportunity.title,
+      type: "Freelancing",
+      description: "Launch your freelance career using your existing skills to find clients and generate income.",
+      incomePotential: "$2000-5000/mo",
+      startupCost: "$200-500",
+      riskLevel: "low",
+      stepsToStart: [
+        "Identify your marketable skills and niche",
+        "Create a portfolio website showcasing your work",
+        "Set up profiles on relevant freelance platforms",
+        "Define your service packages and pricing strategy",
+        "Develop a client outreach strategy",
+        "Start bidding on relevant projects"
+      ],
+      successStories: [
+        {
+          name: "Sarah T.",
+          background: "Former marketing coordinator who started freelancing on the side",
+          journey: "Started with small projects on Upwork while working full-time, gradually built her client base and reputation over 6 months until she had enough steady work to quit her day job.",
+          outcome: "Now earns $6,500/month as a full-time freelance content strategist, working with clients she enjoys."
+        }
+      ],
+      resources: [
+        {
+          title: "The Complete Guide to Freelancing",
+          url: "https://www.example.com/freelance-guide",
+          source: "Freelancers Union"
+        },
+        {
+          title: "Best Freelance Platforms Comparison",
+          url: "https://www.example.com/platforms",
+          source: "Side Hustle Nation"
+        },
+        {
+          title: "Pricing Your Freelance Services",
+          url: "https://www.example.com/pricing-guide",
+          source: "Creative Bloq"
+        }
+      ],
+      roiScore: 85,
+      timeToFirstRevenue: "2-4 weeks",
+      skillGapDays: 14,
+      requiredSkills: [
+        "Core skill expertise",
+        "Basic marketing",
+        "Client communication",
+        "Time management",
+        "Project scoping",
+        "Basic accounting"
+      ]
     };
-  }
 
-  // Get appropriate icon for type
-  const getIconForType = (type: string) => {
-    switch (type) {
-      case "Freelance":
-        return <Briefcase className="w-6 h-6 text-blue-600" />;
-      case "Digital Product":
-        return <Monitor className="w-6 h-6 text-purple-600" />;
-      case "Content Creation":
-        return <Presentation className="w-6 h-6 text-pink-600" />;
-      case "Service-Based":
-        return <CircleDollarSign className="w-6 h-6 text-green-600" />;
-      case "Info Product":
-        return <Layers className="w-6 h-6 text-amber-600" />;
-      case "Software Development":
-        return <Code className="w-6 h-6 text-blue-600" />;
-      default:
-        return <Briefcase className="w-6 h-6 text-neutral-600" />;
+  const riskStyle = riskLevelStyles[opportunityData.riskLevel as keyof typeof riskLevelStyles] || riskLevelStyles.medium;
+
+  const toggleSkillExpand = (index: number) => {
+    if (expandedSkill === index) {
+      setExpandedSkill(null);
+    } else {
+      setExpandedSkill(index);
     }
   };
 
-  // Get a variant of a badge based on risk level
-  const getRiskLevelVariant = (riskLevel: string) => {
-    switch (riskLevel.toLowerCase()) {
-      case "low":
-        return "outline";
-      case "medium":
-        return "secondary";
-      case "high":
-        return "destructive";
-      default:
-        return "outline";
-    }
+  const toggleVideoPlayer = () => {
+    setVideoPlaying(!videoPlaying);
   };
 
-  // Mock progress data - in a real app, this would come from your backend
-  const progressData = {
-    overallProgress: 35, // Percentage completion
-    completedSteps: 2,   // Number of steps completed
-    totalSteps: 7,       // Total number of steps
-    nextMilestone: "Set up your portfolio website",
-    targetDate: "April 30, 2025"
+  const handleSaveOpportunity = () => {
+    toast({
+      title: "Opportunity saved",
+      description: "This opportunity has been added to your saved list.",
+    });
   };
 
-  // Mock similar users - in a real app, this would come from your backend
-  const similarUsers = [
-    {
-      id: 1,
-      name: "Jane Wilson",
-      role: "Frontend Developer",
-      matchScore: 92,
-      avatarUrl: null
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      role: "UX Designer",
-      matchScore: 85,
-      avatarUrl: null
-    },
-    {
-      id: 3,
-      name: "Sarah Roberts",
-      role: "Content Creator",
-      matchScore: 78,
-      avatarUrl: null
-    }
-  ];
+  const handleAddToActionPlan = () => {
+    toast({
+      description: "Added to your action plan. View it in the 'Action Plans' section.",
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Header with navigation */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <Button
-              variant="ghost"
-              onClick={() => setLocation("/saved-opportunities")}
-              className="flex items-center text-neutral-600 hover:text-primary"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Opportunities
-            </Button>
-            <div className="flex items-center gap-2">
-              <Link href={`/action-plan?opportunityId=${opportunity.id}`}>
-                <Button variant="outline" className="flex items-center gap-1">
-                  <FileCheck className="w-4 h-4" />
-                  View Action Plan
-                </Button>
-              </Link>
-              <Link href={`/coach-page?topic=${encodeURIComponent(opportunityData.title)}`}>
-                <Button className="flex items-center gap-1">
-                  <MessageSquare className="w-4 h-4" />
-                  Talk to Coach
-                </Button>
-              </Link>
+    <div className="container py-8">
+      <div className="mb-6">
+        <Button variant="ghost" size="sm" asChild className="mb-2">
+          <Link href="/saved-opportunities">
+            <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
+            Back to My Opportunities
+          </Link>
+        </Button>
+        
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">{opportunityData.title}</h1>
+            <div className="flex items-center mt-2">
+              <Badge variant="outline" className="mr-2 flex items-center">
+                {getIconForType(opportunityData.type)}
+                <span className="ml-1">{opportunityData.type}</span>
+              </Badge>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${riskStyle.bg} ${riskStyle.text}`}>
+                {riskStyle.icon}
+                <span className="ml-1">{opportunityData.riskLevel.charAt(0).toUpperCase() + opportunityData.riskLevel.slice(1)} Risk</span>
+              </span>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleSaveOpportunity}>
+              Save Opportunity
+            </Button>
+            <Button onClick={handleAddToActionPlan}>
+              Add to Action Plan
+            </Button>
           </div>
         </div>
       </div>
-
-      {/* Main content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Opportunity Overview Card */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  {getIconForType(opportunityData.type)}
-                  <div>
-                    <CardTitle>{opportunityData.title}</CardTitle>
-                    <Badge className="mt-1" variant="secondary">
-                      {opportunityData.type}
-                    </Badge>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left sidebar with meta information */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>ROI Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex items-center mb-2">
+                  <TrendingUp className="w-4 h-4 mr-2 text-primary" />
+                  <span className="font-medium">Bang for Buck Score</span>
+                  <span className="ml-auto bg-slate-800 text-white px-2 py-0.5 rounded-md text-sm font-medium">
+                    {opportunityData.roiScore}/100
+                  </span>
+                </div>
+                <Progress value={opportunityData.roiScore} className="h-2" />
+              </div>
+              
+              <div className="space-y-3 pt-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-neutral-500 flex items-center">
+                    <DollarSign className="w-4 h-4 mr-1 text-green-500" />
+                    Income Potential
+                  </span>
+                  <span className="font-medium">{opportunityData.incomePotential}</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-neutral-500 flex items-center">
+                    <Building className="w-4 h-4 mr-1 text-blue-500" />
+                    Startup Cost
+                  </span>
+                  <span className="font-medium">{opportunityData.startupCost}</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-neutral-500 flex items-center">
+                    <Clock className="w-4 h-4 mr-1 text-amber-500" />
+                    Time to Revenue
+                  </span>
+                  <span className="font-medium">{opportunityData.timeToFirstRevenue}</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-neutral-500 flex items-center">
+                    <Target className="w-4 h-4 mr-1 text-purple-500" />
+                    Skill Gap
+                  </span>
+                  <span className="font-medium">~{opportunityData.skillGapDays} days</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Skills Required</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {opportunityData.requiredSkills?.map((skill, index) => (
+                <div key={index} className="text-sm">
+                  <div className="flex items-center">
+                    <div className={`w-2 h-2 rounded-full ${index < 3 ? 'bg-green-500' : 'bg-amber-500'} mr-2`}></div>
+                    <span>{skill}</span>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-neutral-600">
-                  {opportunityData.description}
-                </p>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-neutral-500">Income Potential</p>
-                    <p className="font-medium flex items-center mt-1">
-                      <DollarSign className="w-4 h-4 text-green-500 mr-1" />
-                      {opportunityData.incomePotential}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-neutral-500">Initial Investment</p>
-                    <p className="font-medium flex items-center mt-1">
-                      <Building className="w-4 h-4 text-blue-500 mr-1" />
-                      {opportunityData.startupCost}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-neutral-500">Time to Revenue</p>
-                    <p className="font-medium flex items-center mt-1">
-                      <Clock className="w-4 h-4 text-amber-500 mr-1" />
-                      {opportunityData.timeToFirstRevenue}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-neutral-500">Risk Level</p>
-                    <Badge
-                      variant={getRiskLevelVariant(opportunityData.riskLevel)}
-                      className="mt-1"
-                    >
-                      {opportunityData.riskLevel}
-                    </Badge>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-sm">Steps Completed</h4>
-                    <span className="text-sm text-neutral-500">
-                      {progressData.completedSteps}/{progressData.totalSteps}
-                    </span>
-                  </div>
-                  <Progress value={progressData.overallProgress} className="h-2" />
-                  <div className="mt-3 text-sm text-neutral-600 flex items-center">
-                    <Calendar className="w-4 h-4 mr-1 text-primary" />
-                    Next milestone by {progressData.targetDate}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Skills Required Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center">
-                  <GraduationCap className="w-5 h-5 mr-2 text-primary" />
-                  Skills Required
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {opportunityData.requiredSkills && opportunityData.requiredSkills.length > 0 ? (
-                      opportunityData.requiredSkills.map((skill, index) => (
-                        <Badge key={index} variant="outline" className="px-3 py-1">
-                          {skill}
-                        </Badge>
-                      ))
-                    ) : (
-                      <p className="text-sm text-neutral-500">No specific skills required.</p>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-sm">Skill Gap</h4>
-                      <span className="text-sm font-medium">
-                        ~{opportunityData.skillGapDays} days to close
-                      </span>
+              ))}
+              <Button variant="outline" size="sm" className="w-full mt-2" asChild>
+                <Link href="#skills">View Skill Development Plan</Link>
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Resources</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {opportunityData.resources.slice(0, 3).map((resource, index) => (
+                <a 
+                  key={index}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer" 
+                  className="block p-3 border border-neutral-100 rounded-md hover:border-primary/50 hover:bg-primary/5 transition"
+                >
+                  <div className="flex items-start">
+                    <FileText className="w-4 h-4 mt-0.5 mr-2 text-primary" />
+                    <div>
+                      <div className="text-sm font-medium">{resource.title}</div>
+                      {resource.source && (
+                        <div className="text-xs text-neutral-500">{resource.source}</div>
+                      )}
                     </div>
-                    <Progress 
-                      value={100 - Math.min(opportunityData.skillGapDays || 0, 100)} 
-                      className="h-2" 
-                    />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Similar Users Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center">
-                  <Users className="w-5 h-5 mr-2 text-primary" />
-                  People with Similar Skills
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {similarUsers.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                          {user.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{user.name}</p>
-                          <p className="text-xs text-neutral-500">{user.role}</p>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {user.matchScore}% match
-                      </Badge>
-                    </div>
-                  ))}
-
-                  <Button variant="outline" className="w-full text-sm" size="sm">
-                    Connect with More People
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right main content */}
-          <div className="lg:col-span-2">
-            <Tabs 
+                </a>
+              ))}
+              
+              <Button variant="outline" size="sm" className="w-full" asChild>
+                <Link href="#resources">View All Resources</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Main content area */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+            <Tabs
               defaultValue="overview"
               value={activeTab}
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-5 mb-6">
+              <TabsList className="grid grid-cols-6 mb-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="roi">ROI Analysis</TabsTrigger>
+                <TabsTrigger value="pricing">Pricing Calculator</TabsTrigger>
                 <TabsTrigger value="skills">Skill Development</TabsTrigger>
                 <TabsTrigger value="steps">Success Path</TabsTrigger>
                 <TabsTrigger value="resources">Resources</TabsTrigger>
@@ -738,6 +716,175 @@ const OpportunityDetailPage = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+              
+              {/* Pricing Calculator Tab */}
+              <TabsContent value="pricing" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pricing Calculator</CardTitle>
+                    <CardDescription>
+                      Determine the optimal pricing for your services based on market rates and value
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h3 className="font-medium border-b pb-2">Your Costs & Time Investment</h3>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">
+                                Your Hourly Target Rate
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">$</span>
+                                <input 
+                                  type="number" 
+                                  defaultValue="50"
+                                  className="w-full pl-7 pr-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                              </div>
+                              <p className="text-xs text-neutral-500 mt-1">What you'd like to earn per hour of work</p>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">
+                                Estimated Hours Per Project
+                              </label>
+                              <input 
+                                type="number" 
+                                defaultValue="10"
+                                className="w-full px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                              />
+                              <p className="text-xs text-neutral-500 mt-1">How long you expect the project to take</p>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">
+                                Business Expenses (Monthly)
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">$</span>
+                                <input 
+                                  type="number" 
+                                  defaultValue="250"
+                                  className="w-full pl-7 pr-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                              </div>
+                              <p className="text-xs text-neutral-500 mt-1">Software, tools, marketing, etc.</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h3 className="font-medium border-b pb-2">Market Position</h3>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">
+                                Market Position
+                              </label>
+                              <select 
+                                className="w-full px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                defaultValue="mid"
+                              >
+                                <option value="budget">Budget (Lower Prices)</option>
+                                <option value="mid">Mid-Range</option>
+                                <option value="premium">Premium (Higher Prices)</option>
+                              </select>
+                              <p className="text-xs text-neutral-500 mt-1">Where you want to position your offering</p>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">
+                                Experience Level
+                              </label>
+                              <select 
+                                className="w-full px-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                defaultValue="intermediate"
+                              >
+                                <option value="beginner">Beginner (0-2 years)</option>
+                                <option value="intermediate">Intermediate (2-5 years)</option>
+                                <option value="advanced">Advanced (5+ years)</option>
+                              </select>
+                              <p className="text-xs text-neutral-500 mt-1">Your experience in this field</p>
+                            </div>
+                            
+                            <div>
+                              <label className="text-sm font-medium mb-1 block">
+                                Market Average Rate
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">$</span>
+                                <input 
+                                  type="number" 
+                                  defaultValue="300"
+                                  className="w-full pl-7 pr-4 py-2 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                              </div>
+                              <p className="text-xs text-neutral-500 mt-1">Average price for similar services</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="bg-neutral-50 p-6 rounded-lg">
+                        <h3 className="font-medium text-lg mb-4">Pricing Recommendation</h3>
+                        <div className="grid grid-cols-3 gap-6">
+                          <div className="text-center p-4 border border-neutral-200 rounded-lg bg-white">
+                            <h4 className="text-sm text-neutral-500 mb-1">Budget Pricing</h4>
+                            <p className="text-2xl font-bold text-primary">$250-350</p>
+                            <p className="text-xs text-neutral-500 mt-1">More clients, lower margins</p>
+                          </div>
+                          
+                          <div className="text-center p-4 border-2 border-primary rounded-lg bg-white relative">
+                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white text-xs px-2 py-1 rounded">
+                              Recommended
+                            </div>
+                            <h4 className="text-sm text-neutral-500 mb-1">Optimal Pricing</h4>
+                            <p className="text-2xl font-bold text-primary">$450-550</p>
+                            <p className="text-xs text-neutral-500 mt-1">Balanced value & profit</p>
+                          </div>
+                          
+                          <div className="text-center p-4 border border-neutral-200 rounded-lg bg-white">
+                            <h4 className="text-sm text-neutral-500 mb-1">Premium Pricing</h4>
+                            <p className="text-2xl font-bold text-primary">$650-800</p>
+                            <p className="text-xs text-neutral-500 mt-1">Higher quality clients</p>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-2">Pricing Strategy Tips</h4>
+                          <ul className="space-y-2 text-sm text-neutral-600">
+                            <li className="flex items-start">
+                              <span className="inline-block w-4 h-4 rounded-full bg-primary/10 text-primary flex-shrink-0 flex items-center justify-center text-xs mr-2 mt-0.5">✓</span>
+                              Consider offering tiered packages (Basic, Standard, Premium) to capture different market segments
+                            </li>
+                            <li className="flex items-start">
+                              <span className="inline-block w-4 h-4 rounded-full bg-primary/10 text-primary flex-shrink-0 flex items-center justify-center text-xs mr-2 mt-0.5">✓</span>
+                              Value-based pricing often yields better results than hourly-based pricing
+                            </li>
+                            <li className="flex items-start">
+                              <span className="inline-block w-4 h-4 rounded-full bg-primary/10 text-primary flex-shrink-0 flex items-center justify-center text-xs mr-2 mt-0.5">✓</span>
+                              Raising your rates by 10-15% for each new client helps you find your market ceiling
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Button variant="outline">
+                          Export Pricing Strategy
+                        </Button>
+                        <Button>
+                          Save Pricing Settings
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
               {/* Skill Development Tab */}
               <TabsContent value="skills" className="space-y-6">
@@ -764,33 +911,77 @@ const OpportunityDetailPage = () => {
 
                     <div className="space-y-4">
                       <h3 className="font-medium border-b pb-2">Required Skills</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {opportunityData.requiredSkills && opportunityData.requiredSkills.length > 0 ? (
-                          opportunityData.requiredSkills.map((skill, index) => (
-                            <Badge key={index} variant="outline" className="px-3 py-1">
-                              {skill}
-                            </Badge>
-                          ))
-                        ) : (
-                          <p className="text-sm text-neutral-500">No specific skills required.</p>
-                        )}
+                      <div className="space-y-4">
+                        {opportunityData.requiredSkills?.map((skill, index) => (
+                          <div 
+                            key={index} 
+                            className={cn(
+                              "border rounded-lg overflow-hidden transition-all", 
+                              expandedSkill === index ? "border-primary" : "border-neutral-200"
+                            )}
+                          >
+                            <div 
+                              className="p-4 flex items-center justify-between cursor-pointer"
+                              onClick={() => toggleSkillExpand(index)}
+                            >
+                              <div className="flex items-center">
+                                <div className={`w-8 h-8 rounded-full ${index < 3 ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'} flex items-center justify-center mr-3`}>
+                                  {index < 3 ? (
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  ) : (
+                                    <Target className="w-4 h-4" />
+                                  )}
+                                </div>
+                                <div>
+                                  <h4 className="font-medium">{skill}</h4>
+                                  <p className="text-xs text-neutral-500">
+                                    {index < 3 ? 'You already have this skill' : `Est. ${index * 3 + 4} days to learn basics`}
+                                  </p>
+                                </div>
+                              </div>
+                              <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedSkill === index ? 'rotate-90' : ''}`} />
+                            </div>
+                            
+                            {expandedSkill === index && (
+                              <div className="px-4 pb-4 pt-2 border-t border-neutral-100">
+                                <div className="space-y-4">
+                                  <h5 className="text-sm font-medium">Development Path</h5>
+                                  <div className="space-y-3">
+                                    <div className="flex items-start">
+                                      <div className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs mr-2 mt-0.5">1</div>
+                                      <div>
+                                        <h6 className="text-sm font-medium">Learn the fundamentals</h6>
+                                        <p className="text-xs text-neutral-500">Start with online tutorials and courses to grasp the basics</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-start">
+                                      <div className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs mr-2 mt-0.5">2</div>
+                                      <div>
+                                        <h6 className="text-sm font-medium">Practice on small projects</h6>
+                                        <p className="text-xs text-neutral-500">Build a simple portfolio of projects to demonstrate your skills</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-start">
+                                      <div className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs mr-2 mt-0.5">3</div>
+                                      <div>
+                                        <h6 className="text-sm font-medium">Get feedback and improve</h6>
+                                        <p className="text-xs text-neutral-500">Share your work with the community to get constructive feedback</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="pt-3">
+                                    <Button size="sm" variant="outline" className="w-full">
+                                      View Learning Resources
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    </div>
-
-                    <Separator className="my-6" />
-
-                    <div className="mb-6">
-                      <h3 className="font-medium mb-4">Detailed Skill Gap Analysis</h3>
-                      {opportunity.id && <SkillGapAnalyzer opportunity={opportunity} />}
-                    </div>
-
-                    <div className="mt-8 flex gap-3">
-                      <Button className="flex-1">
-                        Create Learning Plan
-                      </Button>
-                      <Button variant="outline" className="flex-1">
-                        Find Learning Resources
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -802,47 +993,37 @@ const OpportunityDetailPage = () => {
                   <CardHeader>
                     <CardTitle>Success Path</CardTitle>
                     <CardDescription>
-                      Step-by-step guide to launch and succeed in this opportunity
+                      Step-by-step guide to achieve success with this opportunity
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
-                      {opportunityData.stepsToStart.map((step, index) => (
-                        <div key={index} className="flex">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-4 mt-0.5">
-                            {index + 1}
-                          </div>
-                          <div className="bg-white border border-neutral-200 rounded-lg p-4 flex-grow">
-                            <h3 className="font-medium mb-2">{step}</h3>
-                            <p className="text-sm text-neutral-600 mb-3">
-                              {/* Generate a description based on the step */}
-                              {step.toLowerCase().includes("profile") ? 
-                                "Create a compelling profile that highlights your skills, experience, and unique value proposition. Include clear examples of your work and testimonials if available." :
-                              step.toLowerCase().includes("client") || step.toLowerCase().includes("audience") ?
-                                "Research and identify your ideal clients or audience. Understand their pain points, needs, and where they typically look for solutions like yours." :
-                              step.toLowerCase().includes("tools") || step.toLowerCase().includes("accounts") ?
-                                "Set up the necessary tools, software, and accounts you'll need to deliver your services or products efficiently. Ensure all systems are properly integrated." :
-                              step.toLowerCase().includes("market") ?
-                                "Create a marketing strategy to reach your target audience. Focus on platforms where your ideal clients spend their time and tailor your messaging to address their specific needs." :
-                                "Complete this step according to your specific circumstance and skill level. Break it down into smaller sub-tasks if needed."}
-                            </p>
-                            <div className="flex items-center space-x-2">
-                              <Button size="sm" variant="outline">
-                                Mark Complete
-                              </Button>
-                              <Button size="sm" variant="ghost">
-                                View Resources
-                              </Button>
+                      <div className="relative border-l-2 border-primary/30 pl-6 ml-4">
+                        {opportunityData.stepsToStart.map((step, index) => (
+                          <div key={index} className="mb-8 relative">
+                            <div className="absolute -left-8 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white text-sm">
+                              {index + 1}
                             </div>
+                            <h3 className="text-lg font-medium mb-2">{step}</h3>
+                            <p className="text-neutral-600 text-sm mb-3">
+                              {getStepDescription(index)}
+                            </p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <Badge variant="outline" className="bg-primary/5">Estimated time: {getStepTimeEstimate(index)}</Badge>
+                              <Badge variant="outline" className="bg-primary/5">Difficulty: {getStepDifficulty(index)}</Badge>
+                            </div>
+                            {index < opportunityData.stepsToStart.length - 1 && (
+                              <div className="absolute -left-[0.3rem] bottom-[-1rem] h-8 border-l-2 border-primary/30"></div>
+                            )}
                           </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-8">
-                      <Button className="w-full">
-                        Create Detailed Action Plan
-                      </Button>
+                        ))}
+                      </div>
+                      
+                      <div className="mt-6">
+                        <Button className="w-full">
+                          Create Custom Action Plan
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -854,73 +1035,74 @@ const OpportunityDetailPage = () => {
                   <CardHeader>
                     <CardTitle>Learning Resources</CardTitle>
                     <CardDescription>
-                      Curated resources to help you succeed in this opportunity
+                      Curated materials to help you succeed with this opportunity
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                      {opportunityData.resources && opportunityData.resources.length > 0 ? (
-                        opportunityData.resources.map((resource, index) => (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {opportunityData.resources.map((resource, index) => (
                           <a 
                             key={index}
-                            href={resource?.url || '#'} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center p-4 rounded-lg border border-neutral-200 hover:border-primary/50 hover:bg-primary/5 transition"
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer" 
+                            className="block p-4 border border-neutral-200 rounded-lg hover:border-primary/50 hover:bg-primary/5 transition"
                           >
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
-                              <ExternalLink className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium">{resource?.title || 'Resource'}</h4>
-                              <p className="text-sm text-neutral-500">{resource?.source || 'Web'}</p>
+                            <div className="flex items-start">
+                              {getResourceIcon(resource)}
+                              <div>
+                                <div className="text-base font-medium">{resource.title}</div>
+                                {resource.source && (
+                                  <div className="text-sm text-neutral-500 mt-1 flex items-center">
+                                    <LinkIcon className="w-3.5 h-3.5 mr-1" />
+                                    {resource.source}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </a>
-                        ))
-                      ) : (
-                        <div className="col-span-2 text-center py-10">
-                          <p className="text-neutral-500">No resources available yet.</p>
-                        </div>
-                      )}
-                    </div>
+                        ))}
+                      </div>
+                      
+                      <Separator className="my-6" />
 
-                    <Separator className="my-6" />
-
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Recommended Courses</h3>
-                      <div className="space-y-3">
-                        <div className="p-4 border border-neutral-200 rounded-lg flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
-                              <GraduationCap className="w-5 h-5" />
+                      <div className="space-y-4">
+                        <h3 className="font-medium">Recommended Courses</h3>
+                        <div className="space-y-3">
+                          <div className="p-4 border border-neutral-200 rounded-lg flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                                <GraduationCap className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Getting Started with {opportunityData.type}</h4>
+                                <p className="text-sm text-neutral-500">Free • 2 hours</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium">Getting Started with {opportunityData.type}</h4>
-                              <p className="text-sm text-neutral-500">Free • 2 hours</p>
-                            </div>
+                            <Button size="sm">Enroll</Button>
                           </div>
-                          <Button size="sm">Enroll</Button>
-                        </div>
-                        <div className="p-4 border border-neutral-200 rounded-lg flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3">
-                              <DollarSign className="w-5 h-5" />
+                          <div className="p-4 border border-neutral-200 rounded-lg flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3">
+                                <DollarSign className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Pricing Strategies for {opportunityData.type}</h4>
+                                <p className="text-sm text-neutral-500">Premium • 4 hours</p>
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium">Pricing Strategies for {opportunityData.type}</h4>
-                              <p className="text-sm text-neutral-500">Premium • 4 hours</p>
-                            </div>
+                            <Button size="sm">Enroll</Button>
                           </div>
-                          <Button size="sm">Enroll</Button>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="mt-8">
-                      <Button className="w-full flex items-center justify-center">
-                        Get More Learning Resources
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
+                      <div className="mt-8">
+                        <Button className="w-full flex items-center justify-center">
+                          Get More Learning Resources
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

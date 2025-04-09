@@ -50,7 +50,6 @@ export default function AppHeader() {
     { name: "My Opportunities", path: "/saved-opportunities" },
     { name: "Analytics", path: "/analytics" },
     { name: "Skills Assessment", path: "/skills-assessment" },
-    { name: "Pricing Calculator", path: "/pricing-calculator" },
     { name: "AI Coach", path: "/coach" },
   ];
 
