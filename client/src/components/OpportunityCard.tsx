@@ -297,107 +297,76 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
     setIsSkillGapExpanded(!isSkillGapExpanded);
   };
 
+  // This is the simplified summary card for the opportunities list page
   return (
-    <div className="space-y-4">
-      {/* ROI Analysis Card */}
-      <div className="border border-neutral-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white">
-        <div className="flex items-center justify-between p-4 border-b border-neutral-100">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h3 className="font-medium text-lg">ROI Analysis</h3>
-          </div>
-          <div className="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-medium">
-            {opportunityData.roiScore}/100
-          </div>
+    <div className="border border-neutral-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white">
+      <div className="flex items-center p-4 gap-4">
+        {/* Left icon/type section */}
+        <div className="flex-shrink-0">
+          {getIconForType(opportunityData.type)}
         </div>
         
-        <div className="p-4">
-          <p className="text-neutral-600 mb-6">
+        {/* Middle content section */}
+        <div className="flex-grow space-y-3">
+          <div>
+            <h3 className="font-semibold text-xl">{opportunityData.title || opportunity.title}</h3>
+            <Badge variant={(typeVariants[opportunityData.type as keyof typeof typeVariants] || "default") as any} className="mt-1">
+              {opportunityData.type}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center">
+            <TrendingUp className="w-4 h-4 mr-1 text-primary" />
+            <h4 className="font-medium text-base">ROI Analysis</h4>
+            <div className="ml-2 bg-slate-800 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+              {opportunityData.roiScore}/100
+            </div>
+          </div>
+          
+          <p className="text-sm text-neutral-500 line-clamp-2">
             Bang for buck assessment for this opportunity
           </p>
-          
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            <div className="space-y-2">
-              <p className="text-sm text-neutral-500">Potential Monthly Income</p>
-              <div className="flex items-center">
-                <DollarSign className="w-5 h-5 text-green-500 mr-1" />
-                <span className="font-medium">{opportunityData.incomePotential.replace('$', '') || '$0'}</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <p className="text-sm text-neutral-500">Initial Investment</p>
-              <div className="flex items-center">
-                <Building className="w-5 h-5 text-blue-500 mr-1" />
-                <span className="font-medium">{opportunityData.startupCost || '$0'}</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <p className="text-sm text-neutral-500">Time to First Revenue</p>
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 text-amber-500 mr-1" />
-                <span className="font-medium">{opportunityData.timeToFirstRevenue}</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <p className="text-sm text-neutral-500">Skill Gap Closure</p>
-              <div className="flex items-center">
-                <Target className="w-5 h-5 text-purple-500 mr-1" />
-                <span className="font-medium">~{opportunityData.skillGapDays} days</span>
-              </div>
-            </div>
-          </div>
-          
-          <Link href={`/action-plan?opportunityId=${opportunity.id}`}>
-            <Button className="w-full flex items-center justify-center">
-              Create Action Plan
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </Link>
         </div>
-      </div>
-      
-      {/* Skill Gap Analysis Card */}
-      <div className="border border-neutral-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white">
-        <div 
-          className="flex items-center justify-between p-4 border-b border-neutral-100 cursor-pointer"
-          onClick={toggleSkillGapExpanded}
-        >
-          <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            <h3 className="font-medium text-lg">Skill Gap Analysis</h3>
+        
+        {/* Right metrics section */}
+        <div className="w-48 space-y-3 border-l border-neutral-100 pl-4">
+          <div className="space-y-1">
+            <p className="text-xs text-neutral-500">Potential Monthly Income</p>
+            <div className="flex items-center">
+              <DollarSign className="w-4 h-4 text-green-500 mr-1" />
+              <span className="font-medium text-sm">{opportunityData.incomePotential.replace('$', '') || '$0'}</span>
+            </div>
           </div>
-          <div>
-            <Button variant="ghost" size="sm">
-              {isSkillGapExpanded ? "Hide Detailed" : "Show Detailed"}
-            </Button>
+          
+          <div className="space-y-1">
+            <p className="text-xs text-neutral-500">Time to First Revenue</p>
+            <div className="flex items-center">
+              <Clock className="w-4 h-4 text-amber-500 mr-1" />
+              <span className="font-medium text-sm">{opportunityData.timeToFirstRevenue}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-1">
+            <p className="text-xs text-neutral-500">Skill Gap Closure</p>
+            <div className="flex items-center">
+              <Target className="w-4 h-4 text-purple-500 mr-1" />
+              <span className="font-medium text-sm">~{opportunityData.skillGapDays} days</span>
+            </div>
           </div>
         </div>
         
-        <div className="p-4">
-          <p className="text-neutral-600 mb-4">
-            Skills needed for this opportunity
-          </p>
-          
-          {isSkillGapExpanded ? (
-            <div className="mt-4">
-              {opportunity.id && <SkillGapAnalyzer opportunity={opportunity} />}
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {opportunityData.requiredSkills && opportunityData.requiredSkills.length > 0 ? (
-                opportunityData.requiredSkills.map((skill, index) => (
-                  <Badge key={index} variant="outline" className="px-3 py-1">
-                    {skill}
-                  </Badge>
-                ))
-              ) : (
-                <p className="text-sm text-neutral-500">No specific skills required.</p>
-              )}
-            </div>
-          )}
+        {/* Action buttons section */}
+        <div className="flex flex-col gap-2">
+          <Link href={`/opportunity/${opportunity.id}`}>
+            <Button variant="outline" size="sm" className="w-full">
+              View Details
+            </Button>
+          </Link>
+          <Link href={`/action-plan?opportunityId=${opportunity.id}`}>
+            <Button size="sm" className="w-full">
+              Create Plan
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
