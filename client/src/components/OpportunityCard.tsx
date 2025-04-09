@@ -206,12 +206,12 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
                   <div key={index} className="p-4 border border-primary/10 bg-gradient-to-br from-white to-primary/5 rounded-lg">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-lg flex-shrink-0 font-semibold">
-                        {story.name.charAt(0)}
+                        {story?.name ? story.name.charAt(0) : ''}
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <h5 className="font-semibold">{story.name}</h5>
-                          {story.profileUrl && (
+                          <h5 className="font-semibold">{story?.name || 'Anonymous User'}</h5>
+                          {story?.profileUrl && (
                             <a 
                               href={story.profileUrl}
                               target="_blank"
@@ -222,11 +222,11 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
                             </a>
                           )}
                         </div>
-                        <p className="text-sm text-neutral-600 mt-1">{story.background}</p>
+                        <p className="text-sm text-neutral-600 mt-1">{story?.background || 'Professional with experience in this field'}</p>
                         
                         <div className="mt-3 relative pl-5 border-l-2 border-primary/30">
                           <h6 className="text-sm font-medium mb-1">The Journey:</h6>
-                          <p className="text-sm text-neutral-700">{story.journey}</p>
+                          <p className="text-sm text-neutral-700">{story?.journey || 'Started with small projects and gradually built up their portfolio and client base.'}</p>
                         </div>
                         
                         <div className="mt-3 bg-primary/10 p-3 rounded-md">
@@ -236,7 +236,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
                             </svg>
                             Current Status:
                           </h6>
-                          <p className="text-sm font-medium text-primary">{story.outcome}</p>
+                          <p className="text-sm font-medium text-primary">{story?.outcome || 'Successfully monetized their skills through this approach.'}</p>
                         </div>
                       </div>
                     </div>
@@ -252,12 +252,12 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
               {opportunity.resources.map((resource, index) => (
                 <a 
                   key={index}
-                  href={resource.url} 
+                  href={resource?.url || '#'} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center p-3 text-sm font-medium rounded border border-neutral-200 bg-neutral-50 text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition-colors"
                 >
-                  {resource.source === "Reddit" ? (
+                  {resource?.source === "Reddit" ? (
                     <svg className="w-4 h-4 mr-2 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
                       <circle cx="12" cy="12" r="3" fill="white"/>
@@ -265,23 +265,23 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
                       <circle cx="7" cy="9" r="1.5" fill="white"/>
                       <path fill="white" d="M17 14c-1 1.5-2.5 3-5 3s-4-1.5-5-3"/>
                     </svg>
-                  ) : resource.source === "YouTube" ? (
+                  ) : resource?.source === "YouTube" ? (
                     <svg className="w-4 h-4 mr-2 text-red-600" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
-                  ) : resource.source === "Fiverr" ? (
+                  ) : resource?.source === "Fiverr" ? (
                     <svg className="w-4 h-4 mr-2 text-green-600" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M23 9V7h-6.5C15.67 7 15 7.67 15 8.5V11h-3V7H9v9h3v-3h3v4.5c0 .83.67 1.5 1.5 1.5H23v-2h-5v-5h5V9Z"/>
                     </svg>
-                  ) : resource.source === "Gumroad" ? (
+                  ) : resource?.source === "Gumroad" ? (
                     <svg className="w-4 h-4 mr-2 text-pink-600" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M8.5 9A5.5 5.5 0 0 1 14 3.5H21v17H3V9h5.5z"/>
                     </svg>
-                  ) : resource.source === "LinkedIn" ? (
+                  ) : resource?.source === "LinkedIn" ? (
                     <svg className="w-4 h-4 mr-2 text-blue-700" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                     </svg>
-                  ) : resource.source === "Medium" ? (
+                  ) : resource?.source === "Medium" ? (
                     <svg className="w-4 h-4 mr-2 text-neutral-800" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>
                     </svg>
@@ -301,8 +301,8 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
                     </svg>
                   )}
                   <div>
-                    <div className="font-medium line-clamp-1">{resource.title}</div>
-                    <div className="text-xs text-neutral-500">{resource.source}</div>
+                    <div className="font-medium line-clamp-1">{resource?.title || 'Resource'}</div>
+                    <div className="text-xs text-neutral-500">{resource?.source || 'Web'}</div>
                   </div>
                 </a>
               ))}
