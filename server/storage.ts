@@ -10,6 +10,7 @@ import {
   chatConversations,
   chatMessages,
   creditTransactions,
+  promotionCodes,
   type User,
   type InsertUser,
   type UserProfile,
@@ -32,6 +33,8 @@ import {
   type InsertChatMessage,
   type CreditTransaction,
   type InsertCreditTransaction,
+  type PromotionCode,
+  type InsertPromotionCode,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, inArray, sql } from "drizzle-orm";
@@ -113,6 +116,13 @@ export interface IStorage {
   // Credit transactions
   createCreditTransaction(transaction: InsertCreditTransaction): Promise<CreditTransaction>;
   getUserCreditTransactions(userId: number): Promise<CreditTransaction[]>;
+  
+  // Promotion codes
+  createPromotionCode(code: InsertPromotionCode): Promise<PromotionCode>;
+  getPromotionCode(code: string): Promise<PromotionCode | undefined>;
+  validateAndApplyPromoCode(code: string, userId: number): Promise<{success: boolean, message: string, credits?: number}>;
+  listPromotionCodes(): Promise<PromotionCode[]>;
+  updatePromotionCode(id: number, data: Partial<InsertPromotionCode>): Promise<PromotionCode | undefined>;
   
   // Session management
   sessionStore: session.Store;
@@ -586,6 +596,101 @@ export class DatabaseStorage implements IStorage {
       .from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
       .orderBy(sql`${creditTransactions.createdAt} DESC`);
+  }
+  
+  // Promotion Code Methods
+  async createPromotionCode(code: InsertPromotionCode): Promise<PromotionCode> {
+    const result = await db
+      .insert(promotionCodes)
+      .values(code)
+      .returning();
+    return result[0];
+  }
+  
+  async getPromotionCode(code: string): Promise<PromotionCode | undefined> {
+    const result = await db
+      .select()
+      .from(promotionCodes)
+      .where(eq(promotionCodes.code, code));
+    return result[0];
+  }
+  
+  async validateAndApplyPromoCode(code: string, userId: number): Promise<{success: boolean, message: string, credits?: number}> {
+    // Get the promotion code
+    const promoCode = await this.getPromotionCode(code);
+    
+    if (!promoCode) {
+      return { success: false, message: "Invalid promotion code" };
+    }
+    
+    // Check if the code is active
+    if (!promoCode.isActive) {
+      return { success: false, message: "This promotion code is no longer active" };
+    }
+    
+    // Check if the code has expired
+    if (promoCode.expiryDate && new Date(promoCode.expiryDate) < new Date()) {
+      return { success: false, message: "This promotion code has expired" };
+    }
+    
+    // Check if the code has reached its maximum uses
+    if (promoCode.maxUses && promoCode.currentUses >= promoCode.maxUses) {
+      return { success: false, message: "This promotion code has reached its maximum number of uses" };
+    }
+    
+    // Get the user
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+    
+    // Apply the credits to the user's account
+    const currentCredits = user.chatCredits || 0;
+    const newCredits = currentCredits + promoCode.creditsAmount;
+    
+    // Update the user's credit balance
+    await this.updateUser(userId, {
+      chatCredits: newCredits,
+      subscriptionStatus: "active", // Set to active since they now have credits
+    });
+    
+    // Increment the promo code usage
+    await db
+      .update(promotionCodes)
+      .set({
+        currentUses: (promoCode.currentUses || 0) + 1,
+      })
+      .where(eq(promotionCodes.id, promoCode.id));
+    
+    // Record this transaction
+    await this.createCreditTransaction({
+      userId,
+      amount: promoCode.creditsAmount,
+      reason: `Promo code: ${code}`,
+      balanceAfter: newCredits,
+    });
+    
+    return { 
+      success: true, 
+      message: `Successfully applied promotion code. ${promoCode.creditsAmount} credits added to your account.`,
+      credits: promoCode.creditsAmount
+    };
+  }
+  
+  async listPromotionCodes(): Promise<PromotionCode[]> {
+    return db
+      .select()
+      .from(promotionCodes)
+      .orderBy(sql`${promotionCodes.createdAt} DESC`);
+  }
+  
+  async updatePromotionCode(id: number, data: Partial<InsertPromotionCode>): Promise<PromotionCode | undefined> {
+    const result = await db
+      .update(promotionCodes)
+      .set(data)
+      .where(eq(promotionCodes.id, id))
+      .returning();
+    return result[0];
   }
 }
 

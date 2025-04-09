@@ -406,6 +406,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subscription info
   app.get("/api/coach/subscription-info", isAuthenticated, coach.getSubscriptionInfo);
   
+  // Promotion code endpoints
+  app.post("/api/coach/apply-promo", isAuthenticated, async (req, res) => {
+    try {
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ success: false, message: "Promotion code is required" });
+      }
+      
+      const result = await storage.validateAndApplyPromoCode(code, req.user!.id);
+      return res.status(result.success ? 200 : 400).json(result);
+    } catch (error) {
+      console.error("Error applying promotion code:", error);
+      return res.status(500).json({ 
+        success: false,
+        message: "Failed to apply promotion code",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Admin-only endpoint to create or list promotion codes
+  app.post("/api/admin/promo-codes", isAuthenticated, async (req, res) => {
+    try {
+      // Simple admin check - in a real app, use proper role-based access control
+      if (req.user!.id !== 1) { // Assuming user ID 1 is admin
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const { code, creditsAmount, expiryDate, maxUses } = req.body;
+      
+      if (!code || !creditsAmount) {
+        return res.status(400).json({ message: "Code and credits amount are required" });
+      }
+      
+      const promoCode = await storage.createPromotionCode({
+        code,
+        creditsAmount,
+        expiryDate,
+        maxUses,
+        isActive: true
+      });
+      
+      return res.status(201).json(promoCode);
+    } catch (error) {
+      console.error("Error creating promotion code:", error);
+      return res.status(500).json({ 
+        message: "Failed to create promotion code",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.get("/api/admin/promo-codes", isAuthenticated, async (req, res) => {
+    try {
+      // Simple admin check
+      if (req.user!.id !== 1) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const promoCodes = await storage.listPromotionCodes();
+      return res.status(200).json(promoCodes);
+    } catch (error) {
+      console.error("Error listing promotion codes:", error);
+      return res.status(500).json({ 
+        message: "Failed to list promotion codes",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Conversation management
   app.post("/api/coach/conversations", isAuthenticated, coach.hasCoachAccess, coach.createConversation);
   app.get("/api/coach/conversations", isAuthenticated, coach.hasCoachAccess, coach.getConversations);

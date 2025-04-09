@@ -271,8 +271,23 @@ const ConversationSidebar = ({
   );
 };
 
+import PromoCodeForm from '@/components/coach/PromoCodeForm';
+
 // SubscriptionRequired component
 const SubscriptionRequired = () => {
+  const { toast } = useToast();
+  const [showPromoForm, setShowPromoForm] = useState(false);
+
+  const handlePromoSuccess = (credits: number) => {
+    toast({
+      title: "Credits Added!",
+      description: `${credits} credits have been added to your account. Refresh the page to start using the AI Coach.`,
+    });
+    
+    // Refresh subscription info
+    queryClient.invalidateQueries({ queryKey: ['/api/coach/subscription-info'] });
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-full p-6 text-center">
       <div className="mb-6">
@@ -283,9 +298,34 @@ const SubscriptionRequired = () => {
         <p className="text-muted-foreground mb-6">
           The AI Career Coach is available exclusively to premium subscribers. Upgrade your plan to access personalized career guidance.
         </p>
-        <Button className="min-w-[200px]">
-          Upgrade Now
-        </Button>
+        
+        {showPromoForm ? (
+          <div className="my-6">
+            <PromoCodeForm onSuccess={handlePromoSuccess} />
+            <Button 
+              variant="link" 
+              className="mt-4"
+              onClick={() => setShowPromoForm(false)}
+            >
+              Go back
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <Button className="min-w-[200px]">
+              Upgrade Now
+            </Button>
+            <div>
+              <Button 
+                variant="outline" 
+                className="min-w-[200px]"
+                onClick={() => setShowPromoForm(true)}
+              >
+                I Have a Promo Code
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -296,6 +336,7 @@ export default function CoachPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeConversation, setActiveConversation] = useState<number | null>(null);
+  const [showPromoForm, setShowPromoForm] = useState(false);
   
   // Get subscription info
   const { data: subscriptionInfo, isLoading: isLoadingSubscription } = useQuery<SubscriptionInfo>({
@@ -443,8 +484,15 @@ export default function CoachPage() {
                     Access personalized AI coaching by upgrading to a premium plan
                   </p>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex flex-col gap-2">
                   <Button className="w-full">Upgrade Now</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setShowPromoForm(true)}
+                  >
+                    I Have a Promo Code
+                  </Button>
                 </CardFooter>
               </Card>
             </div>

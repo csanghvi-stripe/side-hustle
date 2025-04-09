@@ -333,6 +333,26 @@ export type ProgressMilestone = typeof progressMilestones.$inferSelect;
 export type InsertIncomeEntry = z.infer<typeof insertIncomeEntrySchema>;
 export type IncomeEntry = typeof incomeEntries.$inferSelect;
 
+// Promotion codes table
+export const promotionCodes = pgTable("promotion_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  creditsAmount: integer("credits_amount").notNull(),
+  expiryDate: timestamp("expiry_date"),
+  isActive: boolean("is_active").default(true),
+  maxUses: integer("max_uses"),
+  currentUses: integer("current_uses").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPromotionCodeSchema = createInsertSchema(promotionCodes).pick({
+  code: true,
+  creditsAmount: true,
+  expiryDate: true,
+  isActive: true,
+  maxUses: true,
+});
+
 // Types for chat and subscription
 export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
 export type ChatConversation = typeof chatConversations.$inferSelect;
@@ -345,3 +365,6 @@ export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 
 export type InsertCreditTransaction = z.infer<typeof insertCreditTransactionSchema>;
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
+
+export type InsertPromotionCode = z.infer<typeof insertPromotionCodeSchema>;
+export type PromotionCode = typeof promotionCodes.$inferSelect;
