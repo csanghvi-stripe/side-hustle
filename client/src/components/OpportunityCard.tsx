@@ -364,7 +364,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
         
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-3 mt-3">
-          <Link href={`/opportunities/${opportunity.id}`}>
+          <Link href={`/opportunity/${opportunity.id}`}>
             <Button 
               variant="outline" 
               className="w-full transition-all hover:bg-primary hover:text-white group"

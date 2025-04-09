@@ -291,9 +291,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Query the discovery service for this opportunity
           const opportunity = await discoveryService.getOpportunityById(req.params.id);
-          if (opportunity) {
-            return res.status(200).json(opportunity);
+          
+          if (!opportunity) {
+            return res.status(404).json({
+              message: "Opportunity not found"
+            });
           }
+          
+          // Enhance with resource links if needed
+          if (opportunity && !opportunity.resources && opportunity.resourceLinks) {
+            opportunity.resources = opportunity.resourceLinks.map(url => ({
+              title: url.split('/').pop() || 'Resource',
+              url,
+              source: url.split('//')[1]?.split('/')[0] || 'Source'
+            }));
+          }
+          
+          return res.status(200).json(opportunity);
         } catch (err) {
           console.error("Error fetching from discovery service:", err);
           // Continue to check database opportunities

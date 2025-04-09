@@ -6,11 +6,11 @@
  */
 
 import { DiscoveryPreferences, DiscoveryResults, OpportunitySource, RawOpportunity, SimilarUser, CacheEntry } from './types';
-import { RiskLevel } from '../../shared/schema';
+import { RiskLevel, OpportunityType } from '../../shared/schema';
 import { db } from '../db';
 import { logger } from './utils';
-import { monetizationOpportunities, users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { monetizationOpportunities, users, userProfiles } from '@shared/schema';
+import { eq, and } from 'drizzle-orm';
 import { MLEngine } from './ml-engine';
 import { SkillGapAnalyzer } from './skill-gap-analyzer';
 
@@ -185,57 +185,74 @@ class DiscoveryService {
     if (!skills.length) return [];
     
     try {
-      // Find users with similar skills who have set discoverable to true
-      const allUsers = await db.query.users.findMany({
-        where: eq(users.discoverable, true)
-      });
+      // Find all users to check for those with similar skills
+      const allUsers = await db.query.users.findMany();
+      logger.info(`Found ${allUsers.length} total users to analyze for similarity`);
       
       // Filter out the requesting user
       const otherUsers = allUsers.filter(u => u.id !== userId);
+      logger.info(`Found ${otherUsers.length} other users to check for similarity`);
       
       // Get each user's profile to access their skills
       const similarUsers: SimilarUser[] = [];
       
       for (const user of otherUsers) {
-        // Get user profile with skills
-        const profile = await db.query.userProfiles.findFirst({
-          where: eq(users.id, user.id)
-        });
-        
-        if (!profile || !profile.skills) continue;
-        
-        // Calculate skill overlap
-        const userSkills = Array.isArray(profile.skills) 
-          ? profile.skills as string[] 
-          : [];
-        
-        const commonSkills = skills.filter(skill => 
-          userSkills.some(userSkill => 
-            userSkill.toLowerCase() === skill.toLowerCase()
-          )
-        );
-        
-        if (commonSkills.length > 0) {
-          // Calculate similarity score (0-1)
-          const similarity = commonSkills.length / Math.max(skills.length, userSkills.length);
-          
-          // Count shared opportunities
-          const sharedOpps = await db.query.monetizationOpportunities.findMany({
-            where: (opps) => eq(opps.userId, user.id && opps.shared)
+        try {
+          // Get user profile with skills
+          const profile = await db.query.userProfiles.findFirst({
+            where: eq(userProfiles.userId, user.id)
           });
           
-          similarUsers.push({
-            id: user.id,
-            username: user.username,
-            skills: userSkills,
-            similarity,
-            sharedOpportunities: sharedOpps.length
-          });
+          if (!profile || !profile.skills) {
+            logger.debug(`User ${user.id} has no profile or skills`);
+            continue;
+          }
+          
+          // Calculate skill overlap
+          const userSkills = Array.isArray(profile.skills) 
+            ? profile.skills as string[] 
+            : [];
+          
+          const commonSkills = skills.filter(skill => 
+            userSkills.some(userSkill => 
+              userSkill.toLowerCase() === skill.toLowerCase()
+            )
+          );
+          
+          logger.debug(`User ${user.id} has ${commonSkills.length} common skills out of ${userSkills.length} total skills`);
+          
+          if (commonSkills.length > 0) {
+            // Calculate similarity score (0-1)
+            const similarity = commonSkills.length / Math.max(skills.length, userSkills.length);
+            
+            // Count shared opportunities
+            const sharedOpps = await db.query.monetizationOpportunities.findMany({
+              where: and(
+                eq(monetizationOpportunities.userId, user.id),
+                eq(monetizationOpportunities.shared, true)
+              )
+            });
+            
+            logger.debug(`User ${user.id} has ${sharedOpps.length} shared opportunities`);
+            
+            similarUsers.push({
+              id: user.id,
+              username: user.username,
+              skills: userSkills,
+              similarity,
+              sharedOpportunities: sharedOpps.length
+            });
+          }
+        } catch (err) {
+          const error = err as Error;
+          logger.error(`Error processing user ${user.id} for similarity: ${error.message}`);
         }
       }
       
       // Sort by similarity (highest first)
-      return similarUsers.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
+      const result = similarUsers.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
+      logger.info(`Found ${result.length} similar users`);
+      return result;
     } catch (error) {
       logger.error(`Error finding similar users: ${error.message}`);
       return [];
