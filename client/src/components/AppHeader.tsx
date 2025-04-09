@@ -130,18 +130,20 @@ export default function AppHeader() {
             </span>
           </Link>
 
-          {/* Desktop Navigation Menu */}
-          <nav className="hidden md:flex items-center space-x-4">
-            {menuItems.map((item) => (
-              <Button
-                key={item.path}
-                variant={(location === item.path || (item.path === "/" && location === "")) ? "default" : "ghost"}
-                asChild
-              >
-                <Link href={item.path}>{item.name}</Link>
-              </Button>
-            ))}
-          </nav>
+          {/* Desktop Navigation Menu - Only shown when logged in */}
+          {user && (
+            <nav className="hidden md:flex items-center space-x-4">
+              {menuItems.map((item) => (
+                <Button
+                  key={item.path}
+                  variant={(location === item.path || (item.path === "/" && location === "")) ? "default" : "ghost"}
+                  asChild
+                >
+                  <Link href={item.path}>{item.name}</Link>
+                </Button>
+              ))}
+            </nav>
+          )}
         </div>
 
         {user ? (
@@ -205,7 +207,7 @@ export default function AppHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {renderMobileMenu()}
+            {user && renderMobileMenu()}
           </div>
         ) : (
           <div className="flex items-center space-x-4">

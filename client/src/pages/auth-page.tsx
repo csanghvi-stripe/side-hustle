@@ -330,15 +330,19 @@ export default function AuthPage() {
         </Card>
       </div>
       
-      {/* Right column - Hero content */}
+      {/* Right column - Enhanced Hero content */}
       <div className="hidden md:flex md:w-1/2 bg-gradient-to-r from-primary/10 to-indigo-500/10 p-8 flex-col justify-center">
         <div className="max-w-md mx-auto">
-          <h1 className="text-4xl font-bold mb-2">Turn Your Skills Into Income</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-600">
+              Turn Your Skills Into Income
+            </span>
+          </h1>
           <p className="text-lg text-muted-foreground mb-6">
             SideHustle helps you discover personalized monetization opportunities based on your unique skills and interests.
           </p>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex gap-3">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -347,7 +351,19 @@ export default function AuthPage() {
               </div>
               <div>
                 <h3 className="font-medium">AI-Powered Opportunity Discovery</h3>
-                <p className="text-sm text-muted-foreground">Receive tailored recommendations based on your skills, time availability, and risk tolerance.</p>
+                <p className="text-sm text-muted-foreground">Receive tailored recommendations based on your skills, time availability, and risk tolerance. Our AI analyzes current market trends to find the best matches for you.</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-medium">Start Earning Within A Week</h3>
+                <p className="text-sm text-muted-foreground">Get actionable, step-by-step guidance to start monetizing your skills quickly. Our recommendations focus on opportunities you can begin right away.</p>
               </div>
             </div>
             
@@ -359,7 +375,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <h3 className="font-medium">Connect with Like-Minded People</h3>
-                <p className="text-sm text-muted-foreground">Collaborate with others who share your interests and ambitions.</p>
+                <p className="text-sm text-muted-foreground">Find collaborators, mentors, and peers who share your interests and ambitions. Build your network to accelerate your success.</p>
               </div>
             </div>
             
@@ -371,9 +387,29 @@ export default function AuthPage() {
               </div>
               <div>
                 <h3 className="font-medium">Track Your Progress</h3>
-                <p className="text-sm text-muted-foreground">Set goals, monitor your income, and celebrate your success with our analytics dashboard.</p>
+                <p className="text-sm text-muted-foreground">Set goals, monitor your income, and celebrate your success with our analytics dashboard. See your "time to first dollar" and other key metrics.</p>
               </div>
             </div>
+            
+            <div className="flex gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-medium">AI Career Coach</h3>
+                <p className="text-sm text-muted-foreground">Get personalized guidance from our AI coach to overcome obstacles and maximize your earning potential.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 p-4 bg-white/40 rounded-lg border border-primary/20">
+            <h4 className="font-semibold text-primary">Success Story</h4>
+            <p className="text-sm mt-2 italic">
+              "I went from struggling freelancer to earning $5,000/month with the opportunities SideHustle recommended. The AI coach helped me overcome pricing challenges that had been holding me back for years."
+            </p>
+            <p className="text-sm mt-1 font-medium">— Sarah T., Graphic Designer</p>
           </div>
         </div>
       </div>
