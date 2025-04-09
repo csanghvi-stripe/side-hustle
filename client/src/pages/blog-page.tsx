@@ -104,38 +104,46 @@ export default function BlogPage() {
   return (
     <div className="container mx-auto py-10 px-4">
       {/* Header section with title and featured post */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold mb-3 gradient-heading">
+      <div className="mb-16">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-heading">
           SideHustle Blog
         </h1>
-        <p className="text-lg text-gray-600 mb-10 max-w-2xl">
+        <p className="text-lg text-neutral-600 mb-10 max-w-2xl leading-relaxed">
           Insights, stories, and actionable advice to help you monetize your skills and achieve financial freedom.
         </p>
         
         {/* Featured post */}
-        <div className="rounded-lg overflow-hidden bg-white shadow-lg border card-hover-effect">
+        <div className="rounded-lg overflow-hidden card-hover-effect">
           <div className="md:flex">
-            <div className="md:w-1/2">
+            <div className="md:w-1/2 relative">
               <img 
                 src={blogPosts[0].imageUrl} 
                 alt={blogPosts[0].title} 
                 className="w-full h-64 md:h-full object-cover"
               />
+              <div className="absolute top-4 left-4">
+                <span className="badge-enhanced primary">
+                  {blogPosts[0].category}
+                </span>
+              </div>
             </div>
-            <div className="md:w-1/2 p-8 flex flex-col justify-between">
+            <div className="md:w-1/2 p-8 flex flex-col justify-between bg-white">
               <div>
-                <Badge className="mb-2">{blogPosts[0].category}</Badge>
-                <h2 className="text-2xl font-bold mb-4 hover:text-primary transition-colors">{blogPosts[0].title}</h2>
-                <p className="text-gray-600 mb-6">{blogPosts[0].excerpt}</p>
+                <h2 className="text-2xl font-bold mb-4 text-neutral-900 hover:text-primary transition-colors">
+                  {blogPosts[0].title}
+                </h2>
+                <p className="text-neutral-600 mb-6 leading-relaxed">
+                  {blogPosts[0].excerpt}
+                </p>
               </div>
               
               <div>
-                <div className="flex items-center text-sm text-gray-500 mb-4">
-                  <User size={16} className="mr-1" />
-                  <span className="mr-4">{blogPosts[0].author}</span>
-                  <Calendar size={16} className="mr-1" />
+                <div className="flex items-center text-sm text-neutral-500 mb-4">
+                  <User size={16} className="mr-1 text-neutral-400" />
+                  <span className="mr-4 font-medium">{blogPosts[0].author}</span>
+                  <Calendar size={16} className="mr-1 text-neutral-400" />
                   <span className="mr-4">{blogPosts[0].date}</span>
-                  <Clock size={16} className="mr-1" />
+                  <Clock size={16} className="mr-1 text-neutral-400" />
                   <span>{blogPosts[0].readTime}</span>
                 </div>
                 
@@ -151,14 +159,14 @@ export default function BlogPage() {
       </div>
       
       {/* Search and filter section */}
-      <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="mb-12 flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-5 rounded-lg shadow-sm border border-neutral-200">
         <div className="relative w-full md:w-1/3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" size={18} />
           <Input
             placeholder="Search articles..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 border-neutral-300 focus:border-primary/50"
           />
         </div>
         
@@ -169,6 +177,11 @@ export default function BlogPage() {
               variant={selectedCategory === category ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory(category)}
+              className={
+                selectedCategory === category 
+                  ? "bg-primary hover:bg-primary/90" 
+                  : "text-neutral-700 border-neutral-300 hover:text-primary hover:border-primary/50"
+              }
             >
               {category}
             </Button>
@@ -177,7 +190,7 @@ export default function BlogPage() {
       </div>
       
       {/* Blog posts grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
         {filteredPosts.slice(1).map(post => (
           <Card key={post.id} className="overflow-hidden h-full flex flex-col card-hover-effect">
             <div className="relative h-48">
@@ -186,34 +199,45 @@ export default function BlogPage() {
                 alt={post.title} 
                 className="absolute inset-0 w-full h-full object-cover"
               />
-            </div>
-            
-            <CardHeader className="flex-grow">
-              <div className="flex justify-between items-center mb-2">
-                <Badge>{post.category}</Badge>
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
-                  <Bookmark className="h-4 w-4" />
+              <div className="absolute top-3 left-3">
+                <span className="badge-enhanced primary text-xs">
+                  {post.category}
+                </span>
+              </div>
+              <div className="absolute top-3 right-3">
+                <Button variant="ghost" size="sm" className="h-7 w-7 bg-white/90 hover:bg-white rounded-full p-0 shadow-sm hover:text-primary">
+                  <Bookmark className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <CardTitle className="text-xl mb-2 hover:text-primary transition-colors">{post.title}</CardTitle>
-              <CardDescription className="text-sm text-gray-600">
+            </div>
+            
+            <CardHeader className="flex-grow pt-5 pb-2">
+              <Link href={`/blog/${post.slug}`} className="group">
+                <CardTitle className="text-lg mb-2 font-bold text-neutral-900 group-hover:text-primary transition-colors">
+                  {post.title}
+                </CardTitle>
+              </Link>
+              <CardDescription className="text-sm text-neutral-600 leading-relaxed">
                 {post.excerpt}
               </CardDescription>
             </CardHeader>
             
-            <CardFooter className="flex flex-col items-start pt-0">
-              <div className="flex items-center text-xs text-gray-500 mb-4 w-full">
-                <User size={14} className="mr-1" />
-                <span className="mr-3">{post.author}</span>
-                <Calendar size={14} className="mr-1" />
-                <span className="mr-3">{post.date}</span>
-                <Clock size={14} className="mr-1" />
-                <span>{post.readTime}</span>
+            <CardFooter className="flex flex-col items-start pt-2 pb-5 border-t border-neutral-100">
+              <div className="flex items-center text-xs text-neutral-500 mb-3 w-full">
+                <User size={14} className="mr-1 text-neutral-400" />
+                <span className="mr-3 font-medium">{post.author}</span>
+                <div className="flex items-center ml-auto text-neutral-400">
+                  <Calendar size={12} className="mr-1" />
+                  <span className="mr-3">{post.date}</span>
+                  <Clock size={12} className="mr-1" />
+                  <span>{post.readTime}</span>
+                </div>
               </div>
               
-              <Button variant="outline" size="sm" asChild className="mt-2 button-hover-effect">
-                <Link href={`/blog/${post.slug}`}>
-                  Read more <ArrowRight className="ml-2 h-3 w-3" />
+              <Button variant="ghost" size="sm" asChild className="mt-1 hover:text-primary hover:bg-neutral-50 p-0 h-auto">
+                <Link href={`/blog/${post.slug}`} className="flex items-center">
+                  <span>Read article</span> 
+                  <ArrowRight className="ml-1 h-3 w-3" />
                 </Link>
               </Button>
             </CardFooter>
@@ -222,18 +246,36 @@ export default function BlogPage() {
       </div>
       
       {/* Newsletter signup */}
-      <div className="bg-gradient-to-r from-primary/10 to-indigo-500/10 p-8 rounded-lg shadow-md">
-        <div className="max-w-2xl mx-auto text-center">
-          <h3 className="text-2xl font-bold mb-2 gradient-heading">Get Monetization Tips In Your Inbox</h3>
-          <p className="text-gray-600 mb-6">
-            Join our newsletter for weekly insights on monetizing your skills and achieving financial freedom.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <Input placeholder="Your email address" className="flex-grow" />
-            <Button className="button-hover-effect">Subscribe</Button>
+      <div className="relative bg-white rounded-xl shadow-md overflow-hidden border border-neutral-200">
+        <div className="absolute inset-0 opacity-10 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent"></div>
+        
+        <div className="relative px-8 py-12 md:py-14">
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="text-2xl md:text-3xl font-bold mb-3 gradient-heading">
+              Get Monetization Tips In Your Inbox
+            </h3>
+            <p className="text-neutral-600 mb-8 max-w-xl mx-auto leading-relaxed">
+              Join our newsletter for weekly insights on monetizing your skills, finding opportunities, 
+              and achieving financial freedom through your side hustle.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <Input 
+                placeholder="Your email address" 
+                className="flex-grow bg-white border-neutral-300 focus:border-primary shadow-sm"
+              />
+              <Button className="button-hover-effect px-6">
+                Subscribe
+              </Button>
+            </div>
+            
+            <p className="text-xs text-neutral-400 mt-4">
+              We respect your privacy. Unsubscribe at any time.
+            </p>
           </div>
         </div>
+        
+        <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/70 to-primary/20"></div>
       </div>
     </div>
   );
