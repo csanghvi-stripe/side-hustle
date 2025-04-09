@@ -13,6 +13,8 @@ import CoachPage from "@/pages/coach-page";
 import SubscriptionPage from "@/pages/subscription-page";
 import ResourcesPage from "@/pages/resources-page";
 import CommunityPage from "@/pages/community-page";
+import SkillsAssessmentPage from "@/pages/skills-assessment-page";
+import PricingCalculatorPage from "@/pages/pricing-calculator-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
 import AppHeader from "@/components/AppHeader";
@@ -32,6 +34,8 @@ function Router() {
           <ProtectedRoute path="/subscription" component={SubscriptionPage} />
           <ProtectedRoute path="/resources" component={ResourcesPage} />
           <ProtectedRoute path="/community" component={CommunityPage} />
+          <ProtectedRoute path="/skills-assessment" component={SkillsAssessmentPage} />
+          <ProtectedRoute path="/pricing-calculator" component={PricingCalculatorPage} />
           <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
         </Switch>
