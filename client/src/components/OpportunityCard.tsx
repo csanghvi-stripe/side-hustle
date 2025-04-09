@@ -170,9 +170,37 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
       // Parse from JSON string
       const parsed = JSON.parse(opportunity.opportunityData);
       console.log("Parsed opportunity JSON data:", parsed);
+      
+      // Normalize opportunity type to match enum values
+      let normalizedType = parsed.type || (opportunity as any).type || "Freelance";
+      
+      // Ensure type matches one of our enum values for filtering
+      if (normalizedType && typeof normalizedType === 'string') {
+        // Convert to title case to match our enum values
+        const typeWords = normalizedType.split(' ');
+        normalizedType = typeWords.map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+        
+        // Map to defined opportunity types
+        if (normalizedType.includes('Freelance')) {
+          normalizedType = "Freelance";
+        } else if (normalizedType.includes('Digital') || normalizedType.includes('Product')) {
+          normalizedType = "Digital Product";
+        } else if (normalizedType.includes('Content')) {
+          normalizedType = "Content Creation";
+        } else if (normalizedType.includes('Service')) {
+          normalizedType = "Service-Based";
+        } else if (normalizedType.includes('Passive')) {
+          normalizedType = "Passive Income";
+        } else {
+          normalizedType = "Freelance"; // Default to Freelance
+        }
+      }
+      
       opportunityData = {
         title: parsed.title || opportunity.title || "",
-        type: parsed.type || "Freelance",
+        type: normalizedType,
         description: parsed.description || "This opportunity allows you to leverage your skills in a flexible way to generate income.",
         incomePotential: parsed.incomePotential || "$0-$0",
         startupCost: parsed.startupCost || "$0",
@@ -203,9 +231,36 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
         description = "This opportunity allows you to leverage your skills in a flexible way to generate income.";
       }
       
+      // Normalize opportunity type to match enum values
+      let normalizedType = parsed.type || (opportunity as any).type || "Freelance";
+      
+      // Ensure type matches one of our enum values for filtering
+      if (normalizedType && typeof normalizedType === 'string') {
+        // Convert to title case to match our enum values
+        const typeWords = normalizedType.split(' ');
+        normalizedType = typeWords.map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+        
+        // Map to defined opportunity types
+        if (normalizedType.includes('Freelance')) {
+          normalizedType = "Freelance";
+        } else if (normalizedType.includes('Digital') || normalizedType.includes('Product')) {
+          normalizedType = "Digital Product";
+        } else if (normalizedType.includes('Content')) {
+          normalizedType = "Content Creation";
+        } else if (normalizedType.includes('Service')) {
+          normalizedType = "Service-Based";
+        } else if (normalizedType.includes('Passive')) {
+          normalizedType = "Passive Income";
+        } else {
+          normalizedType = "Freelance"; // Default to Freelance
+        }
+      }
+      
       opportunityData = {
         title: parsed.title || opportunity.title || "",
-        type: parsed.type || "Freelance",
+        type: normalizedType,
         description: description,
         incomePotential: parsed.incomePotential || "$0-$0",
         startupCost: parsed.startupCost || "$0",
@@ -223,7 +278,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
       // Fallback if opportunityData is missing/invalid
       opportunityData = {
         title: opportunity.title || "",
-        type: "Freelance",
+        type: "Freelance", // Default to Freelance
         description: "This opportunity allows you to leverage your skills in a flexible way to generate income.",
         incomePotential: "$0-$0",
         startupCost: "$0",

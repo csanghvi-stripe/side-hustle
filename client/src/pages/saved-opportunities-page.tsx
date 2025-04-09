@@ -37,30 +37,99 @@ export default function SavedOpportunitiesPage() {
   const filteredOpportunities = savedOpportunities
     ? savedOpportunities
         .filter((opportunity) => {
-          const opportunityData = opportunity.opportunityData as any;
+          let opportunityType = "";
           
-          // Filter by type if not on "all" tab
-          if (activeTab !== "all" && activeTab !== opportunityData.userProfile?.type) {
+          // Try to extract the opportunity type from various data structures
+          try {
+            if (typeof opportunity.opportunityData === 'string') {
+              const parsed = JSON.parse(opportunity.opportunityData);
+              opportunityType = parsed.type || "";
+            } else if (opportunity.opportunityData && typeof opportunity.opportunityData === 'object') {
+              const parsed = opportunity.opportunityData as any;
+              opportunityType = parsed.type || "";
+            }
+            
+            // If type is missing from opportunityData, check opportunity.type 
+            if (!opportunityType && (opportunity as any).type) {
+              opportunityType = (opportunity as any).type;
+            }
+            
+            // Normalize opportunity type for comparison
+            if (opportunityType) {
+              // Convert to title case format
+              opportunityType = opportunityType
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              
+              // Map to our defined types
+              if (opportunityType.includes('Freelance')) {
+                opportunityType = OpportunityType.FREELANCE;
+              } else if (opportunityType.includes('Digital') || opportunityType.includes('Product')) {
+                opportunityType = OpportunityType.DIGITAL_PRODUCT;
+              } else if (opportunityType.includes('Content')) {
+                opportunityType = OpportunityType.CONTENT;
+              } else if (opportunityType.includes('Service')) {
+                opportunityType = OpportunityType.SERVICE;
+              } else if (opportunityType.includes('Passive')) {
+                opportunityType = OpportunityType.PASSIVE;
+              }
+            }
+            
+            console.log(`Opportunity ${opportunity.id} type: "${opportunityType}", activeTab: "${activeTab}"`);
+            
+            // Filter by type if not on "all" tab
+            if (activeTab !== "all" && activeTab !== opportunityType) {
+              return false;
+            }
+            
+            // Filter by search query if present
+            if (searchQuery) {
+              const searchLower = searchQuery.toLowerCase();
+              let titleMatch = false;
+              let descriptionMatch = false;
+              let typeMatch = false;
+              
+              // Check opportunity title
+              if (opportunity.title) {
+                titleMatch = opportunity.title.toLowerCase().includes(searchLower);
+              }
+              
+              // Check opportunity description and type
+              if (typeof opportunity.opportunityData === 'string') {
+                try {
+                  const parsed = JSON.parse(opportunity.opportunityData);
+                  
+                  if (parsed.description) {
+                    descriptionMatch = parsed.description.toLowerCase().includes(searchLower);
+                  }
+                  
+                  if (parsed.type) {
+                    typeMatch = parsed.type.toLowerCase().includes(searchLower);
+                  }
+                } catch (e) {
+                  console.error("Error parsing opportunity data for search:", e);
+                }
+              } else if (opportunity.opportunityData && typeof opportunity.opportunityData === 'object') {
+                const parsed = opportunity.opportunityData as any;
+                
+                if (parsed.description) {
+                  descriptionMatch = parsed.description.toLowerCase().includes(searchLower);
+                }
+                
+                if (parsed.type) {
+                  typeMatch = parsed.type.toLowerCase().includes(searchLower);
+                }
+              }
+              
+              return titleMatch || descriptionMatch || typeMatch;
+            }
+            
+            return true;
+          } catch (error) {
+            console.error("Error processing opportunity for filtering:", error);
             return false;
           }
-          
-          // Filter by search query if present
-          if (searchQuery) {
-            const searchLower = searchQuery.toLowerCase();
-            const titleMatch = opportunityData.opportunities?.some((opp: any) => 
-              opp.title.toLowerCase().includes(searchLower)
-            );
-            const descriptionMatch = opportunityData.opportunities?.some((opp: any) => 
-              opp.description.toLowerCase().includes(searchLower)
-            );
-            const typeMatch = opportunityData.opportunities?.some((opp: any) => 
-              opp.type.toLowerCase().includes(searchLower)
-            );
-            
-            return titleMatch || descriptionMatch || typeMatch;
-          }
-          
-          return true;
         })
     : [];
 
