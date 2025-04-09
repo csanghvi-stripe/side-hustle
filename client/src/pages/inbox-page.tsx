@@ -189,118 +189,120 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="container py-10">
-      <h1 className="text-3xl font-bold mb-6">Messages</h1>
-      
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-1/4 space-y-4">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search messages..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9"
-            />
+    <div className="min-h-screen bg-neutral-50">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
+        <h1 className="text-3xl font-bold mb-6">Messages</h1>
+        
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="w-full md:w-1/4 space-y-4">
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search messages..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => setActiveTab("inbox")}>
+                  <Mail className="h-4 w-4" />
+                  <span>Inbox</span>
+                  {unreadMessages.length > 0 && (
+                    <Badge className="ml-auto" variant="default">{unreadMessages.length}</Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-sm font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => setActiveTab("sent")}>
+                  <Send className="h-4 w-4" />
+                  <span>Sent</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="py-2">
+                <CardTitle className="text-sm">Message Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    <span>Total</span>
+                  </div>
+                  <span className="font-medium">{messages?.length || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                    <span>Unread</span>
+                  </div>
+                  <span className="font-medium">{unreadMessages.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                    <span>Read</span>
+                  </div>
+                  <span className="font-medium">{inboxMessages.length - unreadMessages.length}</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
           
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => setActiveTab("inbox")}>
-                <Mail className="h-4 w-4" />
-                <span>Inbox</span>
-                {unreadMessages.length > 0 && (
-                  <Badge className="ml-auto" variant="default">{unreadMessages.length}</Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-sm font-medium cursor-pointer hover:text-primary transition-colors" onClick={() => setActiveTab("sent")}>
-                <Send className="h-4 w-4" />
-                <span>Sent</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-2">
-              <CardTitle className="text-sm">Message Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm">
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                  <span>Total</span>
-                </div>
-                <span className="font-medium">{messages?.length || 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                  <span>Unread</span>
-                </div>
-                <span className="font-medium">{unreadMessages.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                  <span>Read</span>
-                </div>
-                <span className="font-medium">{inboxMessages.length - unreadMessages.length}</span>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="w-full md:w-3/4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="inbox">Inbox</TabsTrigger>
+                <TabsTrigger value="sent">Sent</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="inbox" className="space-y-4">
+                {renderMessageList(inboxMessages)}
+              </TabsContent>
+              
+              <TabsContent value="sent" className="space-y-4">
+                {renderMessageList(sentMessages, false)}
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
         
-        <div className="w-full md:w-3/4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="inbox">Inbox</TabsTrigger>
-              <TabsTrigger value="sent">Sent</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="inbox" className="space-y-4">
-              {renderMessageList(inboxMessages)}
-            </TabsContent>
-            
-            <TabsContent value="sent" className="space-y-4">
-              {renderMessageList(sentMessages, false)}
-            </TabsContent>
-          </Tabs>
-        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>Reply to {replyTo?.senderName}</DialogTitle>
+              <DialogDescription>
+                Send a message in response to: {replyTo?.subject || 'No subject'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea
+                placeholder="Write your reply here..."
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                className="min-h-[150px]"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleReply}
+                disabled={!replyContent.trim() || sendMessageMutation.isPending}
+              >
+                {sendMessageMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Send Reply
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-      
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Reply to {replyTo?.senderName}</DialogTitle>
-            <DialogDescription>
-              Send a message in response to: {replyTo?.subject || 'No subject'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Textarea
-              placeholder="Write your reply here..."
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              className="min-h-[150px]"
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              type="button" 
-              onClick={handleReply}
-              disabled={!replyContent.trim() || sendMessageMutation.isPending}
-            >
-              {sendMessageMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Send Reply
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
