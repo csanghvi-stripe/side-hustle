@@ -169,40 +169,73 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
     if (typeof opportunity.opportunityData === 'string') {
       // Parse from JSON string
       const parsed = JSON.parse(opportunity.opportunityData);
+      console.log("Parsed opportunity JSON data:", parsed);
       opportunityData = {
         title: parsed.title || opportunity.title || "",
         type: parsed.type || "Freelance",
-        description: parsed.description || "",
+        description: parsed.description || "This opportunity allows you to leverage your skills in a flexible way to generate income.",
         incomePotential: parsed.incomePotential || "$0-$0",
         startupCost: parsed.startupCost || "$0",
         riskLevel: parsed.riskLevel || "Medium",
-        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [],
-        resources: Array.isArray(parsed.resources) ? parsed.resources : []
+        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [
+          "Create a profile highlighting your relevant skills",
+          "Identify your target clients or audience",
+          "Set up the necessary tools and accounts",
+          "Start marketing your services"
+        ],
+        resources: Array.isArray(parsed.resources) ? parsed.resources : [],
+        successStories: Array.isArray(parsed.successStories) ? parsed.successStories : []
       };
     } else if (opportunity.opportunityData && typeof opportunity.opportunityData === 'object') {
       // It's already an object
       const parsed = opportunity.opportunityData as any;
+      console.log("Parsed opportunity object data:", parsed);
+      
+      // Let's check for different possible data structures
+      let description = "";
+      if (parsed.description) {
+        description = parsed.description;
+      } else if (parsed.howItWorks) {
+        description = parsed.howItWorks;
+      } else if (parsed.details) {
+        description = parsed.details;
+      } else {
+        description = "This opportunity allows you to leverage your skills in a flexible way to generate income.";
+      }
+      
       opportunityData = {
         title: parsed.title || opportunity.title || "",
         type: parsed.type || "Freelance",
-        description: parsed.description || "",
+        description: description,
         incomePotential: parsed.incomePotential || "$0-$0",
         startupCost: parsed.startupCost || "$0",
         riskLevel: parsed.riskLevel || "Medium",
-        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [],
-        resources: Array.isArray(parsed.resources) ? parsed.resources : []
+        stepsToStart: Array.isArray(parsed.stepsToStart) ? parsed.stepsToStart : [
+          "Create a profile highlighting your relevant skills",
+          "Identify your target clients or audience",
+          "Set up the necessary tools and accounts",
+          "Start marketing your services"
+        ],
+        resources: Array.isArray(parsed.resources) ? parsed.resources : [],
+        successStories: Array.isArray(parsed.successStories) ? parsed.successStories : []
       };
     } else {
       // Fallback if opportunityData is missing/invalid
       opportunityData = {
         title: opportunity.title || "",
         type: "Freelance",
-        description: "No description available",
+        description: "This opportunity allows you to leverage your skills in a flexible way to generate income.",
         incomePotential: "$0-$0",
         startupCost: "$0",
         riskLevel: "Medium",
-        stepsToStart: [],
-        resources: []
+        stepsToStart: [
+          "Create a profile highlighting your relevant skills",
+          "Identify your target clients or audience",
+          "Set up the necessary tools and accounts",
+          "Start marketing your services"
+        ],
+        resources: [],
+        successStories: []
       };
     }
     
