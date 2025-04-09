@@ -2,6 +2,22 @@ import { pgTable, text, serial, integer, boolean, jsonb, timestamp, uniqueIndex,
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Enums for the discovery engine
+export enum OpportunityType {
+  FREELANCE = "FREELANCE",
+  DIGITAL_PRODUCT = "DIGITAL_PRODUCT",
+  CONTENT = "CONTENT",
+  SERVICE = "SERVICE",
+  PASSIVE = "PASSIVE",
+  INFO_PRODUCT = "INFO_PRODUCT"
+}
+
+export enum RiskLevel {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH"
+}
+
 // User table with social networking features and subscription info
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

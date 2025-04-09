@@ -8,6 +8,7 @@ import { insertUserProfileSchema, insertMonetizationOpportunitySchema } from "@s
 import * as analytics from "./api/analytics";
 import * as coach from "./api/coach";
 import * as progressAnalysis from "./api/progress-analysis";
+import { discoveryService } from "./discovery";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
@@ -57,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Discover monetization opportunities
+  // Discover monetization opportunities - using the new discovery engine
   app.post("/api/opportunities/discover", async (req, res) => {
     try {
       const { skills, timeAvailability, riskAppetite, incomeGoals, workPreference, additionalDetails } = req.body;
@@ -74,12 +75,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const useEnhanced = req.query.enhanced === 'true' || req.body.useEnhanced === true;
       
       // Log which algorithm is being used
-      console.log(`Using ${useEnhanced ? 'enhanced' : 'regular'} monetization algorithm`);
+      console.log(`Using ${useEnhanced ? 'enhanced' : 'regular'} monetization discovery engine`);
       
-      // Generate monetization opportunities using the appropriate algorithm
+      // Process input data
+      const skillsArray = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim());
+      
+      // If user is authenticated, use the discovery engine
+      if (req.isAuthenticated() && req.user?.id) {
+        try {
+          // Use the discovery service to find personalized opportunities
+          const results = await discoveryService.discoverOpportunities(req.user.id, {
+            skills: skillsArray,
+            timeAvailability,
+            riskAppetite,
+            incomeGoals: parseInt(incomeGoals),
+            workPreference,
+            additionalDetails,
+            discoverable,
+            allowMessages,
+            useEnhanced
+          });
+          
+          // Transform to match expected response format
+          const formattedResults = {
+            opportunities: results.opportunities.map(opp => ({
+              id: opp.id,
+              title: opp.title,
+              type: opp.type,
+              icon: opp.type.toLowerCase(), // Generate icon based on type
+              description: opp.description,
+              incomePotential: `$${opp.estimatedIncome.min}-${opp.estimatedIncome.max} ${opp.estimatedIncome.timeframe}`,
+              startupCost: `$${opp.startupCost.min}-${opp.startupCost.max}`,
+              riskLevel: opp.entryBarrier,
+              stepsToStart: opp.stepsToStart,
+              resources: opp.resources,
+              successStories: opp.successStories
+            })),
+            userProfile: {
+              skills: skillsArray,
+              timeAvailability: timeAvailability,
+              incomeGoals: parseInt(incomeGoals),
+              riskTolerance: riskAppetite,
+              preference: workPreference
+            },
+            similarUsers: results.similarUsers,
+            enhanced: results.enhanced
+          };
+          
+          return res.status(200).json(formattedResults);
+        } catch (err) {
+          console.error("Error using discovery engine:", err);
+          // Fall back to the AI-only approach if the discovery engine fails
+        }
+      }
+      
+      // Fallback to the AI-only approach if not authenticated or if discovery engine failed
+      console.log("Falling back to AI-only monetization discovery");
+      
+      // Generate monetization opportunities using the appropriate AI algorithm
       const opportunities = await (useEnhanced ? 
         generateEnhancedMonetizationOpportunities({
-          skills,
+          skills: skillsArray,
           timePerWeek: timeAvailability,
           incomeGoal: `$${incomeGoals}/month`,
           riskTolerance: riskAppetite,
@@ -89,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           allowMessages,
         }) : 
         generateMonetizationOpportunities({
-          skills,
+          skills: skillsArray,
           timePerWeek: timeAvailability,
           incomeGoal: `$${incomeGoals}/month`,
           riskTolerance: riskAppetite,
