@@ -533,9 +533,14 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                   disabled={generateOpportunities.isPending}
                   className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all px-5 py-6 text-lg font-medium button-hover-effect"
                   onClick={(e) => {
+                    e.preventDefault(); // Prevent the default button behavior
                     console.log("Submit button clicked");
-                    // We'll keep the type="submit" to let the form's onSubmit handle it
-                    // This is just for additional debugging
+                    
+                    // Manually trigger form validation and submission
+                    form.handleSubmit((data) => {
+                      console.log("Form submitted with data:", data);
+                      generateOpportunities.mutate(data);
+                    })();
                   }}
                 >
                   Find Monetization Opportunities
