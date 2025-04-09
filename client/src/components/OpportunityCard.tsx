@@ -364,9 +364,17 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
         
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-3 mt-3">
-          <Link href={`/opportunity/${opportunity.id}`}>
-            <Button variant="outline" className="w-full">
+          <Link href={`/opportunities/${opportunity.id}`}>
+            <Button 
+              variant="outline" 
+              className="w-full transition-all hover:bg-primary hover:text-white group"
+              onClick={() => {
+                // Add debug logging
+                console.log("View Details clicked for opportunity ID:", opportunity.id);
+              }}
+            >
               View Details
+              <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>
           <Link href={`/action-plan?opportunityId=${opportunity.id}`}>
