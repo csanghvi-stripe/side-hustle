@@ -218,28 +218,17 @@ export default function SavedOpportunitiesPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {groupedBySkill[skill].map((opportunity) => {
-                        const opportunityData = opportunity.opportunityData as any;
-                        return opportunityData.opportunities?.map((opp: any, index: number) => (
-                          <div key={`${opportunity.id}-${index}`} className="relative">
+                        // Render the opportunity directly
+                        return (
+                          <div key={opportunity.id} className="relative">
                             <div className="absolute top-2 right-2 z-10">
                               <Badge className="text-xs bg-slate-700 hover:bg-slate-800">
                                 {new Date(opportunity.createdAt).toLocaleDateString()}
                               </Badge>
                             </div>
-                            <OpportunityCard 
-                              opportunity={{
-                                ...opp,
-                                riskLevel: typeof opp.riskLevel === 'string' 
-                                  ? opp.riskLevel 
-                                  : (opp.riskLevel as any)?.high 
-                                    ? RiskLevel.HIGH 
-                                    : (opp.riskLevel as any)?.medium 
-                                      ? RiskLevel.MEDIUM 
-                                      : RiskLevel.LOW
-                              }} 
-                            />
+                            <OpportunityCard opportunity={opportunity} />
                           </div>
-                        ));
+                        );
                       })}
                     </div>
                   </div>
