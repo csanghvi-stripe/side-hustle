@@ -225,10 +225,20 @@ const OpportunityDetailPage = () => {
   }
 
   // Parse the opportunity data - from the API
-  const opportunityData: OpportunityDataType = opportunity.opportunityData ? 
-    (typeof opportunity.opportunityData === 'string' ? JSON.parse(opportunity.opportunityData) : opportunity.opportunityData) : 
-    {
-      title: opportunity.title,
+  let parsedOpportunityData: any;
+  
+  try {
+    if (opportunity.opportunityData) {
+      parsedOpportunityData = typeof opportunity.opportunityData === 'string' 
+        ? JSON.parse(opportunity.opportunityData) 
+        : opportunity.opportunityData;
+    }
+  } catch (error) {
+    console.error("Error parsing opportunity data:", error);
+  }
+  
+  const opportunityData: OpportunityDataType = parsedOpportunityData || {
+      title: opportunity.title || "Opportunity",
       type: "Freelancing",
       description: "Launch your freelance career using your existing skills to find clients and generate income.",
       incomePotential: "$2000-5000/mo",
@@ -280,7 +290,12 @@ const OpportunityDetailPage = () => {
       ]
     };
 
-  const riskStyle = riskLevelStyles[opportunityData.riskLevel as keyof typeof riskLevelStyles] || riskLevelStyles.medium;
+  // Safely get the risk style with a fallback to medium if not found
+  const riskStyle = opportunityData.riskLevel && 
+    typeof opportunityData.riskLevel === 'string' && 
+    opportunityData.riskLevel in riskLevelStyles
+      ? riskLevelStyles[opportunityData.riskLevel as keyof typeof riskLevelStyles] 
+      : riskLevelStyles.medium;
 
   const toggleSkillExpand = (index: number) => {
     if (expandedSkill === index) {
@@ -325,10 +340,17 @@ const OpportunityDetailPage = () => {
                 {getIconForType(opportunityData.type)}
                 <span className="ml-1">{opportunityData.type}</span>
               </Badge>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${riskStyle.bg} ${riskStyle.text}`}>
-                {riskStyle.icon}
-                <span className="ml-1">{opportunityData.riskLevel.charAt(0).toUpperCase() + opportunityData.riskLevel.slice(1)} Risk</span>
-              </span>
+              {opportunityData.riskLevel && (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${riskStyle?.bg || ''} ${riskStyle?.text || ''}`}>
+                  {riskStyle?.icon}
+                  <span className="ml-1">
+                    {typeof opportunityData.riskLevel === 'string' && opportunityData.riskLevel.length > 0
+                      ? `${opportunityData.riskLevel.charAt(0).toUpperCase()}${opportunityData.riskLevel.slice(1)} Risk`
+                      : 'Medium Risk'
+                    }
+                  </span>
+                </span>
+              )}
             </div>
           </div>
           
