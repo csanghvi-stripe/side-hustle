@@ -40,6 +40,10 @@ interface DiscoveryFormProps {
 
 const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
   const [currentStep, setCurrentStep] = React.useState(1);
+  const [step1Valid, setStep1Valid] = React.useState(false);
+  const [step2Valid, setStep2Valid] = React.useState(false);
+  const [step3Valid, setStep3Valid] = React.useState(true); // Step 3 fields are optional
+  const [validationErrors, setValidationErrors] = React.useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const form = useForm<UserInputForm>({
@@ -57,7 +61,63 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
       // Algorithm option
       useEnhanced: false,
     },
+    mode: "onChange", // Validate on change to update UI
   });
+
+  // Subscribe to form validation state changes
+  React.useEffect(() => {
+    const subscription = form.watch((formValues, { name, type }) => {
+      // Check step 1 fields
+      if (currentStep === 1) {
+        validateStep1Fields();
+      }
+      // Check step 2 fields
+      else if (currentStep === 2) {
+        validateStep2Fields();
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form.watch, currentStep]);
+
+  // Validate step 1 fields
+  const validateStep1Fields = async () => {
+    const result = await form.trigger(["skills", "incomeGoals"]);
+    setStep1Valid(result);
+    
+    // Collect validation errors for display
+    const errors: Record<string, string> = {};
+    if (form.formState.errors.skills) {
+      errors.skills = form.formState.errors.skills.message || "Skills are required";
+    }
+    if (form.formState.errors.incomeGoals) {
+      errors.incomeGoals = form.formState.errors.incomeGoals.message || "Income goal is required";
+    }
+    setValidationErrors(errors);
+    
+    return result;
+  };
+
+  // Validate step 2 fields
+  const validateStep2Fields = async () => {
+    const result = await form.trigger(["timeAvailability", "riskAppetite", "workPreference"]);
+    setStep2Valid(result);
+    
+    // Collect validation errors for display
+    const errors: Record<string, string> = {};
+    if (form.formState.errors.timeAvailability) {
+      errors.timeAvailability = form.formState.errors.timeAvailability.message || "Time availability is required";
+    }
+    if (form.formState.errors.riskAppetite) {
+      errors.riskAppetite = form.formState.errors.riskAppetite.message || "Risk appetite is required";
+    }
+    if (form.formState.errors.workPreference) {
+      errors.workPreference = form.formState.errors.workPreference.message || "Work preference is required";
+    }
+    setValidationErrors(errors);
+    
+    return result;
+  };
 
   const generateOpportunities = useMutation({
     mutationFn: async (data: UserInputForm) => {
@@ -69,26 +129,62 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
       onResultsReceived(data);
     },
     onError: (error) => {
+      // Display detailed error information for troubleshooting
+      console.error("API Error:", error);
+      
       toast({
-        title: "Error",
-        description: `Failed to generate opportunities: ${error.message}`,
+        title: "Error Generating Opportunities",
+        description: (
+          <div className="space-y-2">
+            <p>{error.message}</p>
+            <p className="text-xs opacity-80">
+              Please check all required fields are completed and try again. If the problem persists,
+              there may be an issue with the server.
+            </p>
+          </div>
+        ),
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: UserInputForm) => {
+  const onSubmit = async (data: UserInputForm) => {
     console.log("Form submitted with data:", data);
-    // Check if form validation passes
-    const isValid = form.formState.isValid;
+    
+    // Do a final validation check of all form fields
+    const isValid = await form.trigger();
     console.log("Form validation status:", isValid);
+    
     if (!isValid) {
       console.log("Form validation errors:", form.formState.errors);
+      
+      // Collect all errors for display
+      const allErrors = Object.entries(form.formState.errors)
+        .map(([field, error]) => `${field}: ${error.message}`)
+        .join(", ");
+      
       toast({
-        title: "Form validation failed",
-        description: "Please make sure all required fields are filled correctly.",
+        title: "Please complete all required fields",
+        description: (
+          <div className="space-y-2">
+            <p>The following fields need attention:</p>
+            <ul className="list-disc pl-5 text-sm">
+              {Object.entries(form.formState.errors).map(([field, error]) => (
+                <li key={field}>{error.message}</li>
+              ))}
+            </ul>
+          </div>
+        ),
         variant: "destructive",
       });
+      
+      // Move to the step with errors
+      if (form.formState.errors.skills || form.formState.errors.incomeGoals) {
+        setCurrentStep(1);
+      } else if (form.formState.errors.timeAvailability || form.formState.errors.riskAppetite || form.formState.errors.workPreference) {
+        setCurrentStep(2);
+      }
+      
       return;
     }
     
@@ -96,16 +192,32 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
     generateOpportunities.mutate(data);
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep === 1) {
-      const step1Valid = form.trigger(["skills", "incomeGoals"]);
-      if (!step1Valid) return;
+      const valid = await validateStep1Fields();
+      if (!valid) {
+        // Show validation errors for step 1
+        toast({
+          title: "Please complete required fields",
+          description: "Please fill in all required fields in this step before continuing.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      const valid = await validateStep2Fields();
+      if (!valid) {
+        // Show validation errors for step 2
+        toast({
+          title: "Please complete required fields",
+          description: "Please fill in all required fields in this step before continuing.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setCurrentStep(3);
     }
-    if (currentStep === 2) {
-      const step2Valid = form.trigger(["timeAvailability", "riskAppetite", "workPreference"]);
-      if (!step2Valid) return;
-    }
-    setCurrentStep(prev => Math.min(prev + 1, 3));
   };
 
   const prevStep = () => {
@@ -228,7 +340,22 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
               />
 
               <div className="flex justify-end mt-6">
-                <Button type="button" onClick={nextStep} className="bg-primary hover:bg-primary/90">
+                {/* Show helper message if fields are not valid */}
+                {!step1Valid && (
+                  <div className="mr-auto text-amber-500 text-sm flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Please complete all required fields to continue
+                  </div>
+                )}
+                <Button 
+                  type="button" 
+                  onClick={nextStep} 
+                  className="bg-primary hover:bg-primary/90"
+                  disabled={!step1Valid}
+                >
                   Next
                   <svg
                     className="ml-1 h-4 w-4"
@@ -395,10 +522,23 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                   </svg>
                   Back
                 </Button>
+                
+                {/* Show helper message if fields are not valid */}
+                {!step2Valid && (
+                  <div className="text-amber-500 text-sm flex items-center mx-auto">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Please complete all required fields
+                  </div>
+                )}
+                
                 <Button 
                   type="button" 
                   onClick={nextStep}
                   className="bg-primary hover:bg-primary/90"
+                  disabled={!step2Valid}
                 >
                   Next
                   <svg
@@ -528,35 +668,91 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                   </svg>
                   Back
                 </Button>
+                
+                {/* Form validation info */}
+                {form.formState.errors && Object.keys(form.formState.errors).length > 0 && (
+                  <div className="text-amber-500 text-sm flex items-center mx-auto">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Please fix form errors before proceeding
+                  </div>
+                )}
+                
                 <Button 
                   type="submit" 
-                  disabled={generateOpportunities.isPending}
+                  disabled={generateOpportunities.isPending || form.formState.isSubmitting}
                   className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all px-5 py-6 text-lg font-medium button-hover-effect"
                   onClick={(e) => {
                     e.preventDefault(); // Prevent the default button behavior
                     console.log("Submit button clicked");
                     
-                    // Manually trigger form validation and submission
-                    form.handleSubmit((data) => {
-                      console.log("Form submitted with data:", data);
-                      generateOpportunities.mutate(data);
-                    })();
+                    // First validate all form fields
+                    form.trigger().then(isValid => {
+                      console.log("Form validation result:", isValid);
+                      
+                      if (!isValid) {
+                        // Show detailed validation errors
+                        toast({
+                          title: "Please complete all required fields",
+                          description: (
+                            <div className="space-y-2">
+                              <p>The following fields need your attention:</p>
+                              <ul className="list-disc pl-5 text-sm">
+                                {Object.entries(form.formState.errors).map(([field, error]) => (
+                                  <li key={field}>{error.message}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ),
+                          variant: "destructive",
+                        });
+                        
+                        // Move to the step with errors
+                        if (form.formState.errors.skills || form.formState.errors.incomeGoals) {
+                          setCurrentStep(1);
+                        } else if (form.formState.errors.timeAvailability || form.formState.errors.riskAppetite || form.formState.errors.workPreference) {
+                          setCurrentStep(2);
+                        }
+                        
+                        return;
+                      }
+                      
+                      // If validation passes, submit the form
+                      form.handleSubmit((data) => {
+                        console.log("Form submitted with data:", data);
+                        generateOpportunities.mutate(data);
+                      })();
+                    });
                   }}
                 >
-                  Find Monetization Opportunities
-                  <svg
-                    className="ml-2 h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                  </svg>
+                  {generateOpportunities.isPending ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Find Monetization Opportunities
+                      <svg
+                        className="ml-2 h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                      </svg>
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
