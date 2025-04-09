@@ -6,7 +6,9 @@ const execAsync = promisify(exec);
 
 async function runMigrations() {
   const migrations = [
-    './db-migrate-profiles.ts',
+    './server/db-migrate-user-display-name.ts',
+    './server/db-migrate-profiles.ts',
+    './server/db-migrate-messages.ts',
   ];
   
   logger.info('Starting all database migrations...');

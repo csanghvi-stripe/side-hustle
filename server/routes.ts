@@ -835,6 +835,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/coach/conversations/:conversationId/messages", isAuthenticated, coach.hasCoachAccess, coach.getMessages);
   app.post("/api/coach/conversations/:conversationId/messages", isAuthenticated, coach.hasCoachAccess, coach.sendMessage);
 
+  // Get available discovery sources
+  app.get("/api/discovery/sources", isAuthenticated, async (req, res) => {
+    try {
+      const sources = discoveryService.getRegisteredSources();
+      
+      // Return the list of sources with their metadata
+      const sourcesList = Array.from(sources.entries()).map(([id, source]) => ({
+        id: id,
+        name: source.name,
+        description: source.description,
+        capabilities: source.capabilities || [],
+        isEnabled: source.isEnabled || false
+      }));
+      
+      return res.status(200).json(sourcesList);
+    } catch (error) {
+      console.error("Error fetching discovery sources:", error);
+      return res.status(500).json({
+        message: "Failed to fetch discovery sources",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get recent opportunities from a specific source
+  app.get("/api/discovery/sources/:sourceId/opportunities", isAuthenticated, async (req, res) => {
+    try {
+      const { sourceId } = req.params;
+      const { limit = "10", skillFilter } = req.query;
+      
+      // Convert limit to number
+      const limitNum = parseInt(limit as string, 10) || 10;
+      
+      // Get opportunities from this source
+      const opportunities = await discoveryService.getOpportunitiesFromSource(
+        sourceId,
+        limitNum,
+        skillFilter ? (skillFilter as string).split(",") : undefined
+      );
+      
+      return res.status(200).json(opportunities);
+    } catch (error) {
+      console.error(`Error fetching opportunities from source ${req.params.sourceId}:`, error);
+      return res.status(500).json({
+        message: `Failed to fetch opportunities from source ${req.params.sourceId}`,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -45,6 +45,52 @@ class DiscoveryService {
   }
   
   /**
+   * Get all registered sources with a Map interface
+   */
+  public getRegisteredSources(): Map<string, OpportunitySource> {
+    return this.sources;
+  }
+  
+  /**
+   * Get opportunities from a specific source
+   */
+  public async getOpportunitiesFromSource(
+    sourceId: string,
+    limit: number = 10,
+    skills?: string[]
+  ): Promise<RawOpportunity[]> {
+    const source = this.sources.get(sourceId);
+    
+    if (!source) {
+      throw new Error(`Source with ID ${sourceId} not found`);
+    }
+    
+    try {
+      // Create minimal preferences object for the source
+      const preferences: DiscoveryPreferences = {
+        skills: skills || [],
+        timeAvailability: "any",
+        riskAppetite: "any",
+        incomeGoals: 0,
+        workPreference: "any"
+      };
+      
+      const opportunities = await Promise.race([
+        source.getOpportunities(skills || [], preferences),
+        new Promise<RawOpportunity[]>((_, reject) => 
+          setTimeout(() => reject(new Error(`Source ${sourceId} timed out`)), this.sourceTimeout)
+        )
+      ]);
+      
+      // Return limited number of opportunities
+      return opportunities.slice(0, limit);
+    } catch (error) {
+      logger.error(`Error fetching from source ${sourceId}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to fetch opportunities from source ${sourceId}`);
+    }
+  }
+  
+  /**
    * Main method to discover personalized opportunities for a user
    */
   public async discoverOpportunities(
