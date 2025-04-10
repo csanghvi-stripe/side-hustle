@@ -6,7 +6,7 @@
  */
 
 import axios from 'axios';
-import { DiscoveryPreferences, OpportunitySource, RawOpportunity } from "../types";
+import { DiscoveryPreferences, OpportunitySource, RawOpportunity, UserDiscoveryInput } from "../types";
 import { logger, randomDelay, sleep } from '../utils';
 import { OpportunityType, RiskLevel } from '../../../shared/schema';
 
@@ -14,24 +14,55 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
   // Basic properties that all sources must have
   public readonly name: string;
   public readonly id: string;
+  public readonly description: string;
+  public capabilities: string[] = [];
+  public isEnabled: boolean = true;
   protected baseUrl: string;
   protected requestDelay: number = 1000; // Time in ms between requests
   protected cacheTimeMs: number = 60 * 60 * 1000; // Default 1 hour cache
   protected cache: Map<string, {data: RawOpportunity[], timestamp: number}> = new Map();
+  protected type: OpportunityType;
+  protected metadata: any;
   
-  constructor(name: string, id: string, baseUrl: string) {
-    this.name = name;
+  constructor(
+    id: string,
+    name: string, 
+    baseUrl: string,
+    type: string = 'FREELANCE',
+    metadata: any = {}
+  ) {
     this.id = id;
+    this.name = name;
     this.baseUrl = baseUrl;
+    this.type = type as OpportunityType;
+    this.metadata = metadata;
+    this.description = `Opportunities from ${name}`;
   }
   
   /**
-   * Main method that all sources must implement to get opportunities
+   * Main method that all source implementations must provide
    */
-  public abstract getOpportunities(
+  public abstract fetchOpportunities(
+    input: UserDiscoveryInput
+  ): Promise<RawOpportunity[]>;
+  
+  /**
+   * Standard interface method that calls the source-specific implementation
+   */
+  public async getOpportunities(
     skills: string[], 
     preferences: DiscoveryPreferences
-  ): Promise<RawOpportunity[]>;
+  ): Promise<RawOpportunity[]> {
+    try {
+      return await this.fetchOpportunities({
+        skills,
+        preferences
+      });
+    } catch (error) {
+      this.handleError(error, 'getOpportunities');
+      return [];
+    }
+  }
   
   /**
    * Helper for making HTTP requests with appropriate delays and error handling
@@ -124,5 +155,40 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
    */
   protected generateOpportunityId(platform: string, uniqueIdentifier: string): string {
     return `${platform.toLowerCase()}-${uniqueIdentifier.replace(/[^a-z0-9]/gi, '-')}`;
+  }
+  
+  /**
+   * Standard error handling for all sources
+   */
+  protected handleError(error: any, context: string): void {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Error in ${this.name} source (${context}): ${errorMessage}`);
+  }
+  
+  /**
+   * Helper to create a standardized opportunity object
+   */
+  protected createOpportunity(data: Partial<RawOpportunity>): RawOpportunity {
+    // Generate a unique ID if not provided
+    const id = data.id || this.generateOpportunityId(
+      this.id, 
+      data.title || `${Date.now()}`
+    );
+    
+    // Return the opportunity with defaults for required fields
+    return {
+      id,
+      title: data.title || 'Untitled Opportunity',
+      description: data.description || 'No description available',
+      source: this.id,
+      requiredSkills: data.requiredSkills || [],
+      type: data.type || this.type || OpportunityType.FREELANCE,
+      url: data.url || this.baseUrl,
+      estimatedIncome: data.estimatedIncome || { min: 0, max: 0, timeframe: 'monthly' },
+      timeRequired: data.timeRequired || { min: 0, max: 0, timeframe: 'weekly' },
+      startupCost: data.startupCost || { min: 0, max: 0 },
+      entryBarrier: data.entryBarrier || RiskLevel.MEDIUM,
+      ...data
+    };
   }
 }
