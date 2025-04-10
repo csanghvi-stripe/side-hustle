@@ -296,8 +296,9 @@ export default function OpportunityDetailPage() {
     };
   }
   
-  const riskStyle = opportunityData.riskLevel ? 
-    riskLevelStyles[opportunityData.riskLevel.toLowerCase() as keyof typeof riskLevelStyles] : 
+  // Make sure opportunityData and riskLevel exist before accessing
+  const riskStyle = opportunityData && opportunityData.riskLevel ? 
+    riskLevelStyles[(opportunityData.riskLevel.toString().toLowerCase()) as keyof typeof riskLevelStyles] || riskLevelStyles.medium : 
     riskLevelStyles.medium;
 
   const toggleVideoPlayer = () => {
@@ -312,7 +313,7 @@ export default function OpportunityDetailPage() {
   };
 
   const handleAddToActionPlan = () => {
-    if (!id) return;
+    if (!id || !opportunityData) return;
     
     // Store opportunity name in localStorage for the action plan page to use
     if (opportunityData.title) {
