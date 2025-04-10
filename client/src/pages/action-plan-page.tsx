@@ -43,13 +43,37 @@ export default function ActionPlanPage() {
   });
   
   // Fetch opportunity details if we have an ID but no name
+  const { data: opportunityData } = useQuery({
+    queryKey: [`/api/opportunities/${opportunityId}`],
+    enabled: !!opportunityId && !opportunityName
+  });
+
+  // Process opportunity data when it changes
   useEffect(() => {
-    if (opportunityId && !opportunityName) {
-      // This is a placeholder - in a real implementation, you would fetch the opportunity details
-      // For now, set a default name
-      setOpportunityName("Selected Opportunity");
+    if (opportunityData && !opportunityName) {
+      let title;
+      try {
+        // Try to parse opportunity data
+        if (typeof opportunityData.opportunityData === 'string') {
+          const parsed = JSON.parse(opportunityData.opportunityData);
+          title = parsed.title;
+        } else if (opportunityData.opportunityData && (opportunityData.opportunityData as any).title) {
+          title = (opportunityData.opportunityData as any).title;
+        } else {
+          title = opportunityData.title || "Opportunity";
+        }
+        
+        setOpportunityName(title);
+        // Also store in localStorage for future reference
+        if (opportunityId && title) {
+          localStorage.setItem(`opportunity_${opportunityId}_name`, title);
+        }
+      } catch (err) {
+        console.error("Failed to parse opportunity data:", err);
+        setOpportunityName((opportunityData as any).title || "Selected Opportunity");
+      }
     }
-  }, [opportunityId, opportunityName]);
+  }, [opportunityData, opportunityId, opportunityName]);
   
   // Select the first action plan or null if none exists
   const activeActionPlan = actionPlans && actionPlans.length > 0 ? actionPlans[0] : null;

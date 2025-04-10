@@ -273,15 +273,19 @@ export default function OpportunityDetailPage() {
   let opportunityData: OpportunityDataType;
   
   try {
-    if (typeof opportunity.opportunityData === 'string') {
-      opportunityData = JSON.parse(opportunity.opportunityData);
+    if (opportunity && typeof opportunity === 'object' && 'opportunityData' in opportunity) {
+      if (typeof opportunity.opportunityData === 'string') {
+        opportunityData = JSON.parse(opportunity.opportunityData);
+      } else {
+        opportunityData = opportunity.opportunityData as any;
+      }
     } else {
-      opportunityData = opportunity.opportunityData as any;
+      throw new Error('Invalid opportunity data');
     }
   } catch {
     // Fallback if parsing fails
     opportunityData = {
-      title: opportunity.title || 'Untitled Opportunity',
+      title: opportunity && typeof opportunity === 'object' && 'title' in opportunity ? (opportunity.title as string) || 'Untitled Opportunity' : 'Untitled Opportunity',
       type: 'Freelance',
       description: 'No detailed description available for this opportunity.',
       incomePotential: '$1,000-$5,000/month',
