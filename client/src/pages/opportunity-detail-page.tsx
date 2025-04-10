@@ -331,12 +331,21 @@ const OpportunityDetailPage = () => {
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 sm:px-6">
       <div className="mb-6">
-        <Button variant="ghost" size="sm" asChild className="mb-2">
-          <Link href="/saved-opportunities">
-            <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
-            Back to My Opportunities
-          </Link>
-        </Button>
+        <div className="flex space-x-4 mb-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/saved-opportunities">
+              <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
+              Back to My Opportunities
+            </Link>
+          </Button>
+          
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/">
+              <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
+              Back to Search Results
+            </Link>
+          </Button>
+        </div>
         
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
