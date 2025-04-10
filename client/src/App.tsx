@@ -42,6 +42,7 @@ function Router() {
           <ProtectedRoute path="/pricing-calculator" component={PricingCalculatorPage} />
           <ProtectedRoute path="/action-plan" component={ActionPlanPage} />
           <ProtectedRoute path="/opportunity/:id" component={OpportunityDetailPage} />
+          <ProtectedRoute path="/saved-opportunities/:id" component={OpportunityDetailPage} />
           <Route path="/blog" component={BlogPage} />
           <Route path="/blog/:slug" component={BlogPostPage} />
           <Route path="/auth" component={AuthPage} />

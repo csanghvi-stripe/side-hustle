@@ -159,7 +159,7 @@ class EnhancedDiscoveryService {
    */
   public async getOpportunitiesFromSource(
     sourceId: string,
-    limit: number = 10,
+    limit: number = 100, // Increased limit to show more opportunities
     skills?: string[],
   ): Promise<RawOpportunity[]> {
     const source = this.sources.get(sourceId);
@@ -209,8 +209,8 @@ class EnhancedDiscoveryService {
       // Log source performance
       logger.debug(`Source ${sourceId} returned ${opportunities.length} opportunities in ${duration.toFixed(2)}ms`);
 
-      // Return limited number of opportunities
-      return opportunities.slice(0, limit);
+      // Return opportunities without artificial limits
+      return opportunities;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error(
@@ -512,10 +512,9 @@ class EnhancedDiscoveryService {
         similarUsers.push(...(batchResults.filter(Boolean) as SimilarUser[]));
       }
 
-      // Sort by similarity (highest first) and limit to top 5
+      // Sort by similarity (highest first) and return all similar users
       const result = similarUsers
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 5);
+        .sort((a, b) => b.similarity - a.similarity);
 
       logger.info(`Found ${result.length} similar users`);
       return result;
@@ -666,8 +665,8 @@ class EnhancedDiscoveryService {
     if (preferences.useSkillGapAnalysis) {
       logger.info(`Applying skill gap analysis to opportunities`);
 
-      // Take top 15 for skill gap analysis for performance reasons
-      const topOpportunities = scoredOpportunities.slice(0, 15);
+      // Apply skill gap analysis to all opportunities
+      const topOpportunities = scoredOpportunities;
 
       // Apply skill gap analysis in parallel
       const skillGapPromises = topOpportunities.map(async (opportunity) => {
@@ -860,7 +859,7 @@ class EnhancedDiscoveryService {
    */
   private ensureDiverseResults(
     opportunities: RawOpportunity[],
-    maxResults = 10,
+    maxResults = 100, // Increased max results to show more opportunities
   ): RawOpportunity[] {
     if (opportunities.length <= maxResults) {
       return opportunities;
