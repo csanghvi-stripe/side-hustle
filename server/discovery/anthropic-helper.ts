@@ -176,27 +176,55 @@ export class AnthropicHelper {
     return opportunities.map((opp: any) => {
       // Ensure all fields are present and properly formatted
       const opportunityType = this.validateOpportunityType(opp.type);
+      const entryBarrier = this.validateRiskLevel(opp.entryBarrier);
+      
+      // Extract any category information from the title and description
+      let category = 'general';
+      const description = opp.description || '';
+      const title = opp.title || '';
+      
+      if (description.toLowerCase().includes('design') || title.toLowerCase().includes('design')) {
+        category = 'design';
+      } else if (description.toLowerCase().includes('writing') || title.toLowerCase().includes('writing')) {
+        category = 'writing';
+      } else if (description.toLowerCase().includes('develop') || title.toLowerCase().includes('develop')) {
+        category = 'web_development';
+      } else if (description.toLowerCase().includes('teach') || title.toLowerCase().includes('teach')) {
+        category = 'education';
+      }
+      
+      // Get more accurate income range from market data if AI didn't provide it
+      let estimatedIncome = opp.estimatedIncome;
+      if (!estimatedIncome || !estimatedIncome.min || !estimatedIncome.max) {
+        estimatedIncome = marketDataService.calculateIncomeRange(category, opportunityType);
+      }
       
       // Generate ROI score (0-100)
       const roiScore = this.calculateROIScore(
-        opp.estimatedIncome, 
-        opp.startupCost, 
-        opp.timeRequired
+        estimatedIncome, 
+        opp.startupCost || { min: 0, max: 100 }, 
+        opp.timeRequired || { min: 5, max: 20 },
+        opportunityType,
+        category
       );
       
       // Generate skill gap analysis
       const skillGapDays = this.calculateSkillGapDays(
-        opp.requiredSkills,
-        opp.niceToHaveSkills,
+        opp.requiredSkills || [],
+        opp.niceToHaveSkills || [],
         preferences.skills
       );
       
       // Calculate time to first revenue
       const timeToFirstRevenue = this.estimateTimeToFirstRevenue(
         opportunityType, 
-        opp.entryBarrier,
+        entryBarrier,
         skillGapDays
       );
+      
+      // Calculate market demand using market data
+      const marketDemandScore = marketDataService.calculateMarketDemandScore(opportunityType, category);
+      const marketDemand = marketDemandScore > 0.7 ? 'HIGH' : marketDemandScore > 0.4 ? 'MEDIUM' : 'LOW';
       
       return {
         id: generateOpportunityId('anthropic', opportunityType.toLowerCase()),
@@ -206,11 +234,11 @@ export class AnthropicHelper {
         requiredSkills: opp.requiredSkills || [],
         niceToHaveSkills: opp.niceToHaveSkills || [],
         type: opportunityType,
-        estimatedIncome: opp.estimatedIncome || { min: 100, max: 1000, timeframe: 'month' },
+        estimatedIncome: estimatedIncome,
         startupCost: opp.startupCost || { min: 0, max: 100 },
         timeRequired: opp.timeRequired || { min: 5, max: 20 },
-        entryBarrier: this.validateRiskLevel(opp.entryBarrier),
-        marketDemand: opp.marketDemand || 'MEDIUM',
+        entryBarrier: entryBarrier,
+        marketDemand: opp.marketDemand || marketDemand,
         stepsToStart: opp.stepsToStart || ['Research the opportunity', 'Create a plan', 'Take the first step'],
         successStories: opp.successStory ? [opp.successStory] : [],
         resources: opp.resources || [],
@@ -228,12 +256,20 @@ export class AnthropicHelper {
   private calculateROIScore(
     estimatedIncome: { min: number, max: number, timeframe: string },
     startupCost: { min: number, max: number },
-    timeRequired: { min: number, max: number }
+    timeRequired: { min: number, max: number },
+    opportunityType?: OpportunityType,
+    category?: string
   ): number {
     // Default values if missing
     const income = estimatedIncome || { min: 100, max: 1000, timeframe: 'month' };
     const cost = startupCost || { min: 0, max: 100 };
     const time = timeRequired || { min: 5, max: 20 };
+    
+    // Get market demand if we have opportunity type
+    let marketDemandScore = 0.5; // Default medium demand
+    if (opportunityType) {
+      marketDemandScore = marketDataService.calculateMarketDemandScore(opportunityType, category || 'general');
+    }
     
     // Calculate average values
     const avgIncome = (income.min + income.max) / 2;
@@ -255,7 +291,12 @@ export class AnthropicHelper {
     const incomeFactor = Math.min(1, monthlyIncome / 5000); // Cap at $5000/month for scoring
     
     // Combined weighted ROI score (0-100)
-    const weightedScore = (incomeFactor * 0.6 + costFactor * 0.2 + timeFactor * 0.2) * 100;
+    const weightedScore = (
+      incomeFactor * 0.5 + 
+      costFactor * 0.15 + 
+      timeFactor * 0.15 + 
+      marketDemandScore * 0.2
+    ) * 100;
     
     // Ensure within 0-100 range and round to integer
     return Math.round(Math.min(100, Math.max(0, weightedScore)));
@@ -287,18 +328,9 @@ export class AnthropicHelper {
     entryBarrier: RiskLevel,
     skillGapDays: number
   ): string {
-    // Base time ranges by opportunity type
-    const baseTimeRanges: Record<string, [number, number]> = {
-      [OpportunityType.FREELANCE]: [7, 30], // 1-4 weeks
-      [OpportunityType.SERVICE]: [7, 30], // 1-4 weeks
-      [OpportunityType.DIGITAL_PRODUCT]: [30, 90], // 1-3 months
-      [OpportunityType.CONTENT]: [14, 60], // 2 weeks to 2 months
-      [OpportunityType.PASSIVE]: [30, 120], // 1-4 months
-      [OpportunityType.INFO_PRODUCT]: [30, 90] // 1-3 months
-    };
-    
-    // Get base range for this opportunity type
-    const [minDays, maxDays] = baseTimeRanges[opportunityType] || [14, 60];
+    // Get time to first revenue from market data service
+    // Base days on opportunity type as the main category
+    const baseDays = marketDataService.getTimeToFirstRevenue(opportunityType);
     
     // Adjust based on entry barrier
     const barrierMultiplier = entryBarrier === RiskLevel.HIGH ? 1.5 :
@@ -309,6 +341,9 @@ export class AnthropicHelper {
                                skillGapDays > 14 ? 1.25 : 1;
     
     // Calculate adjusted range
+    const minDays = Math.ceil(baseDays * 0.7); // 30% less than average
+    const maxDays = Math.ceil(baseDays * 1.3); // 30% more than average
+    
     const adjustedMin = Math.ceil(minDays * barrierMultiplier);
     const adjustedMax = Math.ceil(maxDays * skillGapMultiplier);
     
@@ -433,20 +468,52 @@ export class AnthropicHelper {
     // Create one opportunity per type up to the requested count
     return opportunityTypes.slice(0, count).map(type => {
       const title = `${type.charAt(0) + type.slice(1).toLowerCase()} Opportunity`;
+      const entryBarrier = RiskLevel.MEDIUM;
+      const category = this.deriveCategoryFromSkills(preferences.skills);
+      
+      // Get realistic income range from market data
+      const estimatedIncome = marketDataService.calculateIncomeRange(category, type);
+      
+      // Calculate skill gap using skill graph
+      const skillGapDays = this.calculateSkillGapDays(
+        preferences.skills.slice(0, 3), // Use first 3 skills as required
+        preferences.skills.slice(3, 5), // Use next 2 as nice-to-have
+        preferences.skills             // Compare against all skills (will find missing ones)
+      );
+      
+      // Get realistic time to first revenue estimate
+      const timeToFirstRevenue = this.estimateTimeToFirstRevenue(
+        type,
+        entryBarrier,
+        skillGapDays
+      );
+      
+      // Calculate ROI score
+      const roiScore = this.calculateROIScore(
+        estimatedIncome,
+        { min: 100, max: 500 },
+        { min: 10, max: 20 },
+        type,
+        category
+      );
+      
+      // Calculate market demand
+      const marketDemandScore = marketDataService.calculateMarketDemandScore(type, category);
+      const marketDemand = marketDemandScore > 0.7 ? 'HIGH' : marketDemandScore > 0.4 ? 'MEDIUM' : 'LOW';
       
       return {
         id: generateOpportunityId('fallback', type.toLowerCase()),
         source: 'anthropic-fallback',
         title,
-        description: `A ${type.toLowerCase()} opportunity based on your skills.`,
+        description: `A ${type.toLowerCase()} opportunity based on your ${category} skills.`,
         requiredSkills: preferences.skills.slice(0, 3),
         niceToHaveSkills: preferences.skills.slice(3, 5),
         type,
-        estimatedIncome: { min: 500, max: 2000, timeframe: 'month' },
+        estimatedIncome,
         startupCost: { min: 100, max: 500 },
         timeRequired: { min: 10, max: 20 },
-        entryBarrier: RiskLevel.MEDIUM,
-        marketDemand: 'MEDIUM',
+        entryBarrier,
+        marketDemand,
         stepsToStart: [
           'Research the market',
           'Develop your skills',
@@ -457,18 +524,45 @@ export class AnthropicHelper {
           name: 'John Doe',
           background: 'Started with similar skills',
           journey: 'Built a client base over 6 months',
-          outcome: 'Now earns $3,000/month'
+          outcome: `Now earns $${estimatedIncome.min}-${estimatedIncome.max} per ${estimatedIncome.timeframe}`
         }],
         resources: [
           { title: 'Getting Started Guide', url: 'https://example.com/guide' },
           { title: 'Industry Overview', url: 'https://example.com/overview' }
         ],
-        skillGapDays: 14,
+        skillGapDays,
         matchScore: 0.7,
-        timeToFirstRevenue: '1-2 months',
-        roiScore: 75
+        timeToFirstRevenue,
+        roiScore
       };
     });
+  }
+  
+  /**
+   * Derive a category from skills to use with market data
+   */
+  private deriveCategoryFromSkills(skills: string[]): string {
+    // Default category
+    let category = 'general';
+    
+    // Check for common categories in skills
+    const allSkills = skills.join(' ').toLowerCase();
+    
+    if (allSkills.includes('design') || allSkills.includes('photoshop') || allSkills.includes('illustrator')) {
+      category = 'design';
+    } else if (allSkills.includes('write') || allSkills.includes('content') || allSkills.includes('blog')) {
+      category = 'writing';
+    } else if (allSkills.includes('code') || allSkills.includes('program') || allSkills.includes('develop')) {
+      category = 'web_development';
+    } else if (allSkills.includes('teach') || allSkills.includes('tutor') || allSkills.includes('education')) {
+      category = 'education';
+    } else if (allSkills.includes('video') || allSkills.includes('youtube') || allSkills.includes('edit')) {
+      category = 'video';
+    } else if (allSkills.includes('market') || allSkills.includes('seo') || allSkills.includes('social')) {
+      category = 'marketing';
+    }
+    
+    return category;
   }
 }
 

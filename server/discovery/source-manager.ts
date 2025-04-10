@@ -111,7 +111,7 @@ export class SourceManager {
             return Array.isArray(result) ? result : [];
           } catch (err) {
             if (source.handleError) {
-              source.handleError(err);
+              source.handleError(err instanceof Error ? err : String(err));
             }
             return [];
           }

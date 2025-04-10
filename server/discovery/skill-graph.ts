@@ -259,15 +259,15 @@ export class SkillGraph {
     const matches: string[] = [];
 
     // Direct match first
-    for (const [id, skill] of this.skills.entries()) {
+    Array.from(this.skills.entries()).forEach(([id, skill]) => {
       if (normalized.includes(skill.name.toLowerCase())) {
         matches.push(id);
       }
-    }
+    });
 
     // If no direct matches, look for partial matches
     if (matches.length === 0) {
-      for (const [id, skill] of this.skills.entries()) {
+      Array.from(this.skills.entries()).forEach(([id, skill]) => {
         // Check if any words in the skill name match
         const skillWords = skill.name.toLowerCase().split(/\\s+/);
         for (const word of skillWords) {
@@ -276,7 +276,7 @@ export class SkillGraph {
             break;
           }
         }
-      }
+      });
     }
 
     return matches;
@@ -422,24 +422,24 @@ export class SkillGraph {
     let totalDays = 0;
 
     // Required skills first (higher weight)
-    for (const skillId of [...new Set(requiredSkillIds)]) {
+    Array.from(new Set(requiredSkillIds)).forEach(skillId => {
       if (!userSkillIds.includes(skillId)) {
         const learningTime = this.calculateLearningTime(skillId, userSkillIds);
         const days = learningTime.average;
         breakdownBySkill[skillId] = days;
         totalDays += days;
       }
-    }
+    });
 
     // Nice-to-have skills (lower weight)
-    for (const skillId of [...new Set(niceToHaveSkillIds)]) {
+    Array.from(new Set(niceToHaveSkillIds)).forEach(skillId => {
       if (!userSkillIds.includes(skillId) && !requiredSkillIds.includes(skillId)) {
         const learningTime = this.calculateLearningTime(skillId, userSkillIds);
         const days = Math.round(learningTime.average * 0.7); // Less time for nice-to-have
         breakdownBySkill[skillId] = days;
         totalDays += days;
       }
-    }
+    });
 
     // If we don't have any matched skills in our graph, fall back to the old approach
     if (Object.keys(breakdownBySkill).length === 0) {
@@ -487,24 +487,30 @@ export class SkillGraph {
     const niceToHaveSkillDaysMin = configManager.get('skillGap.niceToHaveSkillDaysMin') || 3;
     const niceToHaveSkillDaysMax = configManager.get('skillGap.niceToHaveSkillDaysMax') || 7;
     
+    // Convert to numbers to prevent TypeScript errors
+    const reqMin = Number(requiredSkillDaysMin);
+    const reqMax = Number(requiredSkillDaysMax);
+    const niceMin = Number(niceToHaveSkillDaysMin);
+    const niceMax = Number(niceToHaveSkillDaysMax);
+    
     // Calculate skill gap days
     const requiredSkillDays = missingRequired.length * 
-      Math.floor(Math.random() * (requiredSkillDaysMax - requiredSkillDaysMin + 1) + requiredSkillDaysMin);
+      Math.floor(Math.random() * (reqMax - reqMin + 1) + reqMin);
     
     const niceToHaveSkillDays = missingNiceToHave.length * 
-      Math.floor(Math.random() * (niceToHaveSkillDaysMax - niceToHaveSkillDaysMin + 1) + niceToHaveSkillDaysMin);
+      Math.floor(Math.random() * (niceMax - niceMin + 1) + niceMin);
     
     // Create a simple breakdown
     const breakdownBySkill: Record<string, number> = {};
     missingRequired.forEach(skill => {
       breakdownBySkill[skill] = Math.floor(
-        Math.random() * (requiredSkillDaysMax - requiredSkillDaysMin + 1) + requiredSkillDaysMin
+        Math.random() * (reqMax - reqMin + 1) + reqMin
       );
     });
     
     missingNiceToHave.forEach(skill => {
       breakdownBySkill[skill] = Math.floor(
-        Math.random() * (niceToHaveSkillDaysMax - niceToHaveSkillDaysMin + 1) + niceToHaveSkillDaysMin
+        Math.random() * (niceMax - niceMin + 1) + niceMin
       );
     });
     
