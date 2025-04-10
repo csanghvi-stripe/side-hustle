@@ -301,7 +301,7 @@ export default function SavedOpportunitiesPage() {
                                 {new Date(opportunity.createdAt).toLocaleDateString()}
                               </Badge>
                             </div>
-                            <OpportunityCard opportunity={opportunity} />
+                            <OpportunityCard opportunity={opportunity} source="saved" />
                           </div>
                         );
                       })}
