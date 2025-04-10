@@ -47,12 +47,25 @@ export class AnthropicHelper {
       // Create a detailed prompt for Claude to generate personalized opportunities
       const prompt = this.createOpportunityGenerationPrompt(preferences, count);
       
+      // Validate prompt to ensure we don't send empty content
+      if (!prompt || prompt.trim() === '') {
+        logger.error('Empty prompt generated for Anthropic API call');
+        throw new Error('Cannot send empty prompt to Anthropic API');
+      }
+      
+      // Get system prompt with validation
+      const systemPrompt = this.getSystemPrompt();
+      if (!systemPrompt || systemPrompt.trim() === '') {
+        logger.error('Empty system prompt for Anthropic API call');
+        throw new Error('Cannot send empty system prompt to Anthropic API');
+      }
+      
       // Call Anthropic API
       const response = await anthropic.messages.create({
         model: 'claude-3-7-sonnet-20250219',
         max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
-        system: this.getSystemPrompt(),
+        system: systemPrompt,
       });
       
       // Parse the response to extract opportunities

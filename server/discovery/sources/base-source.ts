@@ -56,6 +56,11 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
     try {
       return await this.fetchOpportunities({
         skills,
+        timeAvailability: preferences.timeAvailability || 'any',
+        riskAppetite: preferences.riskAppetite || 'medium',
+        incomeGoals: preferences.incomeGoals || 0,
+        workPreference: preferences.workPreference,
+        additionalDetails: preferences.additionalDetails,
         preferences
       });
     } catch (error) {
@@ -94,9 +99,10 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
       });
       
       return response.data;
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       if (retries > 0) {
-        logger.warn(`Error fetching ${url}, retrying (${retries} attempts left): ${error.message}`);
+        logger.warn(`Error fetching ${url}, retrying (${retries} attempts left): ${error.message || 'Unknown error'}`);
         // Exponential backoff
         await sleep(2000 * (4 - retries));
         return this.fetchWithRetry(url, {
@@ -105,7 +111,7 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
         });
       }
       
-      logger.error(`Failed to fetch ${url} after retries: ${error.message}`);
+      logger.error(`Failed to fetch ${url} after retries: ${error.message || 'Unknown error'}`);
       return null;
     }
   }
@@ -160,9 +166,10 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
   /**
    * Standard error handling for all sources
    */
-  protected handleError(error: any, context: string): void {
+  public handleError(error: any, context?: string): void {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`Error in ${this.name} source (${context}): ${errorMessage}`);
+    const contextInfo = context ? ` (${context})` : '';
+    logger.error(`Error in ${this.name} source${contextInfo}: ${errorMessage}`);
   }
   
   /**

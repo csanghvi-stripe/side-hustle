@@ -30,6 +30,7 @@ export interface RawOpportunity {
   timeRequired: {
     min: number; // Hours per week
     max: number;
+    timeframe?: string; // Default is "weekly"
   };
   entryBarrier: RiskLevel;
   stepsToStart: string[];
@@ -95,6 +96,7 @@ export interface UserDiscoveryInput {
   additionalDetails?: string;
   discoverable?: boolean;
   useEnhanced?: boolean;
+  preferences?: DiscoveryPreferences; // Added for compatibility with getOpportunities
 }
 
 // Added structure for success stories
@@ -135,13 +137,12 @@ export interface EnrichedOpportunity extends Omit<RawOpportunity, 'resourceLinks
 export interface OpportunitySource {
   name: string;
   id: string;
-  description?: string;
-  capabilities?: string[];
-  isEnabled?: boolean;
-  active?: boolean;
+  description: string;
+  capabilities: string[];
+  isEnabled: boolean;
   getOpportunities(skills: string[], preferences: DiscoveryPreferences): Promise<RawOpportunity[]>;
-  handleError?: (error: Error | string) => void;
-  findOpportunities?: (skills: string[], preferences: DiscoveryPreferences) => Promise<RawOpportunity[]>;
+  handleError?: (error: any, context?: string) => void;
+  fetchOpportunities?(input: UserDiscoveryInput): Promise<RawOpportunity[]>;
 }
 
 // Classification of opportunity types
