@@ -39,15 +39,39 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const { toast } = useToast();
 
-  // Fix bug: showing all opportunities of selected type rather than limiting to 3
+  // Fix bug: showing opportunities with the correct type classification
   const filteredOpportunities =
     activeTab === "all"
       ? results.opportunities
       : results.opportunities.filter((opp) => {
-          console.log("opp.type:", opp.type);
-          const oppType =
-            typeof opp.type === "string" ? opp.type : String(opp.type);
-          return oppType === activeTab || oppType === String(activeTab);
+          // Normalize types using our helper function
+          let oppType;
+          
+          if (typeof opp.type === "string") {
+            // Convert types from DB like "FREELANCE" to our enum values like "Freelance"
+            const lowerType = opp.type.toLowerCase();
+            
+            if (lowerType.includes("freelance")) {
+              oppType = "Freelance";
+            } else if (lowerType.includes("digital") || lowerType.includes("product")) {
+              oppType = "Digital Product";
+            } else if (lowerType.includes("content")) {
+              oppType = "Content Creation";
+            } else if (lowerType.includes("service")) {
+              oppType = "Service-Based";
+            } else if (lowerType.includes("passive")) {
+              oppType = "Passive Income";
+            } else if (lowerType.includes("info")) {
+              oppType = "Info Product";
+            } else {
+              oppType = "Freelance"; // Default
+            }
+          } else {
+            oppType = String(opp.type);
+          }
+          
+          console.log(`Opportunity "${opp.title}" - Original type: ${opp.type}, Normalized: ${oppType}, Tab: ${activeTab}`);
+          return oppType === activeTab;
         });
 
   const skillsList = results.userProfile.skills.join(", ");

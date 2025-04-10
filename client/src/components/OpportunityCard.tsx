@@ -625,12 +625,9 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
           </div>
 
           {/* View Details Button */}
-          <div className="mt-3">
-            <Link
-              href={`/saved-opportunities/${opportunity.id}`}
-              className="w-full"
-            >
-              <Button variant="outline" className="w-full" size="sm">
+          <div className="mt-3 flex justify-end">
+            <Link href={`/opportunity/${opportunity.id}`}>
+              <Button variant="outline" size="sm" className="px-3 py-1 h-8">
                 View Details
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
