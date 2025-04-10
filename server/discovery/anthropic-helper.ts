@@ -40,9 +40,15 @@ export class AnthropicHelper {
     try {
       logger.info(`Using Anthropic AI to generate ${count} thoughtful opportunities`);
       
-      // Get the template and template ID
-      const template = promptManager.getTemplate('opportunityGeneration');
+      // Get the template and template ID - use consistent naming convention for all prompts
+      const templateType = 'opportunityGeneration';
+      logger.info(`Getting template for type: ${templateType}`);
+      const template = promptManager.getTemplate(templateType);
       const templateId = template.id;
+      
+      // Log the available template IDs for debugging
+      const templateTypes = Array.from(promptManager['templates'].keys());
+      logger.info(`Available template types: ${JSON.stringify(templateTypes)}`);
       
       // Create a detailed prompt for Claude to generate personalized opportunities
       const prompt = this.createOpportunityGenerationPrompt(preferences, count);
@@ -121,7 +127,9 @@ export class AnthropicHelper {
 
     // Use the prompt manager's fillTemplate method instead of doing manual replacements
     try {
-      const filledTemplate = promptManager.fillTemplate('opportunity_generation', {
+      // Use the same templateType variable as defined in generateOpportunities() for consistency
+      const templateType = 'opportunityGeneration';
+      const filledTemplate = promptManager.fillTemplate(templateType, {
         count: String(count),
         skillsText,
         timeText, 
@@ -133,9 +141,11 @@ export class AnthropicHelper {
       
       // Verify template length
       if (!filledTemplate || filledTemplate.trim() === '') {
-        logger.error(`Generated empty prompt after template filling. Template type: opportunity_generation`);
-        // Try the camelCase version as fallback
-        const fallbackTemplate = promptManager.fillTemplate('opportunityGeneration', {
+        logger.error(`Generated empty prompt after template filling. Template type: ${templateType}`);
+        // Try the snake_case version as fallback
+        const snakeCaseType = 'opportunity_generation';
+        logger.info(`Trying alternative template format: ${snakeCaseType}`);
+        const fallbackTemplate = promptManager.fillTemplate(snakeCaseType, {
           count: String(count),
           skillsText,
           timeText, 
