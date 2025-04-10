@@ -323,8 +323,19 @@ const OpportunityDetailPage = () => {
   };
 
   const handleAddToActionPlan = () => {
+    if (!id) return;
+    
+    // Store opportunity name in localStorage for the action plan page to use
+    if (opportunityData.title) {
+      localStorage.setItem(`opportunity_${id}_name`, opportunityData.title);
+    }
+    
+    // Navigate to the action plan page with the opportunity ID
+    window.location.href = `/action-plan?opportunityId=${id}`;
+    
     toast({
-      description: "Added to your action plan. View it in the 'Action Plans' section.",
+      title: "Creating action plan",
+      description: "Taking you to the action plan generator for this opportunity.",
     });
   };
 
