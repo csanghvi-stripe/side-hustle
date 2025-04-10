@@ -89,6 +89,9 @@ export class AnthropicHelper {
         throw new Error('Cannot send empty system prompt to Anthropic API');
       }
       
+      // Log that we're about to call the Anthropic API
+      logger.info(`Calling Anthropic API with claude-3-7-sonnet-20250219 model, prompt length: ${prompt.length}, system prompt length: ${systemPrompt.length}`);
+      
       // Call Anthropic API
       const response = await anthropic.messages.create({
         model: 'claude-3-7-sonnet-20250219',
@@ -97,12 +100,19 @@ export class AnthropicHelper {
         system: systemPrompt,
       });
       
-      // Parse the response to extract opportunities
-      const contentBlock = response.content[0];
-      if (contentBlock.type !== 'text') {
+      // Get the response text and process it
+      const responseContent = response.content[0];
+      
+      // Log the response
+      if (responseContent.type === 'text') {
+        logger.info(`Received Anthropic API response: ${responseContent.text.substring(0, 100)}...`);
+      } else {
+        logger.info(`Received Anthropic API response of type: ${responseContent.type}`);
         throw new Error('Unexpected response format from Anthropic AI');
       }
-      const opportunities = this.parseAnthropicResponse(contentBlock.text);
+      
+      // Parse the response to extract opportunities
+      const opportunities = this.parseAnthropicResponse(responseContent.text);
       
       // Ensure required fields and formatting
       const enhancedOpportunities = this.enhanceOpportunities(opportunities, preferences);
@@ -187,7 +197,7 @@ export class AnthropicHelper {
         throw new Error('Could not generate a valid prompt using any template variant');
       }
       
-      logger.info(`Using template ${usedTemplate} successfully, length: ${filledTemplate.length}`);
+      logger.info(`Using template ${usedTemplate} successfully, length: ${filledTemplate.length}, preview: "${filledTemplate.substring(0, 100)}..."`);
       return filledTemplate;
     } catch (error) {
       logger.error(`Error filling opportunity generation template: ${error}`);
@@ -214,14 +224,21 @@ export class AnthropicHelper {
    */
   private parseAnthropicResponse(responseText: string): any[] {
     try {
+      logger.info(`Parsing Anthropic response of length ${responseText.length}, first 100 chars: "${responseText.substring(0, 100)}..."`);
+      
       // First try if the entire response is valid JSON
       try {
+        logger.info(`Attempting to parse entire response as JSON`);
         const parsed = JSON.parse(responseText);
         if (Array.isArray(parsed)) {
+          logger.info(`Successfully parsed entire response as JSON array with ${parsed.length} items`);
           return parsed;
         }
+        logger.info(`Successfully parsed entire response as single JSON object, wrapping in array`);
         return [parsed]; // If it's a single object, wrap it in an array
-      } catch (parseError) {
+      } catch (error) {
+        const parseError = error as Error;
+        logger.info(`Response is not valid JSON, attempting extraction: ${parseError.message}`);
         // Not valid JSON, continue with extraction
       }
       
@@ -231,12 +248,16 @@ export class AnthropicHelper {
       
       if (startBracket >= 0 && endBracket > startBracket) {
         try {
+          logger.info(`Found potential JSON array at positions ${startBracket}-${endBracket}`);
           const jsonArray = responseText.substring(startBracket, endBracket + 1);
           const parsed = JSON.parse(jsonArray);
           if (Array.isArray(parsed)) {
+            logger.info(`Successfully extracted JSON array with ${parsed.length} items`);
             return parsed;
           }
-        } catch (arrayError) {
+        } catch (error) {
+          const arrayError = error as Error;
+          logger.warn(`Failed to parse as array: ${arrayError.message}`);
           // Failed to parse as array
         }
       }
@@ -247,10 +268,14 @@ export class AnthropicHelper {
       
       if (startBrace >= 0 && endBrace > startBrace) {
         try {
+          logger.info(`Found potential JSON object at positions ${startBrace}-${endBrace}`);
           const jsonObj = responseText.substring(startBrace, endBrace + 1);
           const parsed = JSON.parse(jsonObj);
+          logger.info(`Successfully extracted single JSON object, wrapping in array`);
           return [parsed]; // Wrap single object in array
-        } catch (objError) {
+        } catch (error) {
+          const objError = error as Error;
+          logger.warn(`Failed to parse as object: ${objError.message}`);
           // Failed to parse as object
         }
       }
