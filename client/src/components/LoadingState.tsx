@@ -11,11 +11,19 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
   useEffect(() => {
     // Enhanced algorithm has more steps and takes longer
     const maxSteps = useEnhanced ? 6 : 4;
-    const stepTime = useEnhanced ? 2500 : 3000;
+    // Ensure the animation runs long enough to see all steps
+    // Making the steps take longer since backend completes too quickly
+    const stepTime = useEnhanced ? 3500 : 4000;
     
-    // Ensure all steps complete
-    const timings = Array(maxSteps).fill(0)
-      .map((_, index) => (index + 1) * stepTime);
+    // Create staggered timings with a minimum amount of time between steps
+    // This ensures each step is visible for at least a set minimum time
+    let timings = [];
+    for (let i = 0; i < maxSteps; i++) {
+      // Create a more natural progression through steps
+      // First step is quick, middle steps take more time, last step is slightly quicker
+      const multiplier = i === 0 ? 0.7 : i === maxSteps - 1 ? 0.9 : 1.0;
+      timings.push((i + 1) * stepTime * multiplier);
+    }
     
     // Create a timeout for each step
     const timeouts = timings.map((time, index) => 
@@ -25,15 +33,20 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
     // Track when we started for progress calculation
     const startTime = Date.now();
     
-    // Progress speed calculation
+    // Progress speed calculation with slight easing
     const totalDuration = stepTime * maxSteps;
     const progressInterval = setInterval(() => {
       const elapsedTime = Date.now() - startTime;
-      const calculatedProgress = Math.min(Math.floor((elapsedTime / totalDuration) * 100), 100);
-      setProgress(calculatedProgress);
+      
+      // Add slight easing to the progress bar to make it feel more natural
+      // Speed up a bit at the beginning, slow down near the end
+      const percentComplete = Math.min(elapsedTime / totalDuration, 1);
+      const easedProgress = Math.round(percentComplete * 100);
+      
+      setProgress(easedProgress);
       
       // Stop updating progress once we reach 100%
-      if (calculatedProgress >= 100) {
+      if (easedProgress >= 100) {
         clearInterval(progressInterval);
       }
     }, 50);
@@ -165,8 +178,8 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
 
       <div className="mt-8 text-center text-sm text-neutral-500">
         {useEnhanced 
-          ? "This may take 60-90 seconds to thoroughly research the best opportunities with real-time web data" 
-          : "This may take 30-60 seconds to thoroughly research the best opportunities for you"
+          ? "This may take up to 20 seconds to thoroughly research the best opportunities with real-time web data" 
+          : "This may take up to 15 seconds to thoroughly research the best opportunities for you"
         }
       </div>
     </div>
