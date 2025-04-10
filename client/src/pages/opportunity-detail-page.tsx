@@ -443,7 +443,7 @@ export default function OpportunityDetailPage() {
               <CardTitle>Skills Required</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {opportunityData.requiredSkills?.map((skill, index) => (
+              {opportunityData?.requiredSkills?.map((skill, index) => (
                 <div key={index} className="text-sm">
                   <div className="flex items-center">
                     <div className={`w-2 h-2 rounded-full ${index < 3 ? 'bg-green-500' : 'bg-amber-500'} mr-2`}></div>
@@ -451,6 +451,9 @@ export default function OpportunityDetailPage() {
                   </div>
                 </div>
               ))}
+              {(!opportunityData?.requiredSkills || opportunityData.requiredSkills.length === 0) && (
+                <div className="text-sm text-neutral-500">No specific skills required</div>
+              )}
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -467,7 +470,7 @@ export default function OpportunityDetailPage() {
               <CardTitle>Resources</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {opportunityData.resources && Array.isArray(opportunityData.resources) && opportunityData.resources.slice(0, 3).map((resource, index) => (
+              {opportunityData?.resources && Array.isArray(opportunityData.resources) && opportunityData.resources.slice(0, 3).map((resource, index) => (
                 <a 
                   key={index}
                   href={resource.url}
@@ -486,6 +489,9 @@ export default function OpportunityDetailPage() {
                   </div>
                 </a>
               ))}
+              {(!opportunityData?.resources || !Array.isArray(opportunityData.resources) || opportunityData.resources.length === 0) && (
+                <div className="text-sm text-neutral-500">Resources will be available soon</div>
+              )}
               
               <Button 
                 variant="outline" 
@@ -559,7 +565,7 @@ export default function OpportunityDetailPage() {
                           <li className="flex items-start">
                             <Check className="w-4 h-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
                             <p className="text-neutral-700 text-sm">
-                              <span className="font-medium">Growing market:</span> Increasing demand for {opportunityData.type ? opportunityData.type.toLowerCase() : 'these'} services across industries.
+                              <span className="font-medium">Growing market:</span> Increasing demand for {opportunityData?.type ? opportunityData.type.toLowerCase() : 'these'} services across industries.
                             </p>
                           </li>
                         </ul>
@@ -571,7 +577,7 @@ export default function OpportunityDetailPage() {
                           Steps to Start
                         </h3>
                         <ol className="space-y-3">
-                          {opportunityData.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.map((step, index) => (
+                          {opportunityData?.stepsToStart && Array.isArray(opportunityData.stepsToStart) && opportunityData.stepsToStart.map((step, index) => (
                             <li key={index} className="flex">
                               <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3 mt-0.5">
                                 {index + 1}
@@ -584,6 +590,11 @@ export default function OpportunityDetailPage() {
                               </div>
                             </li>
                           ))}
+                          {(!opportunityData?.stepsToStart || !Array.isArray(opportunityData.stepsToStart) || opportunityData.stepsToStart.length === 0) && (
+                            <li className="text-sm text-neutral-500">
+                              Detailed steps to start will be available soon
+                            </li>
+                          )}
                         </ol>
                       </div>
                       
