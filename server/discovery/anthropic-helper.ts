@@ -11,6 +11,8 @@ import { logger } from './utils';
 import { DiscoveryPreferences, RawOpportunity } from './types';
 import { OpportunityType, RiskLevel } from '../../shared/schema';
 import { v4 as uuidv4 } from 'uuid';
+import { promptManager } from './prompt-manager';
+import { configManager } from './config-manager';
 
 // Initialize Anthropic client
 // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
@@ -35,6 +37,10 @@ export class AnthropicHelper {
   ): Promise<RawOpportunity[]> {
     try {
       logger.info(`Using Anthropic AI to generate ${count} thoughtful opportunities`);
+      
+      // Get the template and template ID
+      const template = promptManager.getTemplate('opportunityGeneration');
+      const templateId = template.id;
       
       // Create a detailed prompt for Claude to generate personalized opportunities
       const prompt = this.createOpportunityGenerationPrompt(preferences, count);
