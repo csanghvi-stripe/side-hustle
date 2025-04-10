@@ -153,25 +153,22 @@ const riskLevelColors: Record<string, string> = {
 
 // Function to get appropriate icon based on opportunity type
 const getIconForType = (type: string) => {
-  const typeUpperCase = type?.toUpperCase() || '';
+  // Normalize the type first
+  const normalizedDisplayType = normalizeOpportunityType(type);
   
-  // Handle schema enum types
-  if (typeUpperCase === 'FREELANCE' || typeUpperCase.includes('FREELANCE')) {
+  // Return icon based on normalized display type
+  if (normalizedDisplayType === "Freelance") {
     return <Briefcase className="w-5 h-5 text-blue-600" />;
-  } else if (typeUpperCase === 'DIGITAL_PRODUCT' || typeUpperCase.includes('DIGITAL') || typeUpperCase.includes('PRODUCT')) {
+  } else if (normalizedDisplayType === "Digital Product") {
     return <Package className="w-5 h-5 text-purple-600" />;
-  } else if (typeUpperCase === 'CONTENT' || typeUpperCase.includes('CONTENT') || typeUpperCase.includes('CREATION')) {
+  } else if (normalizedDisplayType === "Content Creation") {
     return <Brush className="w-5 h-5 text-pink-600" />;
-  } else if (typeUpperCase === 'SERVICE' || typeUpperCase.includes('SERVICE')) {
+  } else if (normalizedDisplayType === "Service-Based") {
     return <CircleDollarSign className="w-5 h-5 text-green-600" />;
-  } else if (typeUpperCase === 'PASSIVE' || typeUpperCase.includes('PASSIVE')) {
+  } else if (normalizedDisplayType === "Passive Income") {
     return <Monitor className="w-5 h-5 text-cyan-600" />;
-  } else if (typeUpperCase === 'INFO_PRODUCT' || typeUpperCase.includes('INFO') || typeUpperCase.includes('COURSE')) {
+  } else if (normalizedDisplayType === "Info Product") {
     return <Presentation className="w-5 h-5 text-amber-600" />;
-  } else if (typeUpperCase.includes('SOFTWARE') || typeUpperCase.includes('DEVELOP')) {
-    return <Code className="w-5 h-5 text-blue-600" />;
-  } else if (typeUpperCase.includes('MARKET')) {
-    return <Megaphone className="w-5 h-5 text-red-600" />;
   } else {
     // Default case
     return <Briefcase className="w-5 h-5 text-neutral-600" />;
@@ -250,39 +247,10 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
       const parsed = JSON.parse(opportunity.opportunityData);
       console.log("Parsed opportunity JSON data:", parsed);
 
-      // Normalize opportunity type to match enum values
-      let normalizedType =
-        parsed.type || (opportunity as any).type || "Freelance";
-
-      // Ensure type matches one of our enum values for filtering
-      if (normalizedType && typeof normalizedType === "string") {
-        // Convert to title case to match our enum values
-        const typeWords = normalizedType.split(" ");
-        normalizedType = typeWords
-          .map(
-            (word) =>
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-          )
-          .join(" ");
-
-        // Map to defined opportunity types
-        if (normalizedType.includes("Freelance")) {
-          normalizedType = "Freelance";
-        } else if (
-          normalizedType.includes("Digital") ||
-          normalizedType.includes("Product")
-        ) {
-          normalizedType = "Digital Product";
-        } else if (normalizedType.includes("Content")) {
-          normalizedType = "Content Creation";
-        } else if (normalizedType.includes("Service")) {
-          normalizedType = "Service-Based";
-        } else if (normalizedType.includes("Passive")) {
-          normalizedType = "Passive Income";
-        } else {
-          normalizedType = "Freelance"; // Default to Freelance
-        }
-      }
+      // Use our helper function to normalize the opportunity type
+      let normalizedType = normalizeOpportunityType(
+        parsed.type || (opportunity as any).type
+      );
 
       // Use metrics helper for more accurate values
       const metrics = calculateOpportunityMetrics(
@@ -347,39 +315,10 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
           "This opportunity allows you to leverage your skills in a flexible way to generate income.";
       }
 
-      // Normalize opportunity type to match enum values
-      let normalizedType =
-        parsed.type || (opportunity as any).type || "Freelance";
-
-      // Ensure type matches one of our enum values for filtering
-      if (normalizedType && typeof normalizedType === "string") {
-        // Convert to title case to match our enum values
-        const typeWords = normalizedType.split(" ");
-        normalizedType = typeWords
-          .map(
-            (word) =>
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-          )
-          .join(" ");
-
-        // Map to defined opportunity types
-        if (normalizedType.includes("Freelance")) {
-          normalizedType = "Freelance";
-        } else if (
-          normalizedType.includes("Digital") ||
-          normalizedType.includes("Product")
-        ) {
-          normalizedType = "Digital Product";
-        } else if (normalizedType.includes("Content")) {
-          normalizedType = "Content Creation";
-        } else if (normalizedType.includes("Service")) {
-          normalizedType = "Service-Based";
-        } else if (normalizedType.includes("Passive")) {
-          normalizedType = "Passive Income";
-        } else {
-          normalizedType = "Freelance"; // Default to Freelance
-        }
-      }
+      // Use our helper function to normalize the opportunity type
+      let normalizedType = normalizeOpportunityType(
+        parsed.type || (opportunity as any).type
+      );
 
       // Use metrics helper for more accurate values
       const secondMetrics = calculateOpportunityMetrics(
@@ -580,23 +519,21 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
                 Potential Monthly Income
                 <Tooltip>
                   <TooltipTrigger>
-                    <Info className="h-3 w-3 ml-1 text-neutral-400" />
+                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="max-w-xs">
-                      Estimated income range based on market rates for this
-                      opportunity type. Actual earnings may vary based on your
-                      skills, time invested, and market conditions.
+                      Estimated monthly income you could earn from this
+                      opportunity once established. Ranges depend on your skill
+                      level, dedication, and market conditions.
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </p>
-              <div className="flex items-center mt-1">
-                <DollarSign className="w-4 h-4 text-green-500 mr-1" />
-                <span className="font-medium">
-                  {opportunityData.incomePotential}
-                </span>
-              </div>
+              <p className="text-sm font-medium mt-1 flex items-center">
+                <DollarSign className="h-4 w-4 text-green-500 mr-0.5" />
+                {opportunityData.incomePotential}
+              </p>
             </div>
 
             <div>
@@ -604,70 +541,99 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
                 Time to First Revenue
                 <Tooltip>
                   <TooltipTrigger>
-                    <Info className="h-3 w-3 ml-1 text-neutral-400" />
+                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="max-w-xs">
-                      Average time frame to earn your first dollar based on user
-                      data and industry averages. Focused effort can often
-                      reduce this timeline.
+                      Estimated time from starting the opportunity to receiving
+                      your first payment. This assumes focused effort on
+                      launching your service or product.
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </p>
-              <div className="flex items-center mt-1">
-                <Clock className="w-4 h-4 text-amber-500 mr-1" />
-                <span className="font-medium">
-                  {opportunityData.timeToFirstRevenue}
-                </span>
+              <p className="text-sm font-medium mt-1 flex items-center">
+                <Clock className="h-4 w-4 text-amber-500 mr-0.5" />
+                {opportunityData.timeToFirstRevenue}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-neutral-500 flex items-center">
+                Skills Assessment
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      Estimated days to learn the necessary skills to start this
+                      opportunity. This is based on your current skill profile
+                      and the requirements for the opportunity.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </p>
+              <div className="text-sm font-medium mt-1">
+                <button
+                  onClick={toggleSkillGapExpanded}
+                  className="flex items-center text-left w-full"
+                >
+                  <Target className="h-4 w-4 text-purple-500 mr-0.5" />
+                  {opportunityData.skillGapDays
+                    ? `${opportunityData.skillGapDays} days to learn`
+                    : "No skill gap"}
+                  <ChevronRight
+                    className={cn(
+                      "h-4 w-4 ml-1 transition-transform",
+                      isSkillGapExpanded ? "rotate-90" : ""
+                    )}
+                  />
+                </button>
+                {isSkillGapExpanded && (
+                  <div className="mt-2 bg-slate-50 p-2 rounded text-xs">
+                    <SkillGapAnalyzer
+                      skillGapDays={opportunityData.skillGapDays || 0}
+                      requiredSkills={opportunityData.requiredSkills || []}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             <div>
               <p className="text-xs text-neutral-500 flex items-center">
-                Skill Gap Closure
+                Startup Cost
                 <Tooltip>
                   <TooltipTrigger>
-                    <Info className="h-3 w-3 ml-1 text-neutral-400" />
+                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="max-w-xs">
-                      Estimated time needed to acquire missing skills required
-                      for this opportunity. Based on your current skill profile
-                      and the requirements for this opportunity type.
+                      Estimated investment needed to start this opportunity,
+                      including tools, software, marketing, and other essential
+                      expenses.
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </p>
-              <div className="flex items-center mt-1">
-                <Target className="w-4 h-4 text-purple-500 mr-1" />
-                <span className="font-medium">
-                  ~{opportunityData.skillGapDays} days
-                </span>
-              </div>
+              <p className="text-sm font-medium mt-1 flex items-center">
+                <Building className="h-4 w-4 text-blue-500 mr-0.5" />
+                {opportunityData.startupCost}
+              </p>
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <Link href={`/opportunity/${opportunity.id}`}>
-              <Button
-                variant="outline"
-                className="w-full transition-all hover:bg-primary hover:text-white group"
-                onClick={() => {
-                  // Add debug logging
-                  console.log(
-                    "View Details clicked for opportunity ID:",
-                    opportunity.id,
-                  );
-                }}
-              >
+          {/* View Details Button */}
+          <div className="mt-3">
+            <Link
+              href={`/saved-opportunities/${opportunity.id}`}
+              className="w-full"
+            >
+              <Button variant="outline" className="w-full" size="sm">
                 View Details
-                <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
-            </Link>
-            <Link href={`/action-plan?opportunityId=${opportunity.id}`}>
-              <Button className="w-full">Create Plan</Button>
             </Link>
           </div>
         </div>
