@@ -99,6 +99,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
             useEnhanced
           });
           
+          // Log detailed information about sources and opportunities
+          console.log(`Discovery completed - Request ID: ${results.requestId}`);
+          console.log(`Total processing time: ${results.performance?.totalDurationMs || 0}ms`);
+          console.log(`Source processing time: ${results.performance?.sourceDurationMs || 0}ms`);
+          
+          // Log source information
+          const sourceStats = {};
+          results.opportunities.forEach(opp => {
+            if (opp.source) {
+              sourceStats[opp.source] = (sourceStats[opp.source] || 0) + 1;
+            }
+          });
+          console.log("Opportunities by source:", JSON.stringify(sourceStats, null, 2));
+          
+          // Log a simplified version of each opportunity
+          console.log("Opportunities (simplified):");
+          results.opportunities.forEach((opp, index) => {
+            console.log(JSON.stringify({
+              index,
+              id: opp.id,
+              title: opp.title,
+              source: opp.source || 'unknown',
+              type: typeof opp.type === 'string' ? opp.type : 'unknown',
+              skills: (opp.requiredSkills || []).slice(0, 3),
+              matchScore: opp.matchScore || 0,
+              income: opp.estimatedIncome ? 
+                `$${opp.estimatedIncome.min}-${opp.estimatedIncome.max}/${opp.estimatedIncome.timeframe}` : 
+                'unknown'
+            }, null, 2));
+          });
+          
           // Transform to match expected response format
           const formattedResults = {
             opportunities: results.opportunities.map(opp => ({

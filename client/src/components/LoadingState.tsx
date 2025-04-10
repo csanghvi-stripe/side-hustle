@@ -11,38 +11,74 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
   useEffect(() => {
     // Enhanced algorithm has more steps and takes longer
     const maxSteps = useEnhanced ? 6 : 4;
-    // Ensure the animation runs long enough to see all steps
-    // Making the steps take longer since backend completes too quickly
-    const stepTime = useEnhanced ? 3500 : 4000;
     
-    // Create staggered timings with a minimum amount of time between steps
-    // This ensures each step is visible for at least a set minimum time
+    // Significantly slow down the animation timing so users can see each step
+    // The backend processes in 1-2 seconds, but we want to show all steps clearly
+    // Each step should be visible for at least this amount of time
+    const minimumStepVisibilityTime = 4000; // 4 seconds per step minimum
+    
+    // Total animation should run for at least this amount of time to ensure all steps are seen
+    const totalMinimumAnimationTime = useEnhanced ? 24000 : 16000; // 24 seconds for enhanced, 16 for regular
+    
+    // Calculate timing for each step to ensure both minimum step time and total animation time
     let timings = [];
     for (let i = 0; i < maxSteps; i++) {
-      // Create a more natural progression through steps
-      // First step is quick, middle steps take more time, last step is slightly quicker
-      const multiplier = i === 0 ? 0.7 : i === maxSteps - 1 ? 0.9 : 1.0;
-      timings.push((i + 1) * stepTime * multiplier);
+      // Distribute the steps more evenly with intentional timing differences:
+      // - First step is slightly quicker (80% of standard time)
+      // - Middle steps take full time 
+      // - Last step is slightly quicker (90% of standard time)
+      const stepPosition = i / (maxSteps - 1); // 0 to 1 position in sequence
+      const multiplier = 
+        i === 0 ? 0.8 :                // First step: 80% of standard time
+        i === maxSteps - 1 ? 0.9 :     // Last step: 90% of standard time
+        stepPosition < 0.33 ? 1.1 :    // Early steps: 110% of standard time (slow them down)
+        stepPosition > 0.66 ? 1.0 :    // Later steps: 100% of standard time
+        1.05;                          // Middle steps: 105% of standard time
+      
+      // Calculate actual step timing, ensuring minimum visibility duration
+      const baseStepTime = totalMinimumAnimationTime / maxSteps;
+      const adjustedStepTime = baseStepTime * multiplier;
+      
+      // Each step starts after the cumulative time of all previous steps
+      // For first step (i=0), this will be the time when step 1 appears (not zero)
+      timings.push(Math.round(adjustedStepTime * (i + 1)));
     }
     
-    // Create a timeout for each step
+    console.log("Loading animation timings (ms):", timings);
+    
+    // Create a timeout for each step transition (not the first step which shows immediately)
     const timeouts = timings.map((time, index) => 
-      setTimeout(() => setStep(index + 1), time)
+      setTimeout(() => {
+        console.log(`Transitioning to step ${index + 1} at ${time}ms`);
+        setStep(index + 1);
+      }, time)
     );
     
     // Track when we started for progress calculation
     const startTime = Date.now();
     
-    // Progress speed calculation with slight easing
-    const totalDuration = stepTime * maxSteps;
+    // Progress speed calculation with improved easing
+    const totalDuration = totalMinimumAnimationTime;
     const progressInterval = setInterval(() => {
       const elapsedTime = Date.now() - startTime;
       
-      // Add slight easing to the progress bar to make it feel more natural
-      // Speed up a bit at the beginning, slow down near the end
-      const percentComplete = Math.min(elapsedTime / totalDuration, 1);
-      const easedProgress = Math.round(percentComplete * 100);
+      // Enhanced easing function to make progress feel more natural:
+      // - Start slightly faster 
+      // - Slow down in the middle sections
+      // - Speed up slightly at the end
+      let percentComplete = Math.min(elapsedTime / totalDuration, 1);
       
+      // Apply cubic easing for more natural progress bar movement (ease-in-out)
+      // This creates a more gradual acceleration and deceleration curve
+      if (percentComplete < 0.5) {
+        // First half: ease in (slow to fast)
+        percentComplete = 4 * percentComplete * percentComplete * percentComplete;
+      } else {
+        // Second half: ease out (fast to slow) 
+        percentComplete = 1 - Math.pow(-2 * percentComplete + 2, 3) / 2;
+      }
+      
+      const easedProgress = Math.round(percentComplete * 100);
       setProgress(easedProgress);
       
       // Stop updating progress once we reach 100%
@@ -178,8 +214,8 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
 
       <div className="mt-8 text-center text-sm text-neutral-500">
         {useEnhanced 
-          ? "This may take up to 20 seconds to thoroughly research the best opportunities with real-time web data" 
-          : "This may take up to 15 seconds to thoroughly research the best opportunities for you"
+          ? "This may take up to 25 seconds to thoroughly research the best opportunities with real-time web data" 
+          : "This may take up to 20 seconds to thoroughly research the best opportunities for you"
         }
       </div>
     </div>
