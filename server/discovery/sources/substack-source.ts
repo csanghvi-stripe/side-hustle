@@ -5,6 +5,7 @@
 import axios from "axios";
 import { BaseOpportunitySource } from "./base-source";
 import { UserDiscoveryInput, RawOpportunity, DiscoveryPreferences } from "../types";
+import { RiskLevel } from "../../../shared/schema";
 import { logger } from "../utils";
 
 /**
@@ -13,9 +14,10 @@ import { logger } from "../utils";
 export class SubstackSource extends BaseOpportunitySource {
   constructor() {
     super(
-      'Substack',
       'substack',
-      'https://substack.com'
+      'Substack',
+      'https://substack.com',
+      'CONTENT'
     );
   }
   
@@ -33,33 +35,7 @@ export class SubstackSource extends BaseOpportunitySource {
     }
   }
   
-  /**
-   * Required implementation of the abstract method from BaseOpportunitySource
-   */
-  public async getOpportunities(
-    skills: string[], 
-    preferences: DiscoveryPreferences
-  ): Promise<RawOpportunity[]> {
-    try {
-      logger.info(`[${this.id}] Getting opportunities for skills: ${skills.join(', ')}`);
-      
-      // Create a minimal input for the fetchOpportunities method
-      const input: UserDiscoveryInput = {
-        userId: 0,
-        skills: skills,
-        timeAvailability: preferences.timeAvailability,
-        riskAppetite: preferences.riskAppetite,
-        incomeGoals: preferences.incomeGoals,
-        workPreference: preferences.workPreference
-      };
-      
-      // Call the existing implementation
-      return await this.fetchOpportunities(input);
-    } catch (error) {
-      logger.error(`Error in getOpportunities for ${this.id}: ${error instanceof Error ? error.message : String(error)}`);
-      return [];
-    }
-  }
+  // We don't need to override getOpportunities since it's already implemented in BaseOpportunitySource
   
   /**
    * Fetch content creation opportunities from Substack

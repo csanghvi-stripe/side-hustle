@@ -195,6 +195,7 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
       timeRequired: data.timeRequired || { min: 0, max: 0, timeframe: 'weekly' },
       startupCost: data.startupCost || { min: 0, max: 0 },
       entryBarrier: data.entryBarrier || RiskLevel.MEDIUM,
+      stepsToStart: data.stepsToStart || ['Research the opportunity', 'Create a plan', 'Start implementation'],
       ...data
     };
   }
