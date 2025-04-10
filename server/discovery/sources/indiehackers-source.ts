@@ -26,7 +26,7 @@ export class IndieHackersSource extends BaseOpportunitySource {
     skills: string[],
     preferences: DiscoveryPreferences
   ): Promise<RawOpportunity[]> {
-    logger.info(`Fetching opportunities from IndieHackers for skills: ${skills.join(', ')}`);
+    logger.info(`[${this.id}] Fetching opportunities from IndieHackers for skills: ${skills.join(', ')}`);
     
     // Check if we have cached results
     const cacheKey = `indiehackers-${skills.sort().join(',')}`;

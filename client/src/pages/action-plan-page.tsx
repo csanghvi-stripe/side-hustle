@@ -43,7 +43,7 @@ export default function ActionPlanPage() {
   });
   
   // Fetch opportunity details if we have an ID but no name
-  const { data: opportunityData } = useQuery({
+  const { data: opportunityData } = useQuery<MonetizationOpportunity>({
     queryKey: [`/api/opportunities/${opportunityId}`],
     enabled: !!opportunityId && !opportunityName
   });
@@ -51,16 +51,25 @@ export default function ActionPlanPage() {
   // Process opportunity data when it changes
   useEffect(() => {
     if (opportunityData && !opportunityName) {
-      let title;
+      let title = "Selected Opportunity"; // Default fallback
       try {
-        // Try to parse opportunity data
-        if (typeof opportunityData.opportunityData === 'string') {
-          const parsed = JSON.parse(opportunityData.opportunityData);
-          title = parsed.title;
-        } else if (opportunityData.opportunityData && (opportunityData.opportunityData as any).title) {
-          title = (opportunityData.opportunityData as any).title;
-        } else {
-          title = opportunityData.title || "Opportunity";
+        if (typeof opportunityData === 'object') {
+          if (typeof opportunityData.opportunityData === 'string') {
+            try {
+              const parsed = JSON.parse(opportunityData.opportunityData);
+              if (parsed && parsed.title) {
+                title = parsed.title;
+              }
+            } catch (parseError) {
+              console.error("Error parsing opportunity data JSON:", parseError);
+            }
+          } else if (opportunityData.opportunityData && 
+                     typeof opportunityData.opportunityData === 'object' && 
+                     'title' in opportunityData.opportunityData) {
+            title = opportunityData.opportunityData.title as string;
+          } else if (opportunityData.title) {
+            title = opportunityData.title;
+          }
         }
         
         setOpportunityName(title);
@@ -69,8 +78,8 @@ export default function ActionPlanPage() {
           localStorage.setItem(`opportunity_${opportunityId}_name`, title);
         }
       } catch (err) {
-        console.error("Failed to parse opportunity data:", err);
-        setOpportunityName((opportunityData as any).title || "Selected Opportunity");
+        console.error("Failed to process opportunity data:", err);
+        setOpportunityName("Selected Opportunity");
       }
     }
   }, [opportunityData, opportunityId, opportunityName]);
