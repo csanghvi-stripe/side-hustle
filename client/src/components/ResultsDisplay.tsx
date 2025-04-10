@@ -193,6 +193,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                         ? RiskLevel.MEDIUM
                         : RiskLevel.LOW,
               }}
+              source="search"
             />
           ))
         ) : (
