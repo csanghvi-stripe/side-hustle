@@ -343,7 +343,7 @@ export default function OpportunityDetailPage() {
               localStorage.removeItem('opportunitySource');
             }}
           >
-            <Link href={isFromSaved ? "/saved-opportunities" : "/"}>
+            <Link href={isFromSaved ? "/saved-opportunities" : "/discover"}>
               <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
               {isFromSaved ? "Back to Saved Opportunities" : "Back to Search Results"}
             </Link>
