@@ -352,13 +352,13 @@ export default function OpportunityDetailPage() {
         
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">{opportunityData.title}</h1>
+            <h1 className="text-3xl font-bold">{opportunityData?.title || 'Opportunity Details'}</h1>
             <div className="flex items-center mt-2">
               <Badge variant="outline" className="mr-2 flex items-center">
-                {getIconForType(opportunityData.type || 'FREELANCE')}
-                <span className="ml-1">{opportunityData.type || 'Opportunity'}</span>
+                {getIconForType(opportunityData?.type || 'FREELANCE')}
+                <span className="ml-1">{opportunityData?.type || 'Opportunity'}</span>
               </Badge>
-              {opportunityData.riskLevel && (
+              {opportunityData?.riskLevel && (
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${riskStyle?.bg || ''} ${riskStyle?.text || ''}`}>
                   {riskStyle?.icon}
                   <span className="ml-1">
@@ -396,10 +396,10 @@ export default function OpportunityDetailPage() {
                   <TrendingUp className="w-4 h-4 mr-2 text-primary" />
                   <span className="font-medium">Bang for Buck Score</span>
                   <span className="ml-auto bg-slate-800 text-white px-2 py-0.5 rounded-md text-sm font-medium">
-                    {opportunityData.roiScore}/100
+                    {opportunityData?.roiScore || 75}/100
                   </span>
                 </div>
-                <Progress value={opportunityData.roiScore} className="h-2" />
+                <Progress value={opportunityData?.roiScore || 75} className="h-2" />
               </div>
               
               <div className="space-y-3 pt-2">
@@ -408,7 +408,7 @@ export default function OpportunityDetailPage() {
                     <DollarSign className="w-4 h-4 mr-1 text-green-500" />
                     Income Potential
                   </span>
-                  <span className="font-medium">{opportunityData.incomePotential}</span>
+                  <span className="font-medium">{opportunityData?.incomePotential || '$500-1000/month'}</span>
                 </div>
                 
                 <div className="flex justify-between items-center text-sm">
@@ -416,7 +416,7 @@ export default function OpportunityDetailPage() {
                     <Building className="w-4 h-4 mr-1 text-blue-500" />
                     Startup Cost
                   </span>
-                  <span className="font-medium">{opportunityData.startupCost}</span>
+                  <span className="font-medium">{opportunityData?.startupCost || '$0-100'}</span>
                 </div>
                 
                 <div className="flex justify-between items-center text-sm">
@@ -424,7 +424,7 @@ export default function OpportunityDetailPage() {
                     <Clock className="w-4 h-4 mr-1 text-amber-500" />
                     Time to Revenue
                   </span>
-                  <span className="font-medium">{opportunityData.timeToFirstRevenue}</span>
+                  <span className="font-medium">{opportunityData?.timeToFirstRevenue || '1-4 weeks'}</span>
                 </div>
                 
                 <div className="flex justify-between items-center text-sm">
@@ -432,7 +432,7 @@ export default function OpportunityDetailPage() {
                     <Target className="w-4 h-4 mr-1 text-purple-500" />
                     Skill Gap
                   </span>
-                  <span className="font-medium">~{opportunityData.skillGapDays} days</span>
+                  <span className="font-medium">~{opportunityData?.skillGapDays || 14} days</span>
                 </div>
               </div>
             </CardContent>
@@ -528,7 +528,7 @@ export default function OpportunityDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-neutral-600">
-                      {opportunityData.description}
+                      {opportunityData?.description || "This opportunity allows you to leverage your skills to generate income with minimal startup costs and a quick path to revenue."}
                     </p>
                     
                     <div className="mt-6 space-y-6">
@@ -633,7 +633,7 @@ export default function OpportunityDetailPage() {
                   <CardContent>
                     <div className="flex items-center mb-4">
                       <div className="bg-slate-800 text-white px-3 py-1 rounded-md text-sm font-medium mr-3">
-                        {opportunityData.roiScore}/100
+                        {opportunityData?.roiScore || 75}/100
                       </div>
                       <p className="text-neutral-600">
                         Bang for buck assessment for this opportunity
@@ -645,7 +645,7 @@ export default function OpportunityDetailPage() {
                         <p className="text-sm text-neutral-500">Potential Monthly Income</p>
                         <div className="flex items-center">
                           <DollarSign className="w-5 h-5 text-green-500 mr-1" />
-                          <span className="font-medium">{opportunityData.incomePotential}</span>
+                          <span className="font-medium">{opportunityData?.incomePotential || '$500-1000/month'}</span>
                         </div>
                       </div>
                       
@@ -653,7 +653,7 @@ export default function OpportunityDetailPage() {
                         <p className="text-sm text-neutral-500">Initial Investment</p>
                         <div className="flex items-center">
                           <Building className="w-5 h-5 text-blue-500 mr-1" />
-                          <span className="font-medium">{opportunityData.startupCost}</span>
+                          <span className="font-medium">{opportunityData?.startupCost || '$0-100'}</span>
                         </div>
                       </div>
                       
@@ -661,7 +661,7 @@ export default function OpportunityDetailPage() {
                         <p className="text-sm text-neutral-500">Time to First Revenue</p>
                         <div className="flex items-center">
                           <Clock className="w-5 h-5 text-amber-500 mr-1" />
-                          <span className="font-medium">{opportunityData.timeToFirstRevenue}</span>
+                          <span className="font-medium">{opportunityData?.timeToFirstRevenue || '1-4 weeks'}</span>
                         </div>
                       </div>
                       
@@ -670,7 +670,7 @@ export default function OpportunityDetailPage() {
                         <div className="flex items-center">
                           <Target className="w-5 h-5 text-red-500 mr-1" />
                           <span className="font-medium">
-                            {typeof opportunityData.riskLevel === 'string' && opportunityData.riskLevel.length > 0
+                            {opportunityData?.riskLevel && typeof opportunityData.riskLevel === 'string' && opportunityData.riskLevel.length > 0
                               ? `${opportunityData.riskLevel.charAt(0).toUpperCase()}${opportunityData.riskLevel.slice(1)}`
                               : 'Medium'
                             }
