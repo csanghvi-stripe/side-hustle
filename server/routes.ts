@@ -8,7 +8,8 @@ import { insertUserProfileSchema, insertMonetizationOpportunitySchema } from "@s
 import * as analytics from "./api/analytics";
 import * as coach from "./api/coach";
 import * as progressAnalysis from "./api/progress-analysis";
-import { discoveryService } from "./discovery";
+// Import the enhanced discovery service instead of the original one
+import { discoveryService } from "./discovery/enhanced-index";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
