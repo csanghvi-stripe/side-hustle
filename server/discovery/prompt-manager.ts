@@ -109,8 +109,11 @@ Please structure your response as a valid JSON array of opportunities that I can
 
 Focus on current (2025) opportunities that are specific to their skills. Please make sure the JSON is valid and directly parseable.
 
-IMPORTANT: Your entire response must be a valid JSON array like this: [{"opportunity1"...}, {"opportunity2"...}]
-Do not include any explanatory text before or after the JSON array.`,
+IMPORTANT: Your entire response must be a valid JSON array. Pay careful attention to proper JSON formatting:
+- Do not use trailing commas
+- Properly escape quotes inside strings with backslashes
+- Ensure all strings are properly enclosed in double quotes
+- Do not include any explanatory text before or after the JSON array.`,
       variables: [
         "count",
         "skillsText",

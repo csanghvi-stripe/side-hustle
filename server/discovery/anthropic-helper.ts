@@ -267,7 +267,48 @@ export class AnthropicHelper {
         `Parsing Anthropic response of length ${responseText.length}`,
       );
 
-      // Try to find content that looks like JSON by searching for array brackets
+      // Strategy 1: Try to parse the entire response as JSON directly
+      try {
+        const parsed = JSON.parse(responseText);
+        if (Array.isArray(parsed)) {
+          logger.info(
+            `Successfully parsed entire response as JSON array with ${parsed.length} items`,
+          );
+          return parsed;
+        } else {
+          logger.info(
+            `Strategy 1 Successfully parsed entire response as single JSON object, wrapping in array`,
+          );
+          return [parsed];
+        }
+      } catch (error) {
+        logger.info(`Direct parsing failed: ${(error as Error).message}`);
+      }
+
+      // Strategy 2: Try to repair the entire response with jsonrepair
+      try {
+        if (typeof jsonrepair === "function") {
+          const repairedJson = jsonrepair(responseText);
+          const parsed = JSON.parse(repairedJson);
+          if (Array.isArray(parsed)) {
+            logger.info(
+              `Successfully repaired and parsed as JSON array with ${parsed.length} items`,
+            );
+            return parsed;
+          } else {
+            logger.info(
+              `Strategy 2 Successfully repaired and parsed as single object, wrapping in array`,
+            );
+            return [parsed];
+          }
+        }
+      } catch (error) {
+        logger.info(
+          `JSON repair of entire response failed: ${(error as Error).message}`,
+        );
+      }
+
+      // Strategy 3: Find and parse JSON array using regex
       const jsonRegex = /(\[[\s\S]*\])/m;
       const jsonMatches = responseText.match(jsonRegex);
 
@@ -288,58 +329,28 @@ export class AnthropicHelper {
           logger.warn(
             `Failed to parse matched array: ${(error as Error).message}`,
           );
-        }
-      }
 
-      // If we couldn't find/parse an array, try to find individual objects
-      const objectsRegex = /(\{[\s\S]*?\})/g;
-      const objectMatches = Array.from(responseText.matchAll(objectsRegex));
-
-      if (objectMatches.length > 0) {
-        const parsedObjects = [];
-        for (let match of objectMatches) {
+          // Try to repair the matched array
           try {
-            const obj = JSON.parse(match[1].trim());
-            parsedObjects.push(obj);
-          } catch (error) {
-            logger.warn(`Failed to parse object: ${(error as Error).message}`);
+            if (typeof jsonrepair === "function") {
+              const jsonText = jsonMatches[1].trim();
+              const repairedJson = jsonrepair(jsonText);
+              const parsed = JSON.parse(repairedJson);
+              if (Array.isArray(parsed)) {
+                logger.info(
+                  `Strategy 3 Successfully repaired and parsed array with ${parsed.length} items`,
+                );
+                return parsed;
+              }
+            }
+          } catch (repairError) {
+            logger.warn(
+              `Failed to repair array: ${(repairError as Error).message}`,
+            );
           }
         }
-
-        if (parsedObjects.length > 0) {
-          logger.info(`Extracted ${parsedObjects.length} individual objects`);
-          return parsedObjects;
-        }
       }
-
-      // Last resort: Try to fix common JSON errors
-      try {
-        // Remove potential markdown code block syntax
-        let cleanedText = responseText.replace(/```json|```/g, "").trim();
-
-        // Try to find the outermost array brackets
-        const firstBracket = cleanedText.indexOf("[");
-        const lastBracket = cleanedText.lastIndexOf("]");
-
-        if (firstBracket >= 0 && lastBracket > firstBracket) {
-          cleanedText = cleanedText.substring(firstBracket, lastBracket + 1);
-
-          // Try to parse with relaxed JSON (allows trailing commas)
-          const relaxedJson = cleanedText.replace(/,(\s*[}\]])/g, "$1"); // Remove trailing commas
-
-          const parsed = JSON.parse(relaxedJson);
-          if (Array.isArray(parsed)) {
-            logger.info(`Successfully parsed JSON with relaxed rules`);
-            return parsed;
-          } else {
-            return [parsed]; // Wrap single object
-          }
-        }
-      } catch (error) {
-        logger.warn(`Failed relaxed parsing: ${(error as Error).message}`);
-      }
-
-      logger.warn("Could not extract JSON from Anthropic response");
+      logger.warn("Could not extract valid JSON from Anthropic response");
       return [];
     } catch (error) {
       const errorMessage =
