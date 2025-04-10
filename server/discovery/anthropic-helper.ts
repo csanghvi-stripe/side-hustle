@@ -40,10 +40,33 @@ export class AnthropicHelper {
     try {
       logger.info(`Using Anthropic AI to generate ${count} thoughtful opportunities`);
       
-      // Get the template and template ID - use consistent naming convention for all prompts
-      const templateType = 'opportunityGeneration';
-      logger.info(`Getting template for type: ${templateType}`);
-      const template = promptManager.getTemplate(templateType);
+      // Try to get the template using camelCase format first
+      let templateType = 'opportunityGeneration';
+      logger.info(`Attempting to get template for type: ${templateType}`);
+      
+      // Check if the primary template type exists, if not try the snake_case version
+      let template;
+      try {
+        template = promptManager.getTemplate(templateType);
+        if (!template || !template.template) {
+          // Fall back to snake_case if camelCase template is empty
+          templateType = 'opportunity_generation';
+          logger.info(`Falling back to snake_case template type: ${templateType}`);
+          template = promptManager.getTemplate(templateType);
+        }
+      } catch (error) {
+        // If there's an error with the camelCase version, try snake_case
+        templateType = 'opportunity_generation';
+        logger.info(`Error with camelCase template, trying snake_case: ${templateType}`);
+        template = promptManager.getTemplate(templateType);
+      }
+      
+      // Make sure we have a valid template
+      if (!template || !template.template) {
+        logger.error(`No valid template found for either camelCase or snake_case formats`);
+        throw new Error('No valid template found for opportunity generation');
+      }
+      
       const templateId = template.id;
       
       // Log the available template IDs for debugging
@@ -127,43 +150,44 @@ export class AnthropicHelper {
 
     // Use the prompt manager's fillTemplate method instead of doing manual replacements
     try {
-      // Use the same templateType variable as defined in generateOpportunities() for consistency
-      const templateType = 'opportunityGeneration';
-      const filledTemplate = promptManager.fillTemplate(templateType, {
-        count: String(count),
-        skillsText,
-        timeText, 
-        riskText,
-        incomeText,
-        prefText,
-        detailsText
-      });
+      // Try both camelCase and snake_case template formats
+      const templateVariants = ['opportunityGeneration', 'opportunity_generation'];
+      let filledTemplate = '';
+      let usedTemplate = '';
       
-      // Verify template length
-      if (!filledTemplate || filledTemplate.trim() === '') {
-        logger.error(`Generated empty prompt after template filling. Template type: ${templateType}`);
-        // Try the snake_case version as fallback
-        const snakeCaseType = 'opportunity_generation';
-        logger.info(`Trying alternative template format: ${snakeCaseType}`);
-        const fallbackTemplate = promptManager.fillTemplate(snakeCaseType, {
-          count: String(count),
-          skillsText,
-          timeText, 
-          riskText,
-          incomeText,
-          prefText,
-          detailsText
-        });
-        
-        if (!fallbackTemplate || fallbackTemplate.trim() === '') {
-          throw new Error('Both template variants failed to generate a valid prompt');
+      // Try each template format until we get a valid filled template
+      for (const templateType of templateVariants) {
+        try {
+          logger.info(`Attempting to fill template type: ${templateType}`);
+          const template = promptManager.fillTemplate(templateType, {
+            count: String(count),
+            skillsText,
+            timeText, 
+            riskText,
+            incomeText,
+            prefText,
+            detailsText
+          });
+          
+          if (template && template.trim() !== '') {
+            filledTemplate = template;
+            usedTemplate = templateType;
+            logger.info(`Successfully filled template ${templateType}`);
+            break;
+          }
+        } catch (templateError) {
+          logger.warn(`Error filling template ${templateType}: ${templateError}`);
+          // Continue to try the next template format
         }
-        
-        logger.info(`Fallback template filled successfully, length: ${fallbackTemplate.length}`);
-        return fallbackTemplate;
       }
       
-      logger.info(`Template filled successfully, length: ${filledTemplate.length}`);
+      // Verify we have a valid filled template
+      if (!filledTemplate || filledTemplate.trim() === '') {
+        logger.error(`All template variants failed to generate a valid prompt`);
+        throw new Error('Could not generate a valid prompt using any template variant');
+      }
+      
+      logger.info(`Using template ${usedTemplate} successfully, length: ${filledTemplate.length}`);
       return filledTemplate;
     } catch (error) {
       logger.error(`Error filling opportunity generation template: ${error}`);
