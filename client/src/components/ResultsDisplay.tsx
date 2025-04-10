@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { BookmarkPlus, BookmarkCheck, ArrowRight, RefreshCw } from "lucide-react";
+import {
+  BookmarkPlus,
+  BookmarkCheck,
+  ArrowRight,
+  RefreshCw,
+} from "lucide-react";
 import { Link } from "wouter";
 
 interface ResultsDisplayProps {
@@ -17,30 +22,43 @@ interface ResultsDisplayProps {
   onSave?: () => void;
 }
 
-type TabKey = "all" | OpportunityType.FREELANCE | OpportunityType.DIGITAL_PRODUCT | OpportunityType.CONTENT | OpportunityType.SERVICE;
+type TabKey =
+  | "all"
+  | OpportunityType.FREELANCE
+  | OpportunityType.DIGITAL_PRODUCT
+  | OpportunityType.CONTENT
+  | OpportunityType.SERVICE;
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results, onReset, saved = false, onSave }) => {
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
+  results,
+  onReset,
+  saved = false,
+  onSave,
+}) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const { toast } = useToast();
-  
+
   // Fix bug: showing all opportunities of selected type rather than limiting to 3
-const filteredOpportunities = activeTab === "all" 
-    ? results.opportunities 
-    : results.opportunities.filter(opp => {
-        const oppType = typeof opp.type === 'string' ? opp.type : String(opp.type);
-        return oppType === activeTab || oppType === String(activeTab);
-      });
+  const filteredOpportunities =
+    activeTab === "all"
+      ? results.opportunities
+      : results.opportunities.filter((opp) => {
+          console.log("opp.type:", opp.type);
+          const oppType =
+            typeof opp.type === "string" ? opp.type : String(opp.type);
+          return oppType === activeTab || oppType === String(activeTab);
+        });
 
   const skillsList = results.userProfile.skills.join(", ");
-  
+
   // Save results mutation for authenticated users
   const saveResultsMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/opportunities", {
         opportunityData: results,
         createdAt: new Date().toISOString(),
-        shared: false // Default to not sharing
+        shared: false, // Default to not sharing
       });
       return await res.json();
     },
@@ -66,7 +84,9 @@ const filteredOpportunities = activeTab === "all"
       {/* Results Header */}
       <div className="bg-primary text-white px-6 py-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-medium">Your Monetization Opportunities</h2>
+          <h2 className="text-xl font-medium">
+            Your Monetization Opportunities
+          </h2>
           {results.enhanced && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-200 text-blue-800">
               Enhanced Results
@@ -75,54 +95,54 @@ const filteredOpportunities = activeTab === "all"
         </div>
         <p className="text-primary-50">Based on your skills in {skillsList}</p>
       </div>
-      
+
       {/* Results Tabs */}
       <div className="border-b border-neutral-200">
         <nav className="flex -mb-px overflow-x-auto py-2 px-6">
-          <button 
+          <button
             className={`whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm mr-8 ${
-              activeTab === "all" 
-                ? "text-primary border-primary" 
+              activeTab === "all"
+                ? "text-primary border-primary"
                 : "text-neutral-500 hover:text-neutral-700 border-transparent"
             }`}
             onClick={() => setActiveTab("all")}
           >
             All Opportunities
           </button>
-          <button 
+          <button
             className={`whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm mr-8 ${
-              activeTab === OpportunityType.FREELANCE 
-                ? "text-primary border-primary" 
+              activeTab === OpportunityType.FREELANCE
+                ? "text-primary border-primary"
                 : "text-neutral-500 hover:text-neutral-700 border-transparent"
             }`}
             onClick={() => setActiveTab(OpportunityType.FREELANCE)}
           >
             Freelance
           </button>
-          <button 
+          <button
             className={`whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm mr-8 ${
-              activeTab === OpportunityType.DIGITAL_PRODUCT 
-                ? "text-primary border-primary" 
+              activeTab === OpportunityType.DIGITAL_PRODUCT
+                ? "text-primary border-primary"
                 : "text-neutral-500 hover:text-neutral-700 border-transparent"
             }`}
             onClick={() => setActiveTab(OpportunityType.DIGITAL_PRODUCT)}
           >
             Digital Products
           </button>
-          <button 
+          <button
             className={`whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm mr-8 ${
-              activeTab === OpportunityType.CONTENT 
-                ? "text-primary border-primary" 
+              activeTab === OpportunityType.CONTENT
+                ? "text-primary border-primary"
                 : "text-neutral-500 hover:text-neutral-700 border-transparent"
             }`}
             onClick={() => setActiveTab(OpportunityType.CONTENT)}
           >
             Content Creation
           </button>
-          <button 
+          <button
             className={`whitespace-nowrap py-2 px-4 border-b-2 font-medium text-sm ${
-              activeTab === OpportunityType.SERVICE 
-                ? "text-primary border-primary" 
+              activeTab === OpportunityType.SERVICE
+                ? "text-primary border-primary"
                 : "text-neutral-500 hover:text-neutral-700 border-transparent"
             }`}
             onClick={() => setActiveTab(OpportunityType.SERVICE)}
@@ -131,23 +151,24 @@ const filteredOpportunities = activeTab === "all"
           </button>
         </nav>
       </div>
-      
+
       {/* Tab Content */}
       <div className="p-6 space-y-6">
         {filteredOpportunities.length > 0 ? (
           filteredOpportunities.map((opportunity) => (
-            <OpportunityCard 
-              key={opportunity.id} 
+            <OpportunityCard
+              key={opportunity.id}
               opportunity={{
                 ...opportunity,
-                riskLevel: typeof opportunity.riskLevel === 'string' 
-                  ? opportunity.riskLevel 
-                  : (opportunity.riskLevel as any)?.high 
-                    ? RiskLevel.HIGH 
-                    : (opportunity.riskLevel as any)?.medium 
-                      ? RiskLevel.MEDIUM 
-                      : RiskLevel.LOW
-              }} 
+                riskLevel:
+                  typeof opportunity.riskLevel === "string"
+                    ? opportunity.riskLevel
+                    : (opportunity.riskLevel as any)?.high
+                      ? RiskLevel.HIGH
+                      : (opportunity.riskLevel as any)?.medium
+                        ? RiskLevel.MEDIUM
+                        : RiskLevel.LOW,
+              }}
             />
           ))
         ) : (
@@ -165,7 +186,9 @@ const filteredOpportunities = activeTab === "all"
               <circle cx="12" cy="12" r="10" />
               <line x1="8" y1="12" x2="16" y2="12" />
             </svg>
-            <p className="mt-2">No {activeTab} opportunities found matching your criteria.</p>
+            <p className="mt-2">
+              No {activeTab} opportunities found matching your criteria.
+            </p>
           </div>
         )}
 
@@ -175,7 +198,9 @@ const filteredOpportunities = activeTab === "all"
               onClick={() => saveResultsMutation.mutate()}
               disabled={saveResultsMutation.isPending || saved}
               variant={saved ? "outline" : "default"}
-              className={saved ? "bg-green-50 border-green-200 text-green-700" : ""}
+              className={
+                saved ? "bg-green-50 border-green-200 text-green-700" : ""
+              }
             >
               {saved ? (
                 <>
@@ -195,7 +220,7 @@ const filteredOpportunities = activeTab === "all"
               )}
             </Button>
           )}
-          
+
           {user && saved && (
             <Button variant="outline" asChild>
               <Link href="/saved-opportunities">
@@ -204,22 +229,25 @@ const filteredOpportunities = activeTab === "all"
               </Link>
             </Button>
           )}
-          
+
           <Button variant="outline" onClick={onReset}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Start New Search
           </Button>
         </div>
-        
+
         {/* Similar Users Section */}
         {results.similarUsers && results.similarUsers.length > 0 && (
           <div className="mt-12 border-t pt-8">
-            <h3 className="text-lg font-medium text-neutral-900 mb-4">Connect with Similar Professionals</h3>
+            <h3 className="text-lg font-medium text-neutral-900 mb-4">
+              Connect with Similar Professionals
+            </h3>
             <p className="text-neutral-600 text-sm mb-6">
-              We found people with similar skills who might be on the same monetization journey as you.
-              Connect with them to share experiences and opportunities!
+              We found people with similar skills who might be on the same
+              monetization journey as you. Connect with them to share
+              experiences and opportunities!
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {results.similarUsers.map((match, index) => (
                 <UserMatchCard key={index} match={match} />
