@@ -5,6 +5,7 @@
 import axios from "axios";
 import { BaseOpportunitySource } from "./base-source";
 import { UserDiscoveryInput, RawOpportunity } from "../types";
+import { RiskLevel, OpportunityType } from "../../../shared/schema";
 import { logger, calculateReadability } from "../utils";
 
 /**
@@ -12,13 +13,14 @@ import { logger, calculateReadability } from "../utils";
  */
 export class UpworkSource extends BaseOpportunitySource {
   private axiosInstance;
+  private apiKey?: string;
   
   constructor(apiKey?: string) {
     super(
       'upwork',
       'Upwork',
       'https://www.upwork.com',
-      'FREELANCE',
+      OpportunityType.FREELANCE,
       {
         logo: 'https://assets.static-upwork.com/assets/Adquiro/39ca0d/images/core/svg/upwork.svg',
         apiKey

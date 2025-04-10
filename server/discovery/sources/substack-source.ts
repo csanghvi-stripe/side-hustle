@@ -5,7 +5,7 @@
 import axios from "axios";
 import { BaseOpportunitySource } from "./base-source";
 import { UserDiscoveryInput, RawOpportunity, DiscoveryPreferences } from "../types";
-import { RiskLevel } from "../../../shared/schema";
+import { RiskLevel, OpportunityType } from "../../../shared/schema";
 import { logger } from "../utils";
 
 /**
@@ -17,7 +17,7 @@ export class SubstackSource extends BaseOpportunitySource {
       'substack',
       'Substack',
       'https://substack.com',
-      'CONTENT'
+      OpportunityType.CONTENT
     );
   }
   
@@ -84,7 +84,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Technical Deep-Dive Newsletter',
             description: 'Start a premium technical newsletter that provides in-depth analysis, tutorials, and industry insights for developers or technical professionals. Focus on a specific technology stack or industry to establish expertise.',
-            skillsRequired: ['technical knowledge', 'writing', 'industry analysis'],
+            requiredSkills: ['technical knowledge', 'writing', 'industry analysis'],
             estimatedIncome: {
               min: 1000,
               max: 5000,
@@ -94,12 +94,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 100
             },
-            timeCommitment: {
+            timeRequired: {
               min: 8,
               max: 15,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'medium'
           })
         );
@@ -108,7 +108,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Tech News Curation & Analysis',
             description: 'Create a newsletter that curates and analyzes the most important news and developments in technology. Add value through expert commentary and connecting broader industry trends.',
-            skillsRequired: ['tech industry knowledge', 'news analysis', 'content curation'],
+            requiredSkills: ['tech industry knowledge', 'news analysis', 'content curation'],
             estimatedIncome: {
               min: 500,
               max: 3000,
@@ -118,12 +118,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 50
             },
-            timeCommitment: {
+            timeRequired: {
               min: 5,
               max: 10,
               timeframe: 'weekly'
             },
-            entryBarrier: 'LOW',
+            entryBarrier: RiskLevel.LOW,
             competition: 'high'
           })
         );
@@ -141,7 +141,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Creative Writing or Fiction Newsletter',
             description: 'Start a newsletter featuring your original fiction, poetry, or creative writing. Offer premium tiers for exclusive content, early access to longer works, or personalized feedback on subscribers\' writing.',
-            skillsRequired: ['creative writing', 'storytelling', 'consistency'],
+            requiredSkills: ['creative writing', 'storytelling', 'consistency'],
             estimatedIncome: {
               min: 500,
               max: 3000,
@@ -151,12 +151,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 50
             },
-            timeCommitment: {
+            timeRequired: {
               min: 6,
               max: 12,
               timeframe: 'weekly'
             },
-            entryBarrier: 'LOW',
+            entryBarrier: RiskLevel.LOW,
             competition: 'medium'
           })
         );
@@ -165,7 +165,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Writing Craft & Industry Insights',
             description: 'Create a newsletter for aspiring writers focusing on improving their craft, navigating the publishing industry, or building a sustainable writing career. Include practical tips, exercises, and insider knowledge.',
-            skillsRequired: ['writing expertise', 'publishing knowledge', 'teaching ability'],
+            requiredSkills: ['writing expertise', 'publishing knowledge', 'teaching ability'],
             estimatedIncome: {
               min: 800,
               max: 4000,
@@ -175,12 +175,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 100
             },
-            timeCommitment: {
+            timeRequired: {
               min: 8,
               max: 15,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'medium'
           })
         );
@@ -198,7 +198,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Specialized Financial Analysis Newsletter',
             description: 'Start a premium newsletter offering specialized financial insights, investment analysis, or business strategy. Focus on a specific sector, investment approach, or business type to differentiate from general financial news.',
-            skillsRequired: ['financial expertise', 'analysis', 'market knowledge', 'research'],
+            requiredSkills: ['financial expertise', 'analysis', 'market knowledge', 'research'],
             estimatedIncome: {
               min: 2000,
               max: 10000,
@@ -208,12 +208,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 200
             },
-            timeCommitment: {
+            timeRequired: {
               min: 10,
               max: 20,
               timeframe: 'weekly'
             },
-            entryBarrier: 'HIGH',
+            entryBarrier: RiskLevel.HIGH,
             competition: 'high'
           })
         );
@@ -222,7 +222,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Personal Finance & Financial Independence',
             description: 'Create a newsletter focused on helping people improve their personal finances, achieve financial independence, or navigate specific financial challenges like debt reduction, saving for education, or retirement planning.',
-            skillsRequired: ['personal finance knowledge', 'explaining complex topics', 'practical advice'],
+            requiredSkills: ['personal finance knowledge', 'explaining complex topics', 'practical advice'],
             estimatedIncome: {
               min: 1000,
               max: 5000,
@@ -232,12 +232,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 100
             },
-            timeCommitment: {
+            timeRequired: {
               min: 8,
               max: 15,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'high'
           })
         );
@@ -256,7 +256,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Science-Based Health & Wellness Newsletter',
             description: 'Create a newsletter that cuts through health misinformation by analyzing scientific research and translating it into practical, actionable advice for readers. Focus on evidence-based approaches to health, fitness, or nutrition.',
-            skillsRequired: ['health expertise', 'scientific literacy', 'research', 'clear explanation'],
+            requiredSkills: ['health expertise', 'scientific literacy', 'research', 'clear explanation'],
             estimatedIncome: {
               min: 1000,
               max: 6000,
@@ -266,12 +266,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 100
             },
-            timeCommitment: {
+            timeRequired: {
               min: 8,
               max: 16,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'high'
           })
         );
@@ -280,7 +280,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Mental Health & Personal Development',
             description: 'Start a newsletter focusing on mental health, emotional well-being, or personal growth. Combine research insights with practical strategies, exercises, and reflections to help readers improve their lives.',
-            skillsRequired: ['psychology knowledge', 'empathy', 'writing', 'practical advice'],
+            requiredSkills: ['psychology knowledge', 'empathy', 'writing', 'practical advice'],
             estimatedIncome: {
               min: 800,
               max: 4000,
@@ -290,12 +290,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 50
             },
-            timeCommitment: {
+            timeRequired: {
               min: 6,
               max: 12,
               timeframe: 'weekly'
             },
-            entryBarrier: 'LOW',
+            entryBarrier: RiskLevel.LOW,
             competition: 'medium'
           })
         );
@@ -314,7 +314,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Creative Industry Insider Newsletter',
             description: 'Launch a newsletter that provides industry insights, opportunities, and behind-the-scenes perspectives on a creative field like design, film, music, or photography. Include interviews with professionals, analysis of trends, and practical career advice.',
-            skillsRequired: ['industry knowledge', 'connections', 'analytical thinking'],
+            requiredSkills: ['industry knowledge', 'connections', 'analytical thinking'],
             estimatedIncome: {
               min: 800,
               max: 5000,
@@ -324,12 +324,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 100
             },
-            timeCommitment: {
+            timeRequired: {
               min: 8,
               max: 15,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'medium'
           })
         );
@@ -338,7 +338,7 @@ export class SubstackSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Creative Process & Technique Newsletter',
             description: 'Create a newsletter focusing on creative techniques, processes, and skill development in your area of expertise. Include tutorials, case studies, and analysis of exemplary work to help others improve their craft.',
-            skillsRequired: ['technical expertise', 'teaching ability', 'visual communication'],
+            requiredSkills: ['technical expertise', 'teaching ability', 'visual communication'],
             estimatedIncome: {
               min: 500,
               max: 3000,
@@ -348,12 +348,12 @@ export class SubstackSource extends BaseOpportunitySource {
               min: 0,
               max: 100
             },
-            timeCommitment: {
+            timeRequired: {
               min: 6,
               max: 12,
               timeframe: 'weekly'
             },
-            entryBarrier: 'LOW',
+            entryBarrier: RiskLevel.LOW,
             competition: 'medium'
           })
         );
@@ -366,7 +366,7 @@ export class SubstackSource extends BaseOpportunitySource {
         this.createOpportunity({
           title: 'Niche Expertise Newsletter',
           description: 'Start a newsletter sharing specialized knowledge from your field or passion. The more specific your niche, the easier it is to attract dedicated subscribers. Include insights that aren\'t easily found elsewhere, and develop a consistent voice that resonates with your audience.',
-          skillsRequired: ['expertise in subject', 'writing', 'consistency'],
+          requiredSkills: ['expertise in subject', 'writing', 'consistency'],
           estimatedIncome: {
             min: 500,
             max: 3000,
@@ -376,12 +376,12 @@ export class SubstackSource extends BaseOpportunitySource {
             min: 0,
             max: 50
           },
-          timeCommitment: {
+          timeRequired: {
             min: 5,
             max: 10,
             timeframe: 'weekly'
           },
-          entryBarrier: 'LOW',
+          entryBarrier: RiskLevel.LOW,
           competition: 'medium'
         })
       );
@@ -390,7 +390,7 @@ export class SubstackSource extends BaseOpportunitySource {
         this.createOpportunity({
           title: 'Curated Content & Commentary Newsletter',
           description: 'Create a curated newsletter that saves readers time by finding, organizing, and commenting on the most valuable content in a specific area of interest. Add value through your unique perspective, connections between ideas, and additional context.',
-          skillsRequired: ['research', 'curation', 'critical thinking', 'writing'],
+          requiredSkills: ['research', 'curation', 'critical thinking', 'writing'],
           estimatedIncome: {
             min: 300,
             max: 2000,
@@ -400,12 +400,12 @@ export class SubstackSource extends BaseOpportunitySource {
             min: 0,
             max: 50
           },
-          timeCommitment: {
+          timeRequired: {
             min: 4,
             max: 8,
             timeframe: 'weekly'
           },
-          entryBarrier: 'LOW',
+          entryBarrier: RiskLevel.LOW,
           competition: 'medium'
         })
       );
