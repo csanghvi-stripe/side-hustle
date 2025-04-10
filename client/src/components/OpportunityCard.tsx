@@ -208,9 +208,10 @@ type OpportunityDataType = {
 
 interface OpportunityCardProps {
   opportunity: MonetizationOpportunity;
+  source?: 'search' | 'saved'; // Indicates where this card is being displayed
 }
 
-const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
+const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity, source = 'search' }) => {
   const [isSkillGapExpanded, setIsSkillGapExpanded] = useState(false);
   const { toast } = useToast();
 
@@ -472,7 +473,14 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
             </div>
             
             {/* View Details Button in the top right */}
-            <Link href={`/opportunity/${opportunity.id}`} className="flex-shrink-0">
+            <Link 
+              href={`/opportunity/${opportunity.id}`} 
+              className="flex-shrink-0"
+              onClick={() => {
+                // Store the source page in localStorage to enable proper back navigation
+                localStorage.setItem('opportunitySource', source);
+              }}
+            >
               <Button variant="outline" size="sm" className="px-3 py-1 h-8 whitespace-nowrap">
                 View Details
                 <ChevronRight className="ml-1 h-4 w-4" />

@@ -217,11 +217,20 @@ export default function OpportunityDetailPage() {
   // Check if we are coming from the saved opportunities page or the discover page
   const [isFromSaved, setIsFromSaved] = useState(false);
   
-  // Check the referrer when the component mounts
+  // Check the stored navigation context when the component mounts
   useEffect(() => {
-    const referrer = document.referrer;
-    if (referrer && (referrer.includes('/saved-opportunities') || referrer.includes('/saved'))) {
+    // First check localStorage (most reliable method)
+    const opportunitySource = localStorage.getItem('opportunitySource');
+    if (opportunitySource === 'saved') {
       setIsFromSaved(true);
+    } else if (opportunitySource === 'search') {
+      setIsFromSaved(false);
+    } else {
+      // Fallback to checking document.referrer
+      const referrer = document.referrer;
+      if (referrer && (referrer.includes('/saved-opportunities') || referrer.includes('/saved'))) {
+        setIsFromSaved(true);
+      }
     }
   }, []);
   
@@ -324,7 +333,15 @@ export default function OpportunityDetailPage() {
       <div className="mb-6">
         <div className="flex space-x-4 mb-4">
           {/* Show different back buttons based on where the user came from */}
-          <Button variant="ghost" size="sm" asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild
+            onClick={() => {
+              // Clear the source from localStorage when navigating back
+              localStorage.removeItem('opportunitySource');
+            }}
+          >
             <Link href={isFromSaved ? "/saved-opportunities" : "/"}>
               <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
               {isFromSaved ? "Back to Saved Opportunities" : "Back to Search Results"}
