@@ -152,25 +152,28 @@ const riskLevelColors: Record<string, string> = {
 
 // Function to get appropriate icon based on opportunity type
 const getIconForType = (type: string) => {
-  switch (type) {
-    case "Freelance":
-      return <Briefcase className="w-5 h-5 text-blue-600" />;
-    case "Digital Product":
-      return <Package className="w-5 h-5 text-purple-600" />;
-    case "Content Creation":
-      return <Brush className="w-5 h-5 text-pink-600" />;
-    case "Service-Based":
-      return <CircleDollarSign className="w-5 h-5 text-green-600" />;
-    case "Passive Income":
-      return <Monitor className="w-5 h-5 text-cyan-600" />;
-    case "Info Product":
-      return <Presentation className="w-5 h-5 text-amber-600" />;
-    case "Software Development":
-      return <Code className="w-5 h-5 text-blue-600" />;
-    case "Marketing":
-      return <Megaphone className="w-5 h-5 text-red-600" />;
-    default:
-      return <Briefcase className="w-5 h-5 text-neutral-600" />;
+  const typeUpperCase = type?.toUpperCase() || '';
+  
+  // Handle schema enum types
+  if (typeUpperCase === 'FREELANCE' || typeUpperCase.includes('FREELANCE')) {
+    return <Briefcase className="w-5 h-5 text-blue-600" />;
+  } else if (typeUpperCase === 'DIGITAL_PRODUCT' || typeUpperCase.includes('DIGITAL') || typeUpperCase.includes('PRODUCT')) {
+    return <Package className="w-5 h-5 text-purple-600" />;
+  } else if (typeUpperCase === 'CONTENT' || typeUpperCase.includes('CONTENT') || typeUpperCase.includes('CREATION')) {
+    return <Brush className="w-5 h-5 text-pink-600" />;
+  } else if (typeUpperCase === 'SERVICE' || typeUpperCase.includes('SERVICE')) {
+    return <CircleDollarSign className="w-5 h-5 text-green-600" />;
+  } else if (typeUpperCase === 'PASSIVE' || typeUpperCase.includes('PASSIVE')) {
+    return <Monitor className="w-5 h-5 text-cyan-600" />;
+  } else if (typeUpperCase === 'INFO_PRODUCT' || typeUpperCase.includes('INFO') || typeUpperCase.includes('COURSE')) {
+    return <Presentation className="w-5 h-5 text-amber-600" />;
+  } else if (typeUpperCase.includes('SOFTWARE') || typeUpperCase.includes('DEVELOP')) {
+    return <Code className="w-5 h-5 text-blue-600" />;
+  } else if (typeUpperCase.includes('MARKET')) {
+    return <Megaphone className="w-5 h-5 text-red-600" />;
+  } else {
+    // Default case
+    return <Briefcase className="w-5 h-5 text-neutral-600" />;
   }
 };
 
