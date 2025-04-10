@@ -1088,37 +1088,74 @@ class EnhancedDiscoveryService {
     opportunities: RawOpportunity[],
     preferences: DiscoveryPreferences,
   ): Promise<void> {
-    logger.info("Adding supplementary opportunities to enhance results");
+    // Log initial state of opportunities
+    const initialSourceDistribution: Record<string, number> = {};
+    opportunities.forEach(opp => {
+      initialSourceDistribution[opp.source] = (initialSourceDistribution[opp.source] || 0) + 1;
+    });
+    
+    logger.info(`Initial opportunities distribution by source: ${JSON.stringify(initialSourceDistribution)}`);
+    logger.info(`Adding supplementary opportunities to enhance results. Current count: ${opportunities.length}`);
 
+    // Log environment variable status for debugging
+    const hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
+    logger.info(`Anthropic API key present: ${hasAnthropicKey}`);
+    
     // Check if useEnhanced flag is set to use Anthropic AI for generating opportunities
     if (preferences.useEnhanced) {
-      logger.info(
-        "Using Anthropic AI to generate enhanced opportunity suggestions",
-      );
-
-      try {
-        // Generate thoughtful opportunities using Anthropic AI
-        const anthropicOpportunities =
-          await anthropicHelper.generateOpportunities(preferences, 5);
-
-        if (anthropicOpportunities && anthropicOpportunities.length > 0) {
-          logger.info(
-            `Successfully added ${anthropicOpportunities.length} AI-generated opportunities`,
-          );
-          opportunities.push(...anthropicOpportunities);
-
-          // If we got a good number of AI-generated opportunities, we can return early
-          if (anthropicOpportunities.length >= 3) {
-            return;
-          }
-          // Otherwise, continue with hardcoded opportunities to supplement
-        }
-      } catch (error) {
-        logger.error(
-          `Error generating opportunities with Anthropic AI: ${error instanceof Error ? error.message : String(error)}`,
+      // Only try to use Anthropic if we have the API key
+      if (hasAnthropicKey) {
+        logger.info(
+          "Using Anthropic AI to generate enhanced opportunity suggestions",
         );
-        logger.info("Falling back to standard supplementary opportunities");
+  
+        try {
+          // Generate thoughtful opportunities using Anthropic AI
+          const startTime = Date.now();
+          const anthropicOpportunities =
+            await anthropicHelper.generateOpportunities(preferences, 5);
+          const duration = Date.now() - startTime;
+  
+          if (anthropicOpportunities && anthropicOpportunities.length > 0) {
+            // Log each opportunity from Anthropic for debugging
+            anthropicOpportunities.forEach((opp, index) => {
+              logger.info(`Anthropic opportunity ${index + 1}: ${opp.title} (${opp.type})`);
+            });
+            
+            logger.info(
+              `Successfully added ${anthropicOpportunities.length} AI-generated opportunities in ${duration}ms`,
+            );
+            opportunities.push(...anthropicOpportunities);
+  
+            // If we got a good number of AI-generated opportunities, we can return early
+            if (anthropicOpportunities.length >= 3) {
+              // Log final state after Anthropic additions
+              const finalSourceDistribution: Record<string, number> = {};
+              opportunities.forEach(opp => {
+                finalSourceDistribution[opp.source] = (finalSourceDistribution[opp.source] || 0) + 1;
+              });
+              
+              logger.info(`Final opportunities distribution by source: ${JSON.stringify(finalSourceDistribution)}`);
+              logger.info(`Final opportunity count: ${opportunities.length}`);
+              return;
+            }
+            // Otherwise, continue with hardcoded opportunities to supplement
+          } else {
+            logger.warn(`Anthropic API returned no opportunities after ${duration}ms`);
+          }
+        } catch (error) {
+          logger.error(
+            `Error generating opportunities with Anthropic AI: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          logger.info("Falling back to standard supplementary opportunities");
+        }
+      } else {
+        logger.warn(
+          "Enhanced opportunities requested but ANTHROPIC_API_KEY environment variable is not set"
+        );
       }
+    } else {
+      logger.info("Enhanced opportunities not requested (useEnhanced=false), using standard sources only");
     }
 
     // Analyze user skills to determine which hardcoded opportunities to add

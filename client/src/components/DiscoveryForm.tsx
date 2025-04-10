@@ -637,11 +637,11 @@ const DiscoveryForm: React.FC<DiscoveryFormProps> = ({ onResultsReceived }) => {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="font-medium">
-                        Use enhanced algorithm
+                        Use enhanced AI algorithm
                       </FormLabel>
                       <FormDescription>
-                        Combine AI with real-time web search for more up-to-date, actionable recommendations.
-                        This takes a bit longer but provides higher quality results.
+                        Leverage Claude AI to generate custom, tailored monetization opportunities based on your specific skills and preferences. 
+                        This takes a bit longer but provides more personalized, actionable results.
                       </FormDescription>
                     </div>
                   </FormItem>
