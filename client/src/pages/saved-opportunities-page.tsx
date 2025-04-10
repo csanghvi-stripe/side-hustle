@@ -56,23 +56,39 @@ export default function SavedOpportunitiesPage() {
             
             // Normalize opportunity type for comparison
             if (opportunityType) {
-              // Convert to title case format
-              opportunityType = opportunityType
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
+              // First, handle database-style uppercase enum values
+              opportunityType = opportunityType.toUpperCase();
               
-              // Map to our defined types
-              if (opportunityType.includes('Freelance')) {
+              // Check for direct matches from database schema enum values
+              if (opportunityType === 'FREELANCE' || opportunityType === 'FREELANCING') {
                 opportunityType = OpportunityType.FREELANCE;
-              } else if (opportunityType.includes('Digital') || opportunityType.includes('Product')) {
+              } else if (opportunityType === 'DIGITAL_PRODUCT') {
                 opportunityType = OpportunityType.DIGITAL_PRODUCT;
-              } else if (opportunityType.includes('Content')) {
+              } else if (opportunityType === 'CONTENT' || opportunityType === 'CONTENT_CREATION') {
                 opportunityType = OpportunityType.CONTENT;
-              } else if (opportunityType.includes('Service')) {
+              } else if (opportunityType === 'SERVICE' || opportunityType === 'SERVICE_BASED') {
                 opportunityType = OpportunityType.SERVICE;
-              } else if (opportunityType.includes('Passive')) {
+              } else if (opportunityType === 'PASSIVE' || opportunityType === 'PASSIVE_INCOME') {
                 opportunityType = OpportunityType.PASSIVE;
+              } else if (opportunityType === 'INFO_PRODUCT') {
+                opportunityType = OpportunityType.INFO_PRODUCT;
+              } else {
+                // If no direct match, try case-insensitive includes
+                const typeToCheck = opportunityType.toLowerCase();
+                
+                if (typeToCheck.includes('freelance') || typeToCheck.includes('consulting')) {
+                  opportunityType = OpportunityType.FREELANCE;
+                } else if (typeToCheck.includes('digital') || typeToCheck.includes('product')) {
+                  opportunityType = OpportunityType.DIGITAL_PRODUCT;
+                } else if (typeToCheck.includes('content') || typeToCheck.includes('creation') || typeToCheck.includes('blog')) {
+                  opportunityType = OpportunityType.CONTENT;
+                } else if (typeToCheck.includes('service')) {
+                  opportunityType = OpportunityType.SERVICE;
+                } else if (typeToCheck.includes('passive')) {
+                  opportunityType = OpportunityType.PASSIVE;
+                } else if (typeToCheck.includes('info') || typeToCheck.includes('course')) {
+                  opportunityType = OpportunityType.INFO_PRODUCT;
+                }
               }
             }
             
