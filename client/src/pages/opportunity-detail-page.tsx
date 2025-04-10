@@ -67,7 +67,7 @@ import {
   Video,
   VideoIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -214,6 +214,17 @@ export default function OpportunityDetailPage() {
   const [videoPlaying, setVideoPlaying] = useState(false);
   const { toast } = useToast();
   
+  // Check if we are coming from the saved opportunities page or the discover page
+  const [isFromSaved, setIsFromSaved] = useState(false);
+  
+  // Check the referrer when the component mounts
+  useEffect(() => {
+    const referrer = document.referrer;
+    if (referrer && (referrer.includes('/saved-opportunities') || referrer.includes('/saved'))) {
+      setIsFromSaved(true);
+    }
+  }, []);
+  
   // Fetch opportunity data
   const { data: opportunity, isLoading, error } = useQuery({
     queryKey: [`/api/opportunities/${id}`],
@@ -312,11 +323,11 @@ export default function OpportunityDetailPage() {
     <div className="container max-w-6xl mx-auto py-8 px-4 sm:px-6">
       <div className="mb-6">
         <div className="flex space-x-4 mb-4">
-          {/* Always show "Back to Search Results" when coming from the results page */}
+          {/* Show different back buttons based on where the user came from */}
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/">
+            <Link href={isFromSaved ? "/saved-opportunities" : "/"}>
               <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
-              Back to Search Results
+              {isFromSaved ? "Back to Saved Opportunities" : "Back to Search Results"}
             </Link>
           </Button>
         </div>
