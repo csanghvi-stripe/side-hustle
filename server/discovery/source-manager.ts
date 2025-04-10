@@ -178,9 +178,10 @@ export class SourceManager {
    */
   public getSourceMetrics(): Record<string, SourceMetrics> {
     const result: Record<string, SourceMetrics> = {};
-    for (const [sourceId, metrics] of this.metrics.entries()) {
+    // Use Array.from to avoid iterator issues
+    Array.from(this.metrics.entries()).forEach(([sourceId, metrics]) => {
       result[sourceId] = { ...metrics };
-    }
+    });
     return result;
   }
   
@@ -204,7 +205,8 @@ export class SourceManager {
   private performHealthCheck(): void {
     logger.info('Performing source health check');
     
-    for (const [sourceId, metric] of this.metrics.entries()) {
+    // Use Array.from to avoid iterator issues
+    Array.from(this.metrics.entries()).forEach(([sourceId, metric]) => {
       // Disable sources with high failure rates
       if (metric.totalRequests > 10) {
         const failureRate = metric.failedRequests / metric.totalRequests;
@@ -218,7 +220,7 @@ export class SourceManager {
           metric.enabled = true;
         }
       }
-    }
+    });
   }
   
   /**

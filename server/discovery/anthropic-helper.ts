@@ -13,6 +13,8 @@ import { OpportunityType, RiskLevel } from '../../shared/schema';
 import { v4 as uuidv4 } from 'uuid';
 import { promptManager } from './prompt-manager';
 import { configManager } from './config-manager';
+import { skillGraph } from './skill-graph';
+import { marketDataService } from './market-data';
 
 // Initialize Anthropic client
 // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
@@ -75,27 +77,8 @@ export class AnthropicHelper {
    * Generate a detailed system prompt for Claude
    */
   private getSystemPrompt(): string {
-    return `You are an expert career and side hustle advisor specializing in helping people discover personalized monetization opportunities based on their skills and preferences. Your task is to suggest specific, actionable, and current monetization opportunities tailored to the user's skills, time availability, risk tolerance, and income goals.
-
-Your recommendations must be:
-1. Realistic - Grounded in the current market reality
-2. Specific - With clear action steps and resource recommendations
-3. Tailored - Precisely matched to the user's skill set
-4. Diverse - Representing different opportunity types and income models
-5. Inspiring - Including success stories of real people
-6. Actionable - Something the user could potentially start within 1-4 weeks
-
-For each opportunity, include:
-- Title and short description
-- Required skills and nice-to-have skills
-- Estimated income range and timeline
-- Startup costs
-- Risk level assessment
-- Clear steps to get started
-- Success story of someone with similar background
-- Relevant resources for learning more
-
-You will output this information in a structured JSON format for direct use in an application.`;
+    // Use the prompt manager to get the system prompt
+    return promptManager.getTemplate('system').template;
   }
   
   /**
@@ -114,61 +97,18 @@ You will output this information in a structured JSON format for direct use in a
     const prefText = workPreference || 'flexible';
     const detailsText = additionalDetails || 'No additional details provided';
 
-    return `Please suggest ${count} personalized monetization opportunities (side hustles, freelance work, digital products, etc.) based on the following profile:
-
-SKILLS: ${skillsText}
-
-TIME AVAILABILITY: ${timeText}
-
-RISK TOLERANCE: ${riskText}
-
-INCOME GOAL: ${incomeText}
-
-WORK PREFERENCE: ${prefText}
-
-ADDITIONAL DETAILS: ${detailsText}
-
-For each opportunity suggestion, please provide:
-1. A specific title (not generic like "Freelance Writing" but specific like "Technical Documentation for SaaS Companies")
-2. A compelling description that explains the opportunity
-3. Required skills (from their skill list) and nice-to-have skills
-4. Opportunity type (FREELANCE, DIGITAL_PRODUCT, CONTENT, SERVICE, PASSIVE, INFO_PRODUCT)
-5. Estimated income range (min-max) and timeframe (hourly, monthly, etc.)
-6. Startup costs (min-max)
-7. Time required in hours per week (min-max)
-8. Entry barrier (LOW, MEDIUM, HIGH)
-9. Market demand (LOW, MEDIUM, HIGH)
-10. 3-5 clear steps to get started
-11. A realistic success story of someone with similar background
-12. 2-3 specific resources (with titles and URLs) to learn more
-
-Please structure your response as a JSON array of opportunities that I can parse directly. The structure should be like this for each opportunity:
-
-{
-  "title": "Specific Opportunity Title",
-  "description": "Detailed description...",
-  "requiredSkills": ["skill1", "skill2"],
-  "niceToHaveSkills": ["skill3", "skill4"],
-  "type": "FREELANCE", (or other valid type)
-  "estimatedIncome": { "min": 50, "max": 150, "timeframe": "hour" },
-  "startupCost": { "min": 100, "max": 500 },
-  "timeRequired": { "min": 10, "max": 20 },
-  "entryBarrier": "MEDIUM", (LOW, MEDIUM, or HIGH)
-  "marketDemand": "HIGH", (LOW, MEDIUM, or HIGH)
-  "stepsToStart": ["Step 1...", "Step 2...", "Step 3..."],
-  "successStory": {
-    "name": "Person's Name",
-    "background": "Their background...",
-    "journey": "How they started...",
-    "outcome": "Current results..."
-  },
-  "resources": [
-    { "title": "Resource Title", "url": "https://example.com" },
-    { "title": "Another Resource", "url": "https://anotherexample.com" }
-  ]
-}
-
-Focus on current (2025) opportunities that are specific to their skills. Please make sure the JSON is valid and directly parseable.`;
+    // Get the template and fill in the variables
+    const template = promptManager.getTemplate('opportunity_generation').template;
+    
+    // Replace variables in the template
+    return template
+      .replace('{{count}}', String(count))
+      .replace('{{skills}}', skillsText)
+      .replace('{{time}}', timeText)
+      .replace('{{risk}}', riskText)
+      .replace('{{income}}', incomeText)
+      .replace('{{preference}}', prefText)
+      .replace('{{details}}', detailsText);
   }
   
   /**
@@ -329,34 +269,14 @@ Focus on current (2025) opportunities that are specific to their skills. Please 
     niceToHaveSkills: string[],
     userSkills: string[]
   ): number {
-    // Default values if missing
-    const required = requiredSkills || [];
-    const niceToHave = niceToHaveSkills || [];
-    const user = userSkills || [];
-    
-    // Normalize all skills to lowercase for comparison
-    const normalizedRequired = required.map(s => s.toLowerCase());
-    const normalizedNiceToHave = niceToHave.map(s => s.toLowerCase());
-    const normalizedUser = user.map(s => s.toLowerCase());
-    
-    // Find missing required skills
-    const missingRequired = normalizedRequired.filter(
-      skill => !normalizedUser.some(userSkill => userSkill.includes(skill) || skill.includes(userSkill))
+    // Use the skill graph to calculate a more accurate skill gap
+    const { days } = skillGraph.calculateSkillGapDays(
+      requiredSkills || [], 
+      niceToHaveSkills || [], 
+      userSkills || []
     );
     
-    // Find missing nice-to-have skills
-    const missingNiceToHave = normalizedNiceToHave.filter(
-      skill => !normalizedUser.some(userSkill => userSkill.includes(skill) || skill.includes(userSkill))
-    );
-    
-    // Calculate skill gap days based on missing skills
-    // Each missing required skill = 7-21 days
-    // Each missing nice-to-have skill = 3-7 days
-    const requiredSkillDays = missingRequired.length * Math.floor(Math.random() * 14 + 7);
-    const niceToHaveSkillDays = missingNiceToHave.length * Math.floor(Math.random() * 4 + 3);
-    
-    // Total skill gap days (capped at 90 days)
-    return Math.min(90, requiredSkillDays + niceToHaveSkillDays);
+    return days;
   }
   
   /**

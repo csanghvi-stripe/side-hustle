@@ -140,6 +140,8 @@ export interface OpportunitySource {
   isEnabled?: boolean;
   active?: boolean;
   getOpportunities(skills: string[], preferences: DiscoveryPreferences): Promise<RawOpportunity[]>;
+  handleError?: (error: Error | string) => void;
+  findOpportunities?: (skills: string[], preferences: DiscoveryPreferences) => Promise<RawOpportunity[]>;
 }
 
 // Classification of opportunity types
