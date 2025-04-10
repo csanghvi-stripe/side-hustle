@@ -27,6 +27,8 @@ export class UpworkSource extends BaseOpportunitySource {
       }
     );
     
+    this.apiKey = apiKey;
+    
     // Initialize axios instance with auth
     this.axiosInstance = axios.create({
       baseURL: 'https://api.upwork.com/v2/',
@@ -119,20 +121,20 @@ export class UpworkSource extends BaseOpportunitySource {
       const hourlyRateMax = job.hourly_rate_max || hourlyRateMin * 1.5;
       
       // Map job experience level to entry barrier
-      let entryBarrier = 'MEDIUM';
+      let entryBarrier = RiskLevel.MEDIUM;
       if (job.experience_level === 'Entry Level') {
-        entryBarrier = 'LOW';
+        entryBarrier = RiskLevel.LOW;
       } else if (job.experience_level === 'Expert') {
-        entryBarrier = 'HIGH';
+        entryBarrier = RiskLevel.HIGH;
       }
       
       // Create the opportunity
       return this.createOpportunity({
-        externalId: job.id,
+        id: `upwork-${job.id}`,
         url: `https://www.upwork.com/jobs/${job.id}`,
         title: job.title || 'Freelance Opportunity',
         description: job.description || '',
-        skillsRequired,
+        requiredSkills: skillsRequired,
         estimatedIncome: {
           min: hourlyRateMin,
           max: hourlyRateMax,
@@ -142,7 +144,7 @@ export class UpworkSource extends BaseOpportunitySource {
           min: 0,
           max: 100 // Upwork connects cost
         },
-        timeCommitment: {
+        timeRequired: {
           min: job.workload === 'Full Time' ? 30 : 10,
           max: job.workload === 'Full Time' ? 40 : 20,
           timeframe: 'weekly'
@@ -150,7 +152,7 @@ export class UpworkSource extends BaseOpportunitySource {
         location: 'remote',
         entryBarrier,
         competition: job.proposals_count > 20 ? 'high' : job.proposals_count > 10 ? 'medium' : 'low',
-        growth: 'stable'
+        stepsToStart: ["Create an Upwork account", "Complete your profile", "Apply for the job"]
       });
     });
   }
@@ -179,18 +181,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Website Development for Small Business',
             description: 'Looking for a skilled web developer to create a professional website for our growing business. Must be proficient in responsive design and modern web technologies.',
-            skillsRequired: ['web development', 'html', 'css', 'javascript', 'responsive design'],
+            requiredSkills: ['web development', 'html', 'css', 'javascript', 'responsive design'],
             estimatedIncome: {
               min: 35,
               max: 50,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 15,
               max: 25,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'high'
           })
         );
@@ -199,18 +201,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'React Developer for E-commerce Platform',
             description: 'We need a React developer to help build new features for our e-commerce platform. Experience with state management and API integration required.',
-            skillsRequired: ['react', 'javascript', 'redux', 'api integration', 'e-commerce'],
+            requiredSkills: ['react', 'javascript', 'redux', 'api integration', 'e-commerce'],
             estimatedIncome: {
               min: 45,
               max: 65,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 20,
               max: 40,
               timeframe: 'weekly'
             },
-            entryBarrier: 'HIGH',
+            entryBarrier: RiskLevel.HIGH,
             competition: 'medium'
           })
         );
@@ -228,18 +230,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Blog Content Writer for SaaS Company',
             description: 'We\'re looking for a skilled writer to create engaging blog content for our software company. Topics include productivity, remote work, and technology trends.',
-            skillsRequired: ['content writing', 'blog writing', 'SEO', 'research'],
+            requiredSkills: ['content writing', 'blog writing', 'SEO', 'research'],
             estimatedIncome: {
               min: 25,
               max: 40,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 10,
               max: 20,
               timeframe: 'weekly'
             },
-            entryBarrier: 'LOW',
+            entryBarrier: RiskLevel.LOW,
             competition: 'medium'
           })
         );
@@ -248,18 +250,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Technical Content Creator for Developer Platform',
             description: 'Create tutorials, guides, and documentation for our developer tools. Strong technical understanding and clear writing required.',
-            skillsRequired: ['technical writing', 'documentation', 'developer content', 'tutorials'],
+            requiredSkills: ['technical writing', 'documentation', 'developer content', 'tutorials'],
             estimatedIncome: {
               min: 35,
               max: 55,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 15,
               max: 25,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'low'
           })
         );
@@ -278,18 +280,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'UI/UX Designer for Mobile App',
             description: 'Design intuitive interfaces for our iOS and Android health app. Experience with user testing and modern design systems preferred.',
-            skillsRequired: ['ui design', 'ux design', 'mobile design', 'figma', 'user testing'],
+            requiredSkills: ['ui design', 'ux design', 'mobile design', 'figma', 'user testing'],
             estimatedIncome: {
               min: 40,
               max: 65,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 15,
               max: 30,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'medium'
           })
         );
@@ -298,18 +300,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Brand Identity Designer for Startup',
             description: 'Help create a cohesive brand identity including logo, color palette, and basic style guide for an innovative tech startup.',
-            skillsRequired: ['brand design', 'logo design', 'typography', 'color theory'],
+            requiredSkills: ['brand design', 'logo design', 'typography', 'color theory'],
             estimatedIncome: {
               min: 35,
               max: 60,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 10,
               max: 20,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'high'
           })
         );
@@ -327,18 +329,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'Social Media Marketing Specialist',
             description: 'Manage and grow our social media presence across major platforms. Create engaging content and analyze performance metrics.',
-            skillsRequired: ['social media marketing', 'content creation', 'analytics', 'copywriting'],
+            requiredSkills: ['social media marketing', 'content creation', 'analytics', 'copywriting'],
             estimatedIncome: {
               min: 25,
               max: 45,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 10,
               max: 20,
               timeframe: 'weekly'
             },
-            entryBarrier: 'LOW',
+            entryBarrier: RiskLevel.LOW,
             competition: 'high'
           })
         );
@@ -347,18 +349,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: 'SEO Consultant for E-commerce Store',
             description: 'Improve organic search ranking and traffic for our online store. Conduct keyword research, optimize product pages, and build quality backlinks.',
-            skillsRequired: ['SEO', 'keyword research', 'link building', 'content optimization'],
+            requiredSkills: ['SEO', 'keyword research', 'link building', 'content optimization'],
             estimatedIncome: {
               min: 35,
               max: 60,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 10,
               max: 15,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'medium'
           })
         );
@@ -370,18 +372,18 @@ export class UpworkSource extends BaseOpportunitySource {
           this.createOpportunity({
             title: `${skill} Specialist Needed`,
             description: `Looking for a professional with expertise in ${skill} to help with ongoing projects. Competitive pay for the right candidate.`,
-            skillsRequired: [skill],
+            requiredSkills: [skill],
             estimatedIncome: {
               min: 30,
               max: 50,
               timeframe: 'hourly'
             },
-            timeCommitment: {
+            timeRequired: {
               min: 10,
               max: 20,
               timeframe: 'weekly'
             },
-            entryBarrier: 'MEDIUM',
+            entryBarrier: RiskLevel.MEDIUM,
             competition: 'medium'
           })
         );
@@ -394,24 +396,24 @@ export class UpworkSource extends BaseOpportunitySource {
         this.createOpportunity({
           title: 'Entry-Level Virtual Assistant',
           description: 'Supporting a busy professional with email management, scheduling, and basic administrative tasks. Perfect for someone looking to build experience.',
-          skillsRequired: ['organization', 'communication', 'time management', 'attention to detail'],
+          requiredSkills: ['organization', 'communication', 'time management', 'attention to detail'],
           estimatedIncome: {
             min: 15,
             max: 25,
             timeframe: 'hourly'
           },
-          timeCommitment: {
+          timeRequired: {
             min: 10,
             max: 20,
             timeframe: 'weekly'
           },
-          entryBarrier: 'LOW',
+          entryBarrier: RiskLevel.LOW,
           competition: 'medium'
         })
       );
     }
     
     // Return unique opportunities
-    return [...new Map(opportunities.map(item => [item.title, item])).values()];
+    return Array.from(new Map(opportunities.map(item => [item.title, item])).values());
   }
 }

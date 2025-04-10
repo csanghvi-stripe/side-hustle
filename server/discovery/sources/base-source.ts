@@ -28,13 +28,13 @@ export abstract class BaseOpportunitySource implements OpportunitySource {
     id: string,
     name: string, 
     baseUrl: string,
-    type: string = 'FREELANCE',
+    type: OpportunityType = OpportunityType.FREELANCE,
     metadata: any = {}
   ) {
     this.id = id;
     this.name = name;
     this.baseUrl = baseUrl;
-    this.type = type as OpportunityType;
+    this.type = type;
     this.metadata = metadata;
     this.description = `Opportunities from ${name}`;
   }
