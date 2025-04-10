@@ -7,7 +7,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Filter, Search, Bookmark, BookmarkCheck } from "lucide-react";
+import { 
+  Loader2, 
+  Filter, 
+  Search, 
+  Bookmark, 
+  BookmarkCheck,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Link } from "wouter";
 import { OpportunityType, RiskLevel } from "@/types";
 
@@ -15,6 +23,10 @@ export default function SavedOpportunitiesPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Pagination state
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Fetch the user's saved opportunities
   const { data: savedOpportunities, isLoading } = useQuery<MonetizationOpportunity[]>({

@@ -454,20 +454,30 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
         </div>
 
         <div className="flex flex-col gap-5">
-          {/* Header with type */}
-          <div className="flex items-center gap-3 mt-3">
-            <div className="flex-shrink-0">
-              {getIconForType(opportunityData.type)}
+          {/* Header with type and View Details button */}
+          <div className="flex items-center justify-between gap-3 mt-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                {getIconForType(opportunityData.type)}
+              </div>
+              <Badge
+                variant={
+                  (typeVariants[
+                    opportunityData.type as keyof typeof typeVariants
+                  ] || "default") as any
+                }
+              >
+                {opportunityData.type}
+              </Badge>
             </div>
-            <Badge
-              variant={
-                (typeVariants[
-                  opportunityData.type as keyof typeof typeVariants
-                ] || "default") as any
-              }
-            >
-              {opportunityData.type}
-            </Badge>
+            
+            {/* View Details Button in the top right */}
+            <Link href={`/opportunity/${opportunity.id}`} className="flex-shrink-0">
+              <Button variant="outline" size="sm" className="px-3 py-1 h-8 whitespace-nowrap">
+                View Details
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
           </div>
 
           {/* Brief opportunity title and description */}
@@ -624,15 +634,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity }) => {
             </div>
           </div>
 
-          {/* View Details Button */}
-          <div className="mt-3 flex justify-end">
-            <Link href={`/opportunity/${opportunity.id}`}>
-              <Button variant="outline" size="sm" className="px-3 py-1 h-8">
-                View Details
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          {/* We've moved the View Details button to the top */}
         </div>
       </div>
     </TooltipProvider>
