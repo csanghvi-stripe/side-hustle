@@ -193,6 +193,52 @@ export default function SavedOpportunitiesPage() {
 
   // Sort skill groups alphabetically
   const sortedSkills = Object.keys(groupedBySkill).sort();
+  
+  // Get the total number of opportunities
+  const totalOpportunities = filteredOpportunities.length;
+  
+  // Apply pagination to all opportunities, not just per skill group
+  const paginatedOpportunities = filteredOpportunities.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE, 
+    currentPage * ITEMS_PER_PAGE
+  );
+  
+  // Create a new grouped structure with paginated opportunities
+  const paginatedGroupedBySkill: {[skillKey: string]: MonetizationOpportunity[]} = {};
+  
+  // Add opportunities from the paginated list to the grouped structure
+  paginatedOpportunities.forEach(opportunity => {
+    const skills = opportunity.skills as string[] || [];
+    
+    if (skills.length === 0) {
+      const key = "Other";
+      if (!paginatedGroupedBySkill[key]) {
+        paginatedGroupedBySkill[key] = [];
+      }
+      paginatedGroupedBySkill[key].push(opportunity);
+    } else {
+      skills.forEach(skill => {
+        const key = skill.trim();
+        if (!paginatedGroupedBySkill[key]) {
+          paginatedGroupedBySkill[key] = [];
+        }
+        if (!paginatedGroupedBySkill[key].find(opp => opp.id === opportunity.id)) {
+          paginatedGroupedBySkill[key].push(opportunity);
+        }
+      });
+    }
+  });
+  
+  // Sort skill groups alphabetically
+  const paginatedSortedSkills = Object.keys(paginatedGroupedBySkill).sort();
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(totalOpportunities / ITEMS_PER_PAGE);
+  
+  // Reset to page 1 if current page is out of bounds after filtering
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(1);
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -233,19 +279,20 @@ export default function SavedOpportunitiesPage() {
           </TabsList>
           
           <TabsContent value={activeTab} className="mt-0">
-            {sortedSkills && sortedSkills.length > 0 ? (
+            {filteredOpportunities.length > 0 ? (
               <div className="space-y-10">
-                {sortedSkills.map((skill: string) => (
+                {/* Display the paginated skills and opportunities */}
+                {paginatedSortedSkills.map((skill: string) => (
                   <div key={skill}>
                     <div className="flex items-center mb-4">
                       <h2 className="text-lg font-semibold">Skill: {skill}</h2>
                       <Badge variant="secondary" className="ml-3">
-                        {groupedBySkill[skill].length} opportunities
+                        {groupedBySkill[skill].length} total opportunities
                       </Badge>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {groupedBySkill[skill].map((opportunity) => {
+                      {paginatedGroupedBySkill[skill].map((opportunity: MonetizationOpportunity) => {
                         // Render the opportunity directly
                         return (
                           <div key={opportunity.id} className="relative">
@@ -261,6 +308,38 @@ export default function SavedOpportunitiesPage() {
                     </div>
                   </div>
                 ))}
+                
+                {/* Pagination controls at the bottom of all opportunities */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center mt-8 space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </Button>
+                    
+                    <div className="text-sm text-neutral-500">
+                      Page {currentPage} of {totalPages}
+                      <span className="ml-2 text-xs text-neutral-400">
+                        (Showing {Math.min(ITEMS_PER_PAGE, paginatedOpportunities.length)} of {totalOpportunities} opportunities)
+                      </span>
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <Card>
