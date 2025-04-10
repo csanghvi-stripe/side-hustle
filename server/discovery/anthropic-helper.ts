@@ -110,18 +110,69 @@ export class AnthropicHelper {
     const prefText = workPreference || 'flexible';
     const detailsText = additionalDetails || 'No additional details provided';
 
-    // Get the template and fill in the variables
-    const template = promptManager.getTemplate('opportunityGeneration').template;
-    
-    // Replace variables in the template
-    return template
-      .replace('{{count}}', String(count))
-      .replace('{{skillsText}}', skillsText)
-      .replace('{{timeText}}', timeText)
-      .replace('{{riskText}}', riskText)
-      .replace('{{incomeText}}', incomeText)
-      .replace('{{prefText}}', prefText)
-      .replace('{{detailsText}}', detailsText);
+    // Log variables to help debug
+    logger.info(`Opportunity generation variables:
+      - skills: ${skillsText}
+      - time: ${timeText}
+      - risk: ${riskText}
+      - income: ${incomeText}
+      - preference: ${prefText}
+      - details: ${detailsText}`);
+
+    // Use the prompt manager's fillTemplate method instead of doing manual replacements
+    try {
+      const filledTemplate = promptManager.fillTemplate('opportunity_generation', {
+        count: String(count),
+        skillsText,
+        timeText, 
+        riskText,
+        incomeText,
+        prefText,
+        detailsText
+      });
+      
+      // Verify template length
+      if (!filledTemplate || filledTemplate.trim() === '') {
+        logger.error(`Generated empty prompt after template filling. Template type: opportunity_generation`);
+        // Try the camelCase version as fallback
+        const fallbackTemplate = promptManager.fillTemplate('opportunityGeneration', {
+          count: String(count),
+          skillsText,
+          timeText, 
+          riskText,
+          incomeText,
+          prefText,
+          detailsText
+        });
+        
+        if (!fallbackTemplate || fallbackTemplate.trim() === '') {
+          throw new Error('Both template variants failed to generate a valid prompt');
+        }
+        
+        logger.info(`Fallback template filled successfully, length: ${fallbackTemplate.length}`);
+        return fallbackTemplate;
+      }
+      
+      logger.info(`Template filled successfully, length: ${filledTemplate.length}`);
+      return filledTemplate;
+    } catch (error) {
+      logger.error(`Error filling opportunity generation template: ${error}`);
+      
+      // As a last resort fallback, create a simple hand-crafted prompt
+      const manualPrompt = `Please suggest ${count} personalized monetization opportunities based on the following profile:
+      
+      SKILLS: ${skillsText}
+      TIME AVAILABILITY: ${timeText}
+      RISK TOLERANCE: ${riskText}
+      INCOME GOAL: ${incomeText}
+      WORK PREFERENCE: ${prefText}
+      ADDITIONAL DETAILS: ${detailsText}
+      
+      Respond with opportunities in valid JSON array format.`;
+      
+      logger.info(`Using manually generated prompt as fallback, length: ${manualPrompt.length}`);
+      return manualPrompt;
+    }
   }
   
   /**

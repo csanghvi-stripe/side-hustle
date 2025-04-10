@@ -167,7 +167,15 @@ IMPORTANT: Only output valid JSON. NO MARKDOWN. NO INTRODUCTIONS. NO EXPLANATION
       this.defaultTemplates.opportunityGenerationJsonFocus
     ]);
     
-    logger.info('Initialized prompt manager with default templates');
+    // Also add the same templates with the underscored version of the key for backward compatibility
+    this.templates.set('opportunity_generation', [
+      this.defaultTemplates.opportunityGeneration,
+      this.defaultTemplates.opportunityGenerationJsonFocus
+    ]);
+    
+    // Log available templates for debugging
+    const templateTypes = Array.from(this.templates.keys());
+    logger.info(`Initialized prompt manager with templates for types: ${templateTypes.join(', ')}`);
   }
 
   /**
