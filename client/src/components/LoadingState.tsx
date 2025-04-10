@@ -98,11 +98,11 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
   const regularSteps = [
     {
       title: "Analyzing your skills and preferences...",
-      description: "Claude is assessing your unique skillset and constraints"
+      description: "Claude AI is assessing your unique skillset and constraints"
     },
     {
-      title: "Evaluating market opportunities...",
-      description: "Identifying monetization options that match your profile"
+      title: "Evaluating monetization opportunities...",
+      description: "Identifying potential options that match your profile"
     },
     {
       title: "Creating personalized recommendations...",
@@ -114,31 +114,31 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
     }
   ];
   
-  // Enhanced algorithm steps
+  // Enhanced algorithm steps with Claude AI
   const enhancedSteps = [
     {
       title: "Analyzing your skills and preferences...",
-      description: "Claude is assessing your unique skillset and constraints"
+      description: "Claude AI is assessing your unique skillset and constraints"
     },
     {
-      title: "Researching current market opportunities...",
-      description: "Searching the web for real-time monetization data"
+      title: "Generating tailored opportunity ideas...",
+      description: "Claude AI is crafting personalized monetization suggestions"
     },
     {
-      title: "Gathering success stories and case studies...",
-      description: "Finding examples of people who monetized similar skills"
+      title: "Evaluating income potential...",
+      description: "Calculating realistic earnings projections for your skills"
     },
     {
-      title: "Researching market rates and demand...",
-      description: "Analyzing platforms for income potential and competition"
+      title: "Analyzing skill gap requirements...",
+      description: "Identifying learning paths to bridge any skill gaps"
     },
     {
-      title: "Creating personalized recommendations...",
-      description: "Combining AI analysis with web research for custom opportunities"
+      title: "Creating personalized opportunity recommendations...",
+      description: "Combining Claude AI analysis with market data for custom opportunities"
     },
     {
-      title: "Building actionable guides with real resources...",
-      description: "Preparing detailed implementation steps with up-to-date resources"
+      title: "Building actionable implementation guides...",
+      description: "Preparing detailed step-by-step instructions with timeline estimates"
     }
   ];
   
@@ -158,12 +158,12 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
           </div>
         </div>
         <h3 className="mt-4 text-xl font-semibold text-neutral-800">
-          {useEnhanced ? "Enhanced Research in Progress" : "AI Research in Progress"}
+          {useEnhanced ? "Claude AI Enhanced Research" : "Claude AI Research"}
         </h3>
         <p className="text-neutral-500 mt-1">
           {useEnhanced 
-            ? "Claude is analyzing your skills and searching the web for opportunity matches" 
-            : "Claude is analyzing your skills and finding opportunity matches"
+            ? "Anthropic's Claude AI is analyzing your skills and generating tailored monetization opportunities" 
+            : "Claude AI is analyzing your skills and generating personalized opportunity matches"
           }
         </p>
       </div>
@@ -214,8 +214,8 @@ const LoadingState: React.FC<LoadingStateProps> = ({ useEnhanced = false }) => {
 
       <div className="mt-8 text-center text-sm text-neutral-500">
         {useEnhanced 
-          ? "This may take up to 25 seconds to thoroughly research the best opportunities with real-time web data" 
-          : "This may take up to 20 seconds to thoroughly research the best opportunities for you"
+          ? "This may take up to 25 seconds for Claude AI to thoroughly research and generate your personalized opportunities" 
+          : "This may take up to 20 seconds for Claude AI to generate personalized opportunities for you"
         }
       </div>
     </div>
