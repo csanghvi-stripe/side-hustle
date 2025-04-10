@@ -343,8 +343,8 @@ const OpportunityDetailPage = () => {
     <div className="container max-w-6xl mx-auto py-8 px-4 sm:px-6">
       <div className="mb-6">
         <div className="flex space-x-4 mb-4">
-          {/* Use window.location.referrer to determine the source */}
-          {window.location.pathname.includes('/saved-opportunities/') ? (
+          {/* Use URL path to determine the source - specifically for opportunities in the saved list */}
+          {location.pathname.includes('/saved-opportunities/') ? (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/saved-opportunities">
                 <ArrowRight className="w-4 h-4 mr-1 rotate-180" />

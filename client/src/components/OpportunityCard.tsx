@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MonetizationOpportunity } from "@shared/schema";
+import { MonetizationOpportunity, OpportunityType } from "@shared/schema";
 import { Link } from "wouter";
 import SkillGapAnalyzer from "./analytics/SkillGapAnalyzer";
+import { normalizeOpportunityType } from "@/utils/opportunity-helpers";
 import {
   Briefcase,
   Code,
