@@ -111,17 +111,17 @@ export class AnthropicHelper {
     const detailsText = additionalDetails || 'No additional details provided';
 
     // Get the template and fill in the variables
-    const template = promptManager.getTemplate('opportunity_generation').template;
+    const template = promptManager.getTemplate('opportunityGeneration').template;
     
     // Replace variables in the template
     return template
       .replace('{{count}}', String(count))
-      .replace('{{skills}}', skillsText)
-      .replace('{{time}}', timeText)
-      .replace('{{risk}}', riskText)
-      .replace('{{income}}', incomeText)
-      .replace('{{preference}}', prefText)
-      .replace('{{details}}', detailsText);
+      .replace('{{skillsText}}', skillsText)
+      .replace('{{timeText}}', timeText)
+      .replace('{{riskText}}', riskText)
+      .replace('{{incomeText}}', incomeText)
+      .replace('{{prefText}}', prefText)
+      .replace('{{detailsText}}', detailsText);
   }
   
   /**
