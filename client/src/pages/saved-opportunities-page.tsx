@@ -23,15 +23,20 @@ import {
   ScrollText,
   Users,
   Gift,
-  Shapes
+  Shapes,
+  Sparkles,
+  TrendingUp,
+  Target,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { OpportunityType, RiskLevel } from "@/types";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function SavedOpportunitiesPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>("all");
+  const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [, setLocation] = useLocation();
 
   // Fetch the user's saved opportunities
   const { data: savedOpportunities, isLoading } = useQuery<
@@ -52,24 +57,68 @@ export default function SavedOpportunitiesPage() {
     );
   }
 
-  // Filter opportunities based on active tab and search query
+  // Filter opportunities based on active filter and search query
   const filteredOpportunities = savedOpportunities
     ? savedOpportunities.filter((opportunity) => {
         console.log("Filtering opportunity:", opportunity);
 
         let opportunityType = "";
+        let opportunityPriority = "";
 
         // Try to extract the opportunity type from various data structures
         try {
           if (typeof opportunity.opportunityData === "string") {
             const parsed = JSON.parse(opportunity.opportunityData);
             opportunityType = parsed.type || "";
+            
+            // Determine priority based on data
+            const roiScore = parsed.roiScore || 0;
+            const riskLevel = parsed.riskLevel || "Medium";
+            const skillGapDays = parsed.skillGapDays || 0;
+            const timeToRevenue = parsed.timeToFirstRevenue || "";
+            
+            if (
+              roiScore > 80 &&
+              riskLevel.toLowerCase() === "low" &&
+              timeToRevenue.includes("week") &&
+              skillGapDays < 14
+            ) {
+              opportunityPriority = "quick-wins";
+            } else if (opportunityType.includes("PASSIVE") || opportunityType.includes("Passive")) {
+              opportunityPriority = "passive";
+            } else if (skillGapDays > 30) {
+              opportunityPriority = "aspirational";
+            } else {
+              opportunityPriority = "growth";
+            }
+            
           } else if (
             opportunity.opportunityData &&
             typeof opportunity.opportunityData === "object"
           ) {
             const parsed = opportunity.opportunityData as any;
             opportunityType = parsed.type || "";
+            
+            // Determine priority for object data
+            const roiScore = parsed.roiScore || 0;
+            const riskLevel = parsed.riskLevel || "Medium";
+            const skillGapDays = parsed.skillGapDays || 0;
+            const timeToRevenue = parsed.timeToFirstRevenue || "";
+            
+            if (
+              roiScore > 80 &&
+              riskLevel.toLowerCase() === "low" &&
+              timeToRevenue.includes("week") &&
+              skillGapDays < 14
+            ) {
+              opportunityPriority = "quick-wins";
+            } else if (opportunityType.includes("PASSIVE") || opportunityType.includes("Passive")) {
+              opportunityPriority = "passive";
+            } else if (skillGapDays > 30) {
+              opportunityPriority = "aspirational";
+            } else {
+              opportunityPriority = "growth";
+            }
           }
 
           // If type is missing from opportunityData, check opportunity.type
@@ -80,73 +129,46 @@ export default function SavedOpportunitiesPage() {
           // Normalize opportunity type for comparison
           if (opportunityType) {
             // First, handle database-style uppercase enum values
-            opportunityType = opportunityType.toUpperCase();
+            const typeToCheck = opportunityType.toUpperCase();
 
             // Check for direct matches from database schema enum values
             if (
-              opportunityType === "FREELANCE" ||
-              opportunityType === "FREELANCING"
+              typeToCheck === "FREELANCE" ||
+              typeToCheck === "FREELANCING"
             ) {
               opportunityType = OpportunityType.FREELANCE;
-            } else if (opportunityType === "DIGITAL_PRODUCT") {
+            } else if (typeToCheck === "DIGITAL_PRODUCT") {
               opportunityType = OpportunityType.DIGITAL_PRODUCT;
             } else if (
-              opportunityType === "CONTENT" ||
-              opportunityType === "CONTENT_CREATION"
+              typeToCheck === "CONTENT" ||
+              typeToCheck === "CONTENT_CREATION"
             ) {
               opportunityType = OpportunityType.CONTENT;
             } else if (
-              opportunityType === "SERVICE" ||
-              opportunityType === "SERVICE_BASED"
+              typeToCheck === "SERVICE" ||
+              typeToCheck === "SERVICE_BASED"
             ) {
               opportunityType = OpportunityType.SERVICE;
             } else if (
-              opportunityType === "PASSIVE" ||
-              opportunityType === "PASSIVE_INCOME"
+              typeToCheck === "PASSIVE" ||
+              typeToCheck === "PASSIVE_INCOME"
             ) {
               opportunityType = OpportunityType.PASSIVE;
-            } else if (opportunityType === "INFO_PRODUCT") {
+            } else if (typeToCheck === "INFO_PRODUCT") {
               opportunityType = OpportunityType.INFO_PRODUCT;
-            } else {
-              // If no direct match, try case-insensitive includes
-              const typeToCheck = opportunityType.toLowerCase();
-
-              if (
-                typeToCheck.includes("freelance") ||
-                typeToCheck.includes("consulting")
-              ) {
-                opportunityType = OpportunityType.FREELANCE;
-              } else if (
-                typeToCheck.includes("digital") ||
-                typeToCheck.includes("product")
-              ) {
-                opportunityType = OpportunityType.DIGITAL_PRODUCT;
-              } else if (
-                typeToCheck.includes("content") ||
-                typeToCheck.includes("creation") ||
-                typeToCheck.includes("blog")
-              ) {
-                opportunityType = OpportunityType.CONTENT;
-              } else if (typeToCheck.includes("service")) {
-                opportunityType = OpportunityType.SERVICE;
-              } else if (typeToCheck.includes("passive")) {
-                opportunityType = OpportunityType.PASSIVE;
-              } else if (
-                typeToCheck.includes("info") ||
-                typeToCheck.includes("course")
-              ) {
-                opportunityType = OpportunityType.INFO_PRODUCT;
-              }
             }
           }
 
           console.log(
-            `Opportunity ${opportunity.id} type: "${opportunityType}", activeTab: "${activeTab}"`,
+            `Opportunity ${opportunity.id} type: "${opportunityType}", activeFilter: "${activeFilter}"`,
           );
 
-          // Filter by type if not on "all" tab
-          if (activeTab !== "all" && activeTab !== opportunityType) {
-            return false;
+          // Filter by priority when specific filter is selected
+          if (activeFilter !== "all") {
+            if (activeFilter === "quick-wins" && opportunityPriority !== "quick-wins") return false;
+            if (activeFilter === "growth" && opportunityPriority !== "growth") return false;
+            if (activeFilter === "aspirational" && opportunityPriority !== "aspirational") return false;
+            if (activeFilter === "passive" && opportunityPriority !== "passive") return false;
           }
 
           // Filter by search query if present
@@ -240,6 +262,14 @@ export default function SavedOpportunitiesPage() {
 
   // Sort skill groups alphabetically
   const sortedSkills = Object.keys(groupedBySkill).sort();
+  
+  // Function to navigate to the opportunity detail page
+  const handleOpportunityClick = (opportunity: MonetizationOpportunity) => {
+    if (!opportunity || !opportunity.id) return;
+    
+    // Navigate to the opportunity detail page
+    setLocation(`/opportunity/${opportunity.id}`);
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -273,59 +303,50 @@ export default function SavedOpportunitiesPage() {
         <div className="mb-6">
           <div className="flex items-center mb-2">
             <Filter className="w-4 h-4 mr-2 text-neutral-500" />
-            <h3 className="font-medium">Filter Opportunities</h3>
+            <h3 className="font-medium">Filter Results</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
-              variant={activeTab === "all" ? "default" : "outline"}
+              variant={activeFilter === "all" ? "default" : "outline"}
               size="sm"
               className="flex items-center"
-              onClick={() => setActiveTab("all")}
+              onClick={() => setActiveFilter("all")}
             >
               <Shapes className="w-4 h-4 mr-2" />
               All Opportunities
             </Button>
             <Button
-              variant={activeTab === OpportunityType.FREELANCE ? "default" : "outline"}
+              variant={activeFilter === "quick-wins" ? "default" : "outline"}
               size="sm"
               className="flex items-center"
-              onClick={() => setActiveTab(OpportunityType.FREELANCE)}
+              onClick={() => setActiveFilter("quick-wins")}
             >
-              <PenTool className="w-4 h-4 mr-2" />
-              Freelance
+              <Sparkles className="w-4 h-4 mr-2" />
+              Quick Wins
             </Button>
             <Button
-              variant={activeTab === OpportunityType.DIGITAL_PRODUCT ? "default" : "outline"}
+              variant={activeFilter === "growth" ? "default" : "outline"}
               size="sm"
               className="flex items-center"
-              onClick={() => setActiveTab(OpportunityType.DIGITAL_PRODUCT)}
+              onClick={() => setActiveFilter("growth")}
             >
-              <Laptop className="w-4 h-4 mr-2" />
-              Digital Product
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Growth Opportunities
             </Button>
             <Button
-              variant={activeTab === OpportunityType.CONTENT ? "default" : "outline"}
+              variant={activeFilter === "aspirational" ? "default" : "outline"}
               size="sm"
               className="flex items-center"
-              onClick={() => setActiveTab(OpportunityType.CONTENT)}
+              onClick={() => setActiveFilter("aspirational")}
             >
-              <ScrollText className="w-4 h-4 mr-2" />
-              Content Creation
+              <Target className="w-4 h-4 mr-2" />
+              Aspirational Paths
             </Button>
             <Button
-              variant={activeTab === OpportunityType.SERVICE ? "default" : "outline"}
+              variant={activeFilter === "passive" ? "default" : "outline"}
               size="sm"
               className="flex items-center"
-              onClick={() => setActiveTab(OpportunityType.SERVICE)}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Service-Based
-            </Button>
-            <Button
-              variant={activeTab === OpportunityType.PASSIVE ? "default" : "outline"}
-              size="sm"
-              className="flex items-center"
-              onClick={() => setActiveTab(OpportunityType.PASSIVE)}
+              onClick={() => setActiveFilter("passive")}
             >
               <Gift className="w-4 h-4 mr-2" />
               Passive Income
@@ -333,55 +354,106 @@ export default function SavedOpportunitiesPage() {
           </div>
         </div>
 
-{sortedSkills && sortedSkills.length > 0 ? (
-  <div className="space-y-10">
-    {sortedSkills.map((skill: string) => (
-      <div key={skill}>
-        <div className="flex items-center mb-4">
-          <h2 className="text-lg font-semibold">Skill: {skill}</h2>
-          <Badge variant="secondary" className="ml-3">
-            {groupedBySkill[skill].length} opportunities
-          </Badge>
-        </div>
+        <AnimatePresence>
+          {sortedSkills && sortedSkills.length > 0 ? (
+            <div className="space-y-10">
+              {sortedSkills.map((skill: string) => (
+                <div key={skill}>
+                  <div className="flex items-center mb-4">
+                    <h2 className="text-lg font-semibold">Skill: {skill}</h2>
+                    <Badge variant="secondary" className="ml-3">
+                      {groupedBySkill[skill].length} opportunities
+                    </Badge>
+                  </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {groupedBySkill[skill].map((opportunity) => {
-            // Render the opportunity directly
-            return (
-              <div key={opportunity.id} className="relative">
-                <div className="absolute top-2 right-2 z-10">
-                  <Badge className="text-xs bg-slate-700 hover:bg-slate-800">
-                    {new Date(
-                      opportunity.createdAt,
-                    ).toLocaleDateString()}
-                  </Badge>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {groupedBySkill[skill].map((opportunity) => {
+                      // Get priority for the opportunity
+                      let priority = "Growth Opportunity"; // Default
+                      
+                      try {
+                        let data = {};
+                        if (typeof opportunity.opportunityData === "string") {
+                          data = JSON.parse(opportunity.opportunityData);
+                        } else if (opportunity.opportunityData && typeof opportunity.opportunityData === "object") {
+                          data = opportunity.opportunityData;
+                        }
+                        
+                        const parsedData = data as any;
+                        const roiScore = parsedData.roiScore || 0;
+                        const riskLevel = (parsedData.riskLevel || "").toLowerCase();
+                        const timeToRevenue = parsedData.timeToFirstRevenue || "";
+                        const skillGapDays = parsedData.skillGapDays || 0;
+                        const type = parsedData.type || "";
+                        
+                        if (
+                          roiScore > 80 &&
+                          riskLevel === "low" &&
+                          timeToRevenue.includes("week") &&
+                          skillGapDays < 14
+                        ) {
+                          priority = "Quick Win";
+                        } else if (type.includes("PASSIVE") || type.includes("Passive")) {
+                          priority = "Passive Income";
+                        } else if (skillGapDays > 30) {
+                          priority = "Aspirational Path";
+                        }
+                      } catch (error) {
+                        console.error("Error determining priority:", error);
+                      }
+                      
+                      return (
+                        <motion.div
+                          key={opportunity.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ 
+                            opacity: 1, 
+                            y: 0,
+                            transition: { 
+                              delay: 0.1,
+                              duration: 0.4,
+                            }
+                          }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="relative"
+                        >
+                          <div className="absolute top-2 right-2 z-10">
+                            <Badge className="text-xs bg-slate-700 hover:bg-slate-800">
+                              {new Date(
+                                opportunity.createdAt,
+                              ).toLocaleDateString()}
+                            </Badge>
+                          </div>
+                          <OpportunityCard 
+                            opportunity={opportunity} 
+                            source="saved"
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <OpportunityCard opportunity={opportunity} />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    ))}
-  </div>
-) : (
-  <Card>
-    <CardContent className="flex flex-col items-center justify-center py-16">
-      <Bookmark className="h-12 w-12 text-neutral-300 mb-4" />
-      <h3 className="text-xl font-semibold mb-2">
-        No saved opportunities found
-      </h3>
-      <p className="text-neutral-500 text-center mb-6">
-        {searchQuery
-          ? "No results match your search criteria. Try adjusting your search terms."
-          : "You haven't saved any monetization opportunities yet."}
-      </p>
-      <Button asChild>
-        <Link href="/">Discover Opportunities</Link>
-      </Button>
-    </CardContent>
-  </Card>
-)}
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <Bookmark className="h-12 w-12 text-neutral-300 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">
+                  No saved opportunities found
+                </h3>
+                <p className="text-neutral-500 text-center mb-6">
+                  {searchQuery
+                    ? "No results match your search criteria. Try adjusting your search terms."
+                    : "You haven't saved any monetization opportunities yet."}
+                </p>
+                <Button asChild>
+                  <Link href="/">Discover Opportunities</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </AnimatePresence>
       </main>
 
       <footer className="bg-white border-t border-neutral-200 py-6 mt-12">
