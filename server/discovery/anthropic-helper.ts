@@ -28,39 +28,6 @@ const generateOpportunityId = (source: string, type: string) =>
 
 export class AnthropicHelper {
   /**
-   * Rank opportunities based on user preferences using Anthropic AI
-   * @param opportunities Array of opportunities to rank
-   * @param preferences User's discovery preferences
-   * @returns Ranked array of opportunities
-   */
-  public async rankOpportunities(
-    opportunities: RawOpportunity[],
-    preferences: DiscoveryPreferences
-  ): Promise<RawOpportunity[]> {
-    try {
-      logger.info(`Using Anthropic AI to rank ${opportunities.length} opportunities`);
-      
-      // If no opportunities to rank, return empty array
-      if (!opportunities || opportunities.length === 0) {
-        logger.warn("No opportunities provided for ranking");
-        return [];
-      }
-      
-      // Clone the opportunities to avoid modifying originals
-      const clonedOpportunities = JSON.parse(JSON.stringify(opportunities));
-      
-      // For now, simply return the opportunities in their current order
-      // This is a fallback implementation until we implement the full AI ranking
-      logger.info(`Successfully ranked ${clonedOpportunities.length} opportunities`);
-      return clonedOpportunities;
-    } catch (error) {
-      logger.error(
-        `Anthropic ranking error: ${error instanceof Error ? error.message : String(error)}`
-      );
-      return opportunities; // Return original opportunities on error
-    }
-  }
-  /**
    * Generate thoughtful monetization opportunity suggestions using Anthropic AI
    * @param preferences User's discovery preferences
    * @param count Number of opportunities to generate

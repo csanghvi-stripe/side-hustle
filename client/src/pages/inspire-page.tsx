@@ -169,7 +169,14 @@ const OpportunityCard = ({ opportunity, index, priority, onClick }: OpportunityC
             </div>
           </div>
           
-          <Button className="w-full mt-4" size="sm">
+          <Button 
+            className="w-full mt-4" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent the card click handler from firing
+              onClick(); // Call the parent component's click handler
+            }}
+          >
             View Details
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
