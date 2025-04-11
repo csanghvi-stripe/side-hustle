@@ -10,10 +10,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Filter, Search, Bookmark, BookmarkCheck } from "lucide-react";
+import { 
+  Loader2, 
+  Filter, 
+  Search, 
+  Bookmark, 
+  BookmarkCheck,
+  PenTool,
+  Laptop,
+  ScrollText,
+  Users,
+  Gift,
+  Shapes
+} from "lucide-react";
 import { Link } from "wouter";
 import { OpportunityType, RiskLevel } from "@/types";
 
@@ -259,75 +270,118 @@ export default function SavedOpportunitiesPage() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="mb-8">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value={OpportunityType.FREELANCE}>
-              {OpportunityType.FREELANCE}
-            </TabsTrigger>
-            <TabsTrigger value={OpportunityType.DIGITAL_PRODUCT}>
-              {OpportunityType.DIGITAL_PRODUCT}
-            </TabsTrigger>
-            <TabsTrigger value={OpportunityType.CONTENT}>
-              {OpportunityType.CONTENT}
-            </TabsTrigger>
-            <TabsTrigger value={OpportunityType.SERVICE}>
-              {OpportunityType.SERVICE}
-            </TabsTrigger>
-          </TabsList>
+        <div className="mb-6">
+          <div className="flex items-center mb-2">
+            <Filter className="w-4 h-4 mr-2 text-neutral-500" />
+            <h3 className="font-medium">Filter Opportunities</h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={activeTab === "all" ? "default" : "outline"}
+              size="sm"
+              className="flex items-center"
+              onClick={() => setActiveTab("all")}
+            >
+              <Shapes className="w-4 h-4 mr-2" />
+              All Opportunities
+            </Button>
+            <Button
+              variant={activeTab === OpportunityType.FREELANCE ? "default" : "outline"}
+              size="sm"
+              className="flex items-center"
+              onClick={() => setActiveTab(OpportunityType.FREELANCE)}
+            >
+              <PenTool className="w-4 h-4 mr-2" />
+              Freelance
+            </Button>
+            <Button
+              variant={activeTab === OpportunityType.DIGITAL_PRODUCT ? "default" : "outline"}
+              size="sm"
+              className="flex items-center"
+              onClick={() => setActiveTab(OpportunityType.DIGITAL_PRODUCT)}
+            >
+              <Laptop className="w-4 h-4 mr-2" />
+              Digital Product
+            </Button>
+            <Button
+              variant={activeTab === OpportunityType.CONTENT ? "default" : "outline"}
+              size="sm"
+              className="flex items-center"
+              onClick={() => setActiveTab(OpportunityType.CONTENT)}
+            >
+              <ScrollText className="w-4 h-4 mr-2" />
+              Content Creation
+            </Button>
+            <Button
+              variant={activeTab === OpportunityType.SERVICE ? "default" : "outline"}
+              size="sm"
+              className="flex items-center"
+              onClick={() => setActiveTab(OpportunityType.SERVICE)}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Service-Based
+            </Button>
+            <Button
+              variant={activeTab === OpportunityType.PASSIVE ? "default" : "outline"}
+              size="sm"
+              className="flex items-center"
+              onClick={() => setActiveTab(OpportunityType.PASSIVE)}
+            >
+              <Gift className="w-4 h-4 mr-2" />
+              Passive Income
+            </Button>
+          </div>
+        </div>
 
-          <TabsContent value={activeTab} className="mt-0">
-            {sortedSkills && sortedSkills.length > 0 ? (
-              <div className="space-y-10">
-                {sortedSkills.map((skill: string) => (
-                  <div key={skill}>
-                    <div className="flex items-center mb-4">
-                      <h2 className="text-lg font-semibold">Skill: {skill}</h2>
-                      <Badge variant="secondary" className="ml-3">
-                        {groupedBySkill[skill].length} opportunities
-                      </Badge>
-                    </div>
+{sortedSkills && sortedSkills.length > 0 ? (
+  <div className="space-y-10">
+    {sortedSkills.map((skill: string) => (
+      <div key={skill}>
+        <div className="flex items-center mb-4">
+          <h2 className="text-lg font-semibold">Skill: {skill}</h2>
+          <Badge variant="secondary" className="ml-3">
+            {groupedBySkill[skill].length} opportunities
+          </Badge>
+        </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {groupedBySkill[skill].map((opportunity) => {
-                        // Render the opportunity directly
-                        return (
-                          <div key={opportunity.id} className="relative">
-                            <div className="absolute top-2 right-2 z-10">
-                              <Badge className="text-xs bg-slate-700 hover:bg-slate-800">
-                                {new Date(
-                                  opportunity.createdAt,
-                                ).toLocaleDateString()}
-                              </Badge>
-                            </div>
-                            <OpportunityCard opportunity={opportunity} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {groupedBySkill[skill].map((opportunity) => {
+            // Render the opportunity directly
+            return (
+              <div key={opportunity.id} className="relative">
+                <div className="absolute top-2 right-2 z-10">
+                  <Badge className="text-xs bg-slate-700 hover:bg-slate-800">
+                    {new Date(
+                      opportunity.createdAt,
+                    ).toLocaleDateString()}
+                  </Badge>
+                </div>
+                <OpportunityCard opportunity={opportunity} />
               </div>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-16">
-                  <Bookmark className="h-12 w-12 text-neutral-300 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    No saved opportunities found
-                  </h3>
-                  <p className="text-neutral-500 text-center mb-6">
-                    {searchQuery
-                      ? "No results match your search criteria. Try adjusting your search terms."
-                      : "You haven't saved any monetization opportunities yet."}
-                  </p>
-                  <Button asChild>
-                    <Link href="/">Discover Opportunities</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
+) : (
+  <Card>
+    <CardContent className="flex flex-col items-center justify-center py-16">
+      <Bookmark className="h-12 w-12 text-neutral-300 mb-4" />
+      <h3 className="text-xl font-semibold mb-2">
+        No saved opportunities found
+      </h3>
+      <p className="text-neutral-500 text-center mb-6">
+        {searchQuery
+          ? "No results match your search criteria. Try adjusting your search terms."
+          : "You haven't saved any monetization opportunities yet."}
+      </p>
+      <Button asChild>
+        <Link href="/">Discover Opportunities</Link>
+      </Button>
+    </CardContent>
+  </Card>
+)}
       </main>
 
       <footer className="bg-white border-t border-neutral-200 py-6 mt-12">
