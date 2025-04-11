@@ -1,46 +1,33 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { MonetizationOpportunity, OpportunityType } from "@shared/schema";
+import { MonetizationOpportunity } from "@shared/schema";
 import { Link } from "wouter";
-import SkillGapAnalyzer from "./analytics/SkillGapAnalyzer";
 import { normalizeOpportunityType } from "@/utils/opportunity-helpers";
 import {
-  Briefcase,
-  Code,
-  Monitor,
-  Brush,
-  Presentation,
-  Package,
-  CircleDollarSign,
-  Megaphone,
   TrendingUp,
   Clock,
   Target,
   DollarSign,
   Building,
-  ChevronRight,
   Trash2,
-  HelpCircle,
-  Info,
   ArrowRight,
-  Shapes,
   PenTool,
   Laptop,
   ScrollText,
   Users,
   BookOpen,
+  Shapes,
+  Briefcase,
+  Package,
+  Brush,
+  CircleDollarSign,
+  Monitor,
+  Presentation,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -591,7 +578,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity, source =
             </div>
           </div>
           
-          <Link href={`/opportunity/${opportunity.id}`} passHref>
+          <Link href={`/opportunity/${opportunity.id}`}>
             <Button 
               className="w-full mt-4" 
               size="sm"
