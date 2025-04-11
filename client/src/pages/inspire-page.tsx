@@ -40,14 +40,19 @@ interface OpportunityCardProps {
 }
 
 const OpportunityCard = ({ opportunity, index, priority, onClick }: OpportunityCardProps) => {
+  // Log the incoming opportunity object
+  console.log(`Card ${index} - Opportunity:`, opportunity);
+  console.log(`Card ${index} - Priority:`, priority);
+  
   // Ensure opportunity data is properly extracted
   let opportunityData;
   try {
     opportunityData = opportunity.opportunityData && typeof opportunity.opportunityData === 'string' 
       ? JSON.parse(opportunity.opportunityData) 
       : opportunity.opportunityData || {};
+    console.log(`Card ${index} - Parsed Data:`, opportunityData);
   } catch (error) {
-    console.error("Error parsing opportunity data:", error);
+    console.error(`Card ${index} - Error parsing opportunity data:`, error);
     opportunityData = {};
   }
   
@@ -238,6 +243,16 @@ export default function InspirePage() {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
+    // Log the results for debugging
+    console.log("Results from context:", results);
+    if (results?.userProfile) {
+      console.log("User profile:", results.userProfile);
+    }
+    if (results?.opportunities) {
+      console.log("Opportunities count:", results.opportunities.length);
+      console.log("First opportunity sample:", results.opportunities[0]);
+    }
+    
     // Short delay to allow for any async operations
     const timer = setTimeout(() => {
       setIsLoading(false);
