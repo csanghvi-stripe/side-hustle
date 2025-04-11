@@ -40,10 +40,17 @@ interface OpportunityCardProps {
 }
 
 const OpportunityCard = ({ opportunity, index, priority, onClick }: OpportunityCardProps) => {
-  const opportunityData = opportunity.opportunityData && typeof opportunity.opportunityData === 'string' 
-    ? JSON.parse(opportunity.opportunityData) 
-    : opportunity.opportunityData || {};
-    
+  // Ensure opportunity data is properly extracted
+  let opportunityData;
+  try {
+    opportunityData = opportunity.opportunityData && typeof opportunity.opportunityData === 'string' 
+      ? JSON.parse(opportunity.opportunityData) 
+      : opportunity.opportunityData || {};
+  } catch (error) {
+    console.error("Error parsing opportunity data:", error);
+    opportunityData = {};
+  }
+  
   const { title, type, incomePotential, startupCost, riskLevel, roiScore, timeToFirstRevenue, skillGapDays } = opportunityData;
   
   const getBadgeStyle = (type: string) => {
@@ -174,6 +181,7 @@ const OpportunityCard = ({ opportunity, index, priority, onClick }: OpportunityC
             className="w-full mt-4" 
             size="sm" 
             onClick={(e) => {
+              e.preventDefault(); // Prevent default behavior
               e.stopPropagation(); // Prevent the card click handler from firing
               onClick(); // Call the parent component's click handler
             }}
@@ -263,9 +271,16 @@ export default function InspirePage() {
     if (!opportunity) return 'Opportunity';
     
     const score = opportunity.score || 0;
-    const data = opportunity.opportunityData && typeof opportunity.opportunityData === 'string'
-      ? JSON.parse(opportunity.opportunityData)
-      : opportunity.opportunityData || {};
+    // Safely parse opportunity data with error handling
+    let data = {};
+    try {
+      data = opportunity.opportunityData && typeof opportunity.opportunityData === 'string'
+        ? JSON.parse(opportunity.opportunityData)
+        : opportunity.opportunityData || {};
+    } catch (error) {
+      console.error("Error parsing opportunity data for priority:", error);
+      // Continue with empty data object
+    }
     
     const riskLevel = (data.riskLevel || '').toLowerCase();
     const timeToRevenue = data.timeToFirstRevenue || '';
@@ -364,9 +379,9 @@ export default function InspirePage() {
                 We've found {results.opportunities.length} opportunity matches for you
               </h3>
               <p className="text-neutral-700">
-                These opportunities are matched to your skills in {results.userSkills?.join(', ')} 
-                and your preference for {results.timeCommitment} time commitment 
-                with {results.riskTolerance} risk tolerance.
+                These opportunities are matched to your skills in {results.userProfile?.skills?.join(', ')} 
+                and your preference for {results.userProfile?.timeAvailability} time commitment 
+                with {results.userProfile?.riskTolerance} risk tolerance.
               </p>
             </div>
           </div>
