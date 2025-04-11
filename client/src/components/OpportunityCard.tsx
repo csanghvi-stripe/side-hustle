@@ -578,7 +578,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity, source =
             </div>
           </div>
           
-          <Link href={`/opportunity/${opportunity.id}`}>
+          <Link to={`/opportunity/${opportunity.id}`}>
             <Button 
               className="w-full mt-4" 
               size="sm"

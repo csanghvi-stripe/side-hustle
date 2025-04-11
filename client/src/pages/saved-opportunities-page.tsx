@@ -283,7 +283,7 @@ export default function SavedOpportunitiesPage() {
           </div>
 
           <Button asChild className="mt-4 md:mt-0">
-            <Link href="/">Discover New Opportunities</Link>
+            <Link to="/">Discover New Opportunities</Link>
           </Button>
         </div>
 
@@ -448,7 +448,7 @@ export default function SavedOpportunitiesPage() {
                     : "You haven't saved any monetization opportunities yet."}
                 </p>
                 <Button asChild>
-                  <Link href="/">Discover Opportunities</Link>
+                  <Link to="/">Discover Opportunities</Link>
                 </Button>
               </CardContent>
             </Card>
