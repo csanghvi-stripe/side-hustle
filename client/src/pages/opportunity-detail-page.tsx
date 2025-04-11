@@ -214,22 +214,26 @@ export default function OpportunityDetailPage() {
   const [videoPlaying, setVideoPlaying] = useState(false);
   const { toast } = useToast();
   
-  // Check if we are coming from the saved opportunities page or the discover page
-  const [isFromSaved, setIsFromSaved] = useState(false);
+  // Store the source page (saved, inspire, or home) to determine proper back navigation
+  const [sourceType, setSourceType] = useState<string>('home');
   
   // Check the stored navigation context when the component mounts
   useEffect(() => {
     // First check localStorage (most reliable method)
     const opportunitySource = localStorage.getItem('opportunitySource');
     if (opportunitySource === 'saved') {
-      setIsFromSaved(true);
+      setSourceType('saved');
+    } else if (opportunitySource === 'inspire') {
+      setSourceType('inspire');
     } else if (opportunitySource === 'search') {
-      setIsFromSaved(false);
+      setSourceType('home');
     } else {
       // Fallback to checking document.referrer
       const referrer = document.referrer;
       if (referrer && (referrer.includes('/saved-opportunities') || referrer.includes('/saved'))) {
-        setIsFromSaved(true);
+        setSourceType('saved');
+      } else if (referrer && referrer.includes('/inspire')) {
+        setSourceType('inspire');
       }
     }
   }, []);

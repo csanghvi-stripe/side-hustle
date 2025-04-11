@@ -17,6 +17,7 @@ import SkillsAssessmentPage from "@/pages/skills-assessment-page";
 import PricingCalculatorPage from "@/pages/pricing-calculator-page";
 import ActionPlanPage from "@/pages/action-plan-page";
 import OpportunityDetailPage from "@/pages/opportunity-detail-page";
+import InspirePage from "@/pages/inspire-page";
 import BlogPage from "@/pages/blog-page";
 import BlogPostPage from "@/pages/blog-post-page";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -30,6 +31,7 @@ function Router() {
       <main>
         <Switch>
           <ProtectedRoute path="/" component={Home} />
+          <ProtectedRoute path="/inspire" component={InspirePage} />
           <ProtectedRoute path="/inbox" component={InboxPage} />
           <ProtectedRoute path="/settings" component={SettingsPage} />
           <ProtectedRoute path="/saved-opportunities" component={SavedOpportunitiesPage} />
