@@ -351,9 +351,20 @@ export default function OpportunityDetailPage() {
               localStorage.removeItem('opportunitySource');
             }}
           >
-            <Link href={isFromSaved ? "/saved-opportunities" : "/"}>
+            <Link href={
+              sourceType === 'saved' 
+                ? "/saved-opportunities" 
+                : sourceType === 'inspire' 
+                  ? "/inspire" 
+                  : "/"
+            }>
               <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
-              {isFromSaved ? "Back to Saved Opportunities" : "Back to Search Results"}
+              {sourceType === 'saved' 
+                ? "Back to Saved Opportunities" 
+                : sourceType === 'inspire' 
+                  ? "Back to Search Results" 
+                  : "Back to Home"
+              }
             </Link>
           </Button>
         </div>

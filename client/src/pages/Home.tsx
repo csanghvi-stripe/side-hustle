@@ -10,10 +10,10 @@ const Home: React.FC = () => {
 
   const handleResultsReceived = (newResults: MonetizationResults) => {
     // Store results in localStorage so the inspire page can access them
-    localStorage.setItem("searchResults", JSON.stringify(newResults));
+    localStorage.setItem("monetizationResults", JSON.stringify(newResults));
     
     // Set a flag to indicate we're coming from the home page
-    localStorage.setItem("resultSource", "home");
+    localStorage.setItem("opportunitySource", "search");
     
     // Redirect to the inspire page
     setLocation("/inspire");
