@@ -24,6 +24,13 @@ import {
   Trash2,
   HelpCircle,
   Info,
+  ArrowRight,
+  Shapes,
+  PenTool,
+  Laptop,
+  ScrollText,
+  Users,
+  BookOpen,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -34,6 +41,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { motion } from "framer-motion";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 // Helper function to generate realistic metrics for opportunities
 const calculateOpportunityMetrics = (
@@ -425,22 +439,44 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity, source =
     setIsSkillGapExpanded(!isSkillGapExpanded);
   };
 
-  // This is the simplified summary card for the opportunities list page that matches the screenshot
+  // This is the improved card design that matches the inspire-page
+  const normalizedRiskLevel = typeof opportunityData.riskLevel === 'string' 
+    ? opportunityData.riskLevel 
+    : 'Medium';
+    
+  const priority = opportunityData.roiScore && opportunityData.roiScore > 80 
+    ? "Quick Win" 
+    : opportunityData.type?.includes('Passive') 
+      ? "Passive Income" 
+      : opportunityData.skillGapDays && opportunityData.skillGapDays > 30 
+        ? "Aspirational Path" 
+        : "Growth Opportunity";
+        
   return (
-    <TooltipProvider>
-      <div className="border border-neutral-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white p-6 relative">
-        {/* Date badge in top right */}
-
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        transition: { 
+          duration: 0.4,
+        }
+      }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <Card 
+        className="h-full cursor-pointer hover:shadow-md transition-all duration-300 border-2 hover:border-primary/40 relative"
+      >
         {/* Delete button */}
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-2 right-2 z-10">
           <Button
             variant="ghost"
             size="icon"
             className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
-            onClick={() => {
-              if (
-                confirm("Are you sure you want to delete this opportunity?")
-              ) {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (confirm("Are you sure you want to delete this opportunity?")) {
                 deleteMutation.mutate(opportunity.id);
               }
             }}
@@ -453,199 +489,123 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ opportunity, source =
             )}
           </Button>
         </div>
-
-        <div className="flex flex-col gap-5">
-          {/* Header with type and View Details button */}
-          <div className="flex items-center justify-between gap-3 mt-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                {getIconForType(opportunityData.type)}
-              </div>
-              <Badge
-                variant={
-                  (typeVariants[
-                    opportunityData.type as keyof typeof typeVariants
-                  ] || "default") as any
-                }
-              >
-                {opportunityData.type}
-              </Badge>
-            </div>
-            
-            {/* View Details Button in the top right */}
-            <Link 
-              href={`/opportunity/${opportunity.id}`} 
-              className="flex-shrink-0"
-              onClick={() => {
-                // Store the source page in localStorage to enable proper back navigation
-                localStorage.setItem('opportunitySource', source);
-              }}
+        
+        <CardHeader className="p-4 pb-0">
+          <div className="flex justify-between items-start mb-2">
+            <Badge
+              variant="outline"
+              className={`mr-2 flex items-center gap-1 ${
+                opportunityData.type?.toLowerCase().includes('freelance') 
+                  ? "bg-amber-100 text-amber-800 border-amber-200"
+                : opportunityData.type?.toLowerCase().includes('digital') 
+                  ? "bg-green-100 text-green-800 border-green-200"
+                : opportunityData.type?.toLowerCase().includes('content') 
+                  ? "bg-blue-100 text-blue-800 border-blue-200"
+                : opportunityData.type?.toLowerCase().includes('service') 
+                  ? "bg-purple-100 text-purple-800 border-purple-200"
+                : opportunityData.type?.toLowerCase().includes('passive') 
+                  ? "bg-teal-100 text-teal-800 border-teal-200"
+                : opportunityData.type?.toLowerCase().includes('info') 
+                  ? "bg-indigo-100 text-indigo-800 border-indigo-200"
+                : "bg-neutral-100 text-neutral-800 border-neutral-200"
+              }`}
             >
-              <Button variant="outline" size="sm" className="px-3 py-1 h-8 whitespace-nowrap">
-                View Details
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          {/* Brief opportunity title and description */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-medium text-slate-900">{opportunityData.title}</h3>
-            <p className="text-sm text-neutral-600 line-clamp-2">
-              {opportunityData.description}
-            </p>
+              {getIconForType(opportunityData.type)}
+              <span>{opportunityData.type || "Opportunity"}</span>
+            </Badge>
+            
+            <Badge
+              variant="outline"
+              className={`${
+                priority === "Quick Win" 
+                  ? "bg-green-100 text-green-800 border-green-200"
+                : priority === "Growth Opportunity" 
+                  ? "bg-blue-100 text-blue-800 border-blue-200"
+                : priority === "Aspirational Path" 
+                  ? "bg-purple-100 text-purple-800 border-purple-200"
+                : priority === "Passive Income" 
+                  ? "bg-teal-100 text-teal-800 border-teal-200"
+                : "bg-neutral-100 text-neutral-800 border-neutral-200"
+              }`}
+            >
+              {priority}
+            </Badge>
           </div>
           
-          {/* ROI Analysis Section with tooltip */}
-          <div className="mt-2">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <h4 className="font-medium text-sm">ROI Analysis</h4>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-flex items-center">
-                    <div className="bg-slate-800 text-white px-2 py-1 rounded-md text-xs font-medium">
-                      {opportunityData.roiScore}/100
-                    </div>
-                    <HelpCircle className="h-4 w-4 ml-1 text-neutral-400" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">
-                    This ROI score is calculated based on initial investment,
-                    expected income, and time to achieve results.
-                    <br />
-                    <br />
-                    <strong>Higher score (75-100):</strong> Excellent return on
-                    time/money invested
-                    <br />
-                    <strong>Medium score (50-74):</strong> Good balance of
-                    effort and return
-                    <br />
-                    <strong>Lower score (below 50):</strong> May require more
-                    effort or investment
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
+          <div className="text-xl font-semibold leading-tight mb-1">
+            {opportunityData.title || "Untitled Opportunity"}
           </div>
-
-          {/* Metrics Grid with tooltips */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-neutral-500 flex items-center">
-                Potential Monthly Income
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="max-w-xs">
-                      Estimated monthly income you could earn from this
-                      opportunity once established. Ranges depend on your skill
-                      level, dedication, and market conditions.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </p>
-              <p className="text-sm font-medium mt-1 flex items-center">
-                <DollarSign className="h-4 w-4 text-green-500 mr-0.5" />
-                {opportunityData.incomePotential}
-              </p>
+          
+          <div className="flex items-center mt-1 gap-2">
+            <div className="flex items-center mr-2">
+              <TrendingUp className="w-3.5 h-3.5 mr-1 text-primary" />
+              <span className="text-xs font-medium">ROI: {opportunityData.roiScore || 75}/100</span>
             </div>
-
-            <div>
-              <p className="text-xs text-neutral-500 flex items-center">
-                Time to First Revenue
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="max-w-xs">
-                      Estimated time from starting the opportunity to receiving
-                      your first payment. This assumes focused effort on
-                      launching your service or product.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </p>
-              <p className="text-sm font-medium mt-1 flex items-center">
-                <Clock className="h-4 w-4 text-amber-500 mr-0.5" />
-                {opportunityData.timeToFirstRevenue}
-              </p>
+            
+            <div className="flex items-center">
+              <DollarSign className="w-3.5 h-3.5 mr-1 text-green-500" />
+              <span className="text-xs">{opportunityData.incomePotential || "$500-1000/month"}</span>
             </div>
-
-            <div>
-              <p className="text-xs text-neutral-500 flex items-center">
-                Skills Assessment
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="max-w-xs">
-                      Estimated days to learn the necessary skills to start this
-                      opportunity. This is based on your current skill profile
-                      and the requirements for the opportunity.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </p>
-              <div className="text-sm font-medium mt-1">
-                <button
-                  onClick={toggleSkillGapExpanded}
-                  className="flex items-center text-left w-full"
-                >
-                  <Target className="h-4 w-4 text-purple-500 mr-0.5" />
-                  {opportunityData.skillGapDays
-                    ? `${opportunityData.skillGapDays} days to learn`
-                    : "No skill gap"}
-                  <ChevronRight
-                    className={cn(
-                      "h-4 w-4 ml-1 transition-transform",
-                      isSkillGapExpanded ? "rotate-90" : ""
-                    )}
-                  />
-                </button>
-                {isSkillGapExpanded && (
-                  <div className="mt-2 bg-slate-50 p-2 rounded text-xs">
-                    <SkillGapAnalyzer
-                      skillGapDays={opportunityData.skillGapDays || 0}
-                      requiredSkills={opportunityData.requiredSkills || []}
-                    />
-                  </div>
-                )}
-              </div>
+            
+            <Badge 
+              variant="outline" 
+              className={`${
+                normalizedRiskLevel.toLowerCase() === "low"
+                  ? "bg-green-100 text-green-800 border-green-200"
+                : normalizedRiskLevel.toLowerCase() === "medium"
+                  ? "bg-amber-100 text-amber-800 border-amber-200"
+                : normalizedRiskLevel.toLowerCase() === "high"
+                  ? "bg-red-100 text-red-800 border-red-200"
+                : "bg-amber-100 text-amber-800 border-amber-200"
+              } text-xs`}
+            >
+              {normalizedRiskLevel} Risk
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="p-4 pt-2">
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-neutral-500 flex items-center">
+                <Clock className="w-3.5 h-3.5 mr-1 text-amber-500" />
+                Time to Revenue
+              </span>
+              <span className="font-medium">{opportunityData.timeToFirstRevenue || "1-4 weeks"}</span>
             </div>
-
-            <div>
-              <p className="text-xs text-neutral-500 flex items-center">
+            
+            <div className="flex justify-between items-center">
+              <span className="text-neutral-500 flex items-center">
+                <Building className="w-3.5 h-3.5 mr-1 text-blue-500" />
                 Startup Cost
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3.5 w-3.5 ml-1 text-neutral-400" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="max-w-xs">
-                      Estimated investment needed to start this opportunity,
-                      including tools, software, marketing, and other essential
-                      expenses.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </p>
-              <p className="text-sm font-medium mt-1 flex items-center">
-                <Building className="h-4 w-4 text-blue-500 mr-0.5" />
-                {opportunityData.startupCost}
-              </p>
+              </span>
+              <span className="font-medium">{opportunityData.startupCost || "$0-100"}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-neutral-500 flex items-center">
+                <Target className="w-3.5 h-3.5 mr-1 text-purple-500" />
+                Skill Gap
+              </span>
+              <span className="font-medium">~{opportunityData.skillGapDays || 14} days</span>
             </div>
           </div>
-
-          {/* We've moved the View Details button to the top */}
-        </div>
-      </div>
-    </TooltipProvider>
+          
+          <Link href={`/opportunity/${opportunity.id}`} passHref>
+            <Button 
+              className="w-full mt-4" 
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              View Details
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
