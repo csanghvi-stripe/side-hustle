@@ -25,6 +25,7 @@ import {
   Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useResults } from "@/contexts/ResultsContext";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -224,40 +225,34 @@ export default function InspirePage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  // Retrieve results from localStorage
-  const [results, setResults] = useState<any | null>(null);
+  // Get results directly from context
+  const { results, setSource } = useResults();
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const storedResults = localStorage.getItem('monetizationResults');
-    if (storedResults) {
-      try {
-        const parsedResults = JSON.parse(storedResults);
-        setResults(parsedResults);
-      } catch (error) {
-        console.error('Error parsing stored results:', error);
+    // Short delay to allow for any async operations
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      
+      // Show toast if no results are found
+      if (!results) {
         toast({
-          title: "Error loading results",
-          description: "There was a problem loading your saved results.",
+          title: "No search results found",
+          description: "Try starting a new search from the home page.",
           variant: "destructive",
         });
       }
-    } else {
-      toast({
-        title: "No search results found",
-        description: "Try starting a new search from the home page.",
-        variant: "destructive",
-      });
-    }
-    setIsLoading(false);
-  }, [toast]);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [results, toast]);
   
   // Function to handle opportunity card click
   const handleOpportunityClick = (opportunity: any) => {
     if (!opportunity || !opportunity.id) return;
     
     // Set source to 'inspire' to help with back navigation
-    localStorage.setItem('opportunitySource', 'inspire');
+    setSource('inspire');
     
     // Navigate to the opportunity detail page
     setLocation(`/opportunity/${opportunity.id}`);
