@@ -36,6 +36,7 @@ import {
   type PromotionCode,
   type InsertPromotionCode,
 } from "@shared/schema";
+import { DATABASE_URL } from "./config";
 import { db } from "./db";
 import { eq, and, or, inArray, sql } from "drizzle-orm";
 import session from "express-session";
@@ -138,7 +139,7 @@ export class DatabaseStorage implements IStorage {
     
     // Create a new pool for session storage
     const poolConfig = {
-      connectionString: process.env.DATABASE_URL,
+      connectionString: DATABASE_URL,
       ssl: {
         rejectUnauthorized: false,
       },

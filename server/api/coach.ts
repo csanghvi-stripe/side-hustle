@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { storage } from "../storage";
 import Anthropic from "@anthropic-ai/sdk";
+import { ANTHROPIC_API_KEY } from "../config";
 import { z } from "zod";
 
 // Initialize the Anthropic client
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: ANTHROPIC_API_KEY,
 });
 
 // The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025

@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import { sessionSecret } from "./config";
 import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -20,7 +21,7 @@ app.use(
       pool: sessionPool, // Use the standard pg Pool
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || "your-secret",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {

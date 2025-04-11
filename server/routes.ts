@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { DATABASE_URL } from "./config";
 import { storage } from "./storage";
 import { generateMonetizationOpportunities } from "./api/anthropic";
 import { generateEnhancedMonetizationOpportunities } from "./api/enhanced-anthropic";
@@ -16,7 +17,7 @@ const { Pool } = pkg;
 
 // Create a Pool for direct DB operations
 const dbPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
   }

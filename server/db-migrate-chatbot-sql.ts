@@ -1,9 +1,11 @@
+import { DATABASE_URL } from "./config";
 import pkg from "pg";
 const { Pool } = pkg;
 
 // Create a connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: DATABASE_URL,
+
   ssl: {
     rejectUnauthorized: false
   }

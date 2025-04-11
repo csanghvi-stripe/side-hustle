@@ -5,6 +5,7 @@
  * personalized, and high-quality monetization opportunity suggestions based
  * on user skills and preferences.
  */
+import { ANTHROPIC_API_KEY } from "../config";
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "./utils";
@@ -14,15 +15,12 @@ import { v4 as uuidv4 } from "uuid";
 import { promptManager } from "./prompt-manager";
 import { configManager } from "./config-manager";
 import { skillGraph } from "./skill-graph";
-import { marketDataService } from "./market-data";
+import { marketDataService, logger } from "./market-data";
 
 // Initialize Anthropic client
 // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-// Helper function to generate unique IDs
 const generateOpportunityId = (source: string, type: string) =>
   `${source}-${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 

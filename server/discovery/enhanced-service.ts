@@ -31,6 +31,7 @@ import { anthropicHelper } from "./anthropic-helper";
 import { PromptManager } from "./prompt-manager";
 import { ConfigManager } from "./config-manager";
 import { skillGraph } from "./skill-graph";
+import { ANTHROPIC_API_KEY } from "../config";
 import { marketDataService } from "./market-data";
 import { v4 as uuidv4 } from "uuid";
 import { performance } from "perf_hooks";
@@ -1097,7 +1098,7 @@ class EnhancedDiscoveryService {
     logger.info(`Adding supplementary opportunities to enhance results. Current count: ${opportunities.length}`);
 
     // Log environment variable status for debugging
-    const hasAnthropicKey = !!process.env.ANTHROPIC_API_KEY;
+    const hasAnthropicKey = !!ANTHROPIC_API_KEY;
     logger.info(`Anthropic API key present: ${hasAnthropicKey}`);
     
     // Check if useEnhanced flag is set to use Anthropic AI for generating opportunities

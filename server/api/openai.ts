@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { OPENAI_API_KEY } from "../config";
 import { 
   MonetizationResults, 
   MonetizationOpportunity, 
@@ -12,7 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-development" 
+  apiKey: OPENAI_API_KEY || "dummy-key-for-development"
 });
 
 interface UserProfileInput {

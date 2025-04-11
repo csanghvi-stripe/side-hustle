@@ -1,11 +1,12 @@
 import { db } from './db';
 import pg from 'pg';
 import { logger } from './discovery/utils';
+import { DATABASE_URL } from './config';
 
 async function runMigration() {
   logger.info('Starting messages table migration...');
-  const client = new pg.Client(process.env.DATABASE_URL);
-  
+  const client = new pg.Client(DATABASE_URL);
+
   try {
     await client.connect();
     

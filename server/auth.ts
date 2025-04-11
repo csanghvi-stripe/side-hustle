@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { SESSION_SECRET, DATABASE_URL } from "./config";
 import connectPg from "connect-pg-simple";
 import postgres from "postgres"; // Changed to postgres-js
 
@@ -35,13 +36,13 @@ export function setupAuth(app: Express) {
   const PostgresSessionStore = connectPg(session);
 
   // Use postgres-js instead of @neondatabase/serverless
-  const sessionClient = postgres(process.env.DATABASE_URL!, {
+  const sessionClient = postgres(DATABASE_URL!, {
     ssl: true,
     max: 1 // Use a single connection in the pool
   });
 
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "monetization-discovery-secret-key",
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: new PostgresSessionStore({ 

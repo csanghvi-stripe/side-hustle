@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { ANTHROPIC_API_KEY } from '../config';
 import { User } from '@shared/schema';
 import { 
   MonetizationResults, 
@@ -10,7 +11,7 @@ import {
 
 // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: ANTHROPIC_API_KEY,
 });
 
 interface UserProfileInput {

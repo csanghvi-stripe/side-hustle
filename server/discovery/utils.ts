@@ -2,6 +2,8 @@
  * Utility functions and shared helpers for the discovery engine
  */
 
+import { DEBUG } from '../config';
+
 // Helper function to get current timestamp in ISO format
 const getTimestamp = (): string => {
   return new Date().toISOString();
@@ -19,7 +21,7 @@ export const logger = {
     console.warn(`[${getTimestamp()}] [discovery] WARN: ${message}`);
   },
   debug: (message: string) => {
-    if (process.env.DEBUG) {
+    if (DEBUG) {
       console.debug(`[${getTimestamp()}] [discovery] DEBUG: ${message}`);
     }
   }
