@@ -3,22 +3,20 @@ import DiscoveryForm from "@/components/DiscoveryForm";
 import { MonetizationResults } from "@/types";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useResults } from "@/contexts/ResultsContext";
 
 const Home: React.FC = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { setResults, setSource } = useResults();
 
   const handleResultsReceived = (newResults: MonetizationResults) => {
-    // Store results in context for persistence across components
-    setResults(newResults);
+    // Store results in localStorage so the inspire page can access them
+    localStorage.setItem("monetizationResults", JSON.stringify(newResults));
     
-    // Set source to track navigation origin
-    setSource('search');
+    // Set a flag to indicate we're coming from the home page
+    localStorage.setItem("opportunitySource", "search");
     
-    // Navigate to the inspire page
-    setLocation(`/inspire`);
+    // Redirect to the inspire page
+    setLocation("/inspire");
 
     toast({
       title: "Generating opportunities...",

@@ -22,7 +22,7 @@ import BlogPage from "@/pages/blog-page";
 import BlogPostPage from "@/pages/blog-post-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
-import { ResultsProvider } from "@/contexts/ResultsContext";
+
 import AppHeader from "@/components/AppHeader";
 
 function Router() {
@@ -60,10 +60,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ResultsProvider>
-          <Router />
-          <Toaster />
-        </ResultsProvider>
+        <Router />
+        <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );
