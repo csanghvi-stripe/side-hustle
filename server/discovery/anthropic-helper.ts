@@ -101,17 +101,168 @@ export class AnthropicHelper {
       logger.info(
         `Calling Anthropic API with claude-3-7-sonnet-20250219 model, prompt length: ${prompt.length}, system prompt length: ${systemPrompt.length}`,
       );
-
-      // Call Anthropic API
+      // First, get the complete response
       const response = await anthropic.messages.create({
         model: "claude-3-7-sonnet-20250219",
-        max_tokens: 2000,
-        messages: [{ role: "user", content: prompt }],
+        max_tokens: 4000,
+        temperature: 0.7,
         system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        tools: [
+          {
+            name: "monetization_opportunities",
+            description: "Generate monetization opportunities",
+            input_schema: {
+              type: "object",
+              properties: {
+                opportunities: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      requiredSkills: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      niceToHaveSkills: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      type: {
+                        type: "string",
+                        enum: [
+                          "FREELANCE",
+                          "DIGITAL_PRODUCT",
+                          "CONTENT",
+                          "SERVICE",
+                          "PASSIVE",
+                          "INFO_PRODUCT",
+                        ],
+                      },
+                      estimatedIncome: {
+                        type: "object",
+                        properties: {
+                          min: { type: "number" },
+                          max: { type: "number" },
+                          timeframe: { type: "string" },
+                        },
+                        required: ["min", "max", "timeframe"],
+                      },
+                      startupCost: {
+                        type: "object",
+                        properties: {
+                          min: { type: "number" },
+                          max: { type: "number" },
+                        },
+                        required: ["min", "max"],
+                      },
+                      timeRequired: {
+                        type: "object",
+                        properties: {
+                          min: { type: "number" },
+                          max: { type: "number" },
+                        },
+                        required: ["min", "max"],
+                      },
+                      entryBarrier: {
+                        type: "string",
+                        enum: ["LOW", "MEDIUM", "HIGH"],
+                      },
+                      marketDemand: {
+                        type: "string",
+                        enum: ["LOW", "MEDIUM", "HIGH"],
+                      },
+                      stepsToStart: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      successStory: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string" },
+                          background: { type: "string" },
+                          journey: { type: "string" },
+                          outcome: { type: "string" },
+                        },
+                        required: ["name", "background", "journey", "outcome"],
+                      },
+                      resources: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            title: { type: "string" },
+                            url: { type: "string" },
+                          },
+                          required: ["title", "url"],
+                        },
+                      },
+                    },
+                    required: [
+                      "title",
+                      "description",
+                      "requiredSkills",
+                      "type",
+                      "estimatedIncome",
+                      "startupCost",
+                      "timeRequired",
+                      "entryBarrier",
+                      "marketDemand",
+                      "stepsToStart",
+                      "successStory",
+                      "resources",
+                    ],
+                  },
+                },
+              },
+              required: ["opportunities"],
+            },
+          },
+        ],
       });
 
+      // Correct way to access tool output
+      try {
+        // Find the tool_use response part
+        const toolUseResponse = response.content.find(
+          (item) => item.type === "tool_use",
+        );
+
+        if (!toolUseResponse || !toolUseResponse.input) {
+          throw new Error("Tool use response not found in the expected format");
+        }
+
+        // Access the opportunities from the input property
+        const opportunities = toolUseResponse.input.opportunities;
+
+        if (!opportunities || !Array.isArray(opportunities)) {
+          throw new Error("Opportunities not found in the expected format");
+        }
+
+        logger.info(
+          `Successfully received ${opportunities.length} opportunities`,
+        );
+
+        // Now you can work with the opportunities array
+        return opportunities;
+      } catch (error) {
+        logger.error(`Error processing Anthropic response: ${error}`);
+        // Log the actual response structure to help debug
+        logger.debug(
+          `Response structure: ${JSON.stringify(response, null, 2)}`,
+        );
+        return [];
+      }
+      /*
       // Get the response text and process it
-      const responseContent = response.content[0];
+     // const responseContent = response.content[0];
 
       // Log the response
       if (responseContent.type === "text") {
@@ -127,7 +278,7 @@ export class AnthropicHelper {
 
       // Parse the response to extract opportunities
       const opportunities = this.parseAnthropicResponse(responseContent.text);
-
+*/
       // Ensure required fields and formatting
       const enhancedOpportunities = this.enhanceOpportunities(
         opportunities,
@@ -263,9 +414,11 @@ export class AnthropicHelper {
    */
   private parseAnthropicResponse(responseText: string): any[] {
     try {
-      logger.info(
-        `Parsing Anthropic response of length ${responseText.length}`,
-      );
+      // logger.info(
+      `Parsing Anthropic response of length ${responseText.length}`,
+        //);
+
+        logger.info(`Parsing Anthropic response ${responseText}`);
 
       // Strategy 1: Try to parse the entire response as JSON directly
       try {
