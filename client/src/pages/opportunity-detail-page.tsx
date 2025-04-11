@@ -71,6 +71,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useResults } from "@/contexts/ResultsContext";
 
 type ResourceType = {
   title?: string;
@@ -216,27 +217,37 @@ export default function OpportunityDetailPage() {
   
   // Store the source page (saved, inspire, or home) to determine proper back navigation
   const [sourceType, setSourceType] = useState<string>('home');
+  const { source, setSource } = useResults();
   
   // Check the stored navigation context when the component mounts
   useEffect(() => {
-    // First check localStorage (most reliable method)
-    const opportunitySource = localStorage.getItem('opportunitySource');
-    if (opportunitySource === 'saved') {
+    // First check context (most reliable method)
+    if (source === 'saved') {
       setSourceType('saved');
-    } else if (opportunitySource === 'inspire') {
+    } else if (source === 'inspire') {
       setSourceType('inspire');
-    } else if (opportunitySource === 'search') {
+    } else if (source === 'search') {
       setSourceType('home');
     } else {
-      // Fallback to checking document.referrer
-      const referrer = document.referrer;
-      if (referrer && (referrer.includes('/saved-opportunities') || referrer.includes('/saved'))) {
+      // Fallback to checking localStorage
+      const opportunitySource = localStorage.getItem('opportunitySource');
+      if (opportunitySource === 'saved') {
         setSourceType('saved');
-      } else if (referrer && referrer.includes('/inspire')) {
+      } else if (opportunitySource === 'inspire') {
         setSourceType('inspire');
+      } else if (opportunitySource === 'search') {
+        setSourceType('home');
+      } else {
+        // Fallback to checking document.referrer
+        const referrer = document.referrer;
+        if (referrer && (referrer.includes('/saved-opportunities') || referrer.includes('/saved'))) {
+          setSourceType('saved');
+        } else if (referrer && referrer.includes('/inspire')) {
+          setSourceType('inspire');
+        }
       }
     }
-  }, []);
+  }, [source]);
   
   // Fetch opportunity data
   const { data: opportunity, isLoading, error } = useQuery({
@@ -347,7 +358,8 @@ export default function OpportunityDetailPage() {
             size="sm" 
             asChild
             onClick={() => {
-              // Clear the source from localStorage when navigating back
+              // Clear the source from context and localStorage when navigating back
+              setSource(null);
               localStorage.removeItem('opportunitySource');
             }}
           >
